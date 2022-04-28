@@ -1,2 +1,4 @@
 /tests/__pycache__/
 /artifacts/
+/.hypothesis/
+/.pytest_cache/

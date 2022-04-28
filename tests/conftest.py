@@ -26,7 +26,7 @@ def pack(z):
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
 
-MULTI_PRECISION_CONTRACT = os.path.join("contracts", "multi_precision.cairo")
+FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
 
 
 @pytest.fixture(scope="module")
@@ -41,11 +41,11 @@ async def starknet_factory():
 
 
 @pytest.fixture(scope="module")
-async def multi_precision_factory(starknet_factory):
+async def fq_factory(starknet_factory):
     
     starknet = starknet_factory
 
     # Deploy the account contract
-    multi_precision_contract = await starknet.deploy(source=MULTI_PRECISION_CONTRACT)
+    fq_contract = await starknet.deploy(source=FQ_CONTRACT)
 
-    return multi_precision_contract
+    return fq_contract
