@@ -69,7 +69,8 @@ func big_int_12_zero() -> (res : BigInt12):
         d9=0,
         d10=0,
         d11=0
-        ))
+        ),
+    )
 end
 
 func assert_bigint_is_equal(x : BigInt6, y : BigInt6):
@@ -80,4 +81,41 @@ func assert_bigint_is_equal(x : BigInt6, y : BigInt6):
     assert x.d4 = y.d4
     assert x.d5 = y.d5
     return ()
+end
+
+# Returns a BigInt6 instance whose value is controlled by a prover hint.
+#
+# Soundness guarantee: each limb is in the range [0, 3 * BASE).
+# Completeness guarantee (honest prover): the value is in reduced form and in particular,
+# each limb is in the range [0, BASE).
+#
+# Hint arguments: value.
+func nondet_bigint6{range_check_ptr}() -> (res : BigInt6):
+    # The result should be at the end of the stack after the function returns.
+    let res : BigInt6 = [cast(ap + 8, BigInt6*)]
+    %{
+        BASE = 2 ** 64
+        a = []
+        for _ in range(6):
+            value, residue = divmod(value, BASE)
+            a.append(residue)
+        assert value == 0
+        segments.write_arg(ids.res.address_, a)
+    %}
+    # The maximal possible sum of the limbs, assuming each of them is in the range [0, BASE).
+    const MAX_SUM = 6 * (BASE - 1)
+
+    assert [range_check_ptr] = MAX_SUM - (res.d0 + res.d1 + res.d2 + res.d3 + res.d4 + res.d5)
+
+    # Prepare the result at the end of the stack.
+    tempvar range_check_ptr = range_check_ptr + 7
+    [range_check_ptr - 6] = res.d0; ap++
+    [range_check_ptr - 5] = res.d1; ap++
+    [range_check_ptr - 4] = res.d2; ap++
+    [range_check_ptr - 3] = res.d3; ap++
+    [range_check_ptr - 2] = res.d4; ap++
+    [range_check_ptr - 1] = res.d5; ap++
+
+    static_assert &res + BigInt6.SIZE == ap
+    return (res=res)
 end

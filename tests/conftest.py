@@ -3,6 +3,7 @@ import asyncio
 import os
 import pytest
 from starkware.starknet.testing.starknet import Starknet
+from starkware.starknet.compiler.compile import compile_starknet_files
 
 one_bigint6 = ( 1, 0, 0, 0, 0, 0 )
 
@@ -46,6 +47,7 @@ async def fq_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    fq_contract = await starknet.deploy(source=FQ_CONTRACT)
+    contract_def= compile_starknet_files(files=[FQ_CONTRACT], disable_hint_validation=True)
+    fq_contract = await starknet.deploy(contract_def=contract_def)
 
     return fq_contract

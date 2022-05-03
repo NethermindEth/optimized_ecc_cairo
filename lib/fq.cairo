@@ -1,10 +1,12 @@
-from lib.BigInt6 import BigInt6, BigInt12, BASE
+from lib.BigInt6 import BigInt6, BigInt12, BASE, nondet_bigint6
 from lib.multi_precision import (
     multi_precision_add,
     multi_precision_sub,
     multi_precision_gt,
     multi_precision_ge,
     divide_same_limb,
+    multi_precision_mul,
+    multi_precision_square,
 )
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
@@ -53,8 +55,37 @@ func fq_sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : Big
         let (difference : BigInt6) = multi_precision_sub(x, y)
         return (difference)
     end
-    let (difference : BigInt6) = multi_precision_sub(y, x)
+
     let (mod) = get_modulus()
-    let (diff_mod : BigInt6) = multi_precision_sub(mod, difference)
-    return (diff_mod)
+    let (difference : BigInt6) = multi_precision_sub(y, x)
+    let (mod_difference : BigInt6) = multi_precision_sub(mod, difference)
+    return (mod_difference)
+end
+
+func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
+    %{
+        modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+        limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5, ids.x.d6, ids.x.d7, ids.x.d8, ids.x.d9, ids.x.d10, ids.x.d11
+        packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+        value = reduced = packed % modulus
+    %}
+
+    let (reduced : BigInt6) = nondet_bigint6()
+    return (reduced)
+end
+
+func fq_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
+    product : BigInt6
+):
+    let (res : BigInt12) = multi_precision_mul(x, y)
+    let (reduced : BigInt6) = reduce(res)
+
+    return (reduced)
+end
+
+func fq_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (product : BigInt6):
+    let (res : BigInt12) = multi_precision_square(x)
+    let (reduced : BigInt6) = reduce(res)
+
+    return (reduced)
 end

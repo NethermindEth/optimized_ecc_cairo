@@ -1,3 +1,3 @@
 # Build and test
-build :; nile compile
+build :; nile compile --disable-hint-validation
 test  :; pytest tests/

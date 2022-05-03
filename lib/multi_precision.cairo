@@ -18,7 +18,8 @@ end
 
 # @dev purposley allows overflows on most signifigant bit, used in modular arithmatic
 func multi_precision_add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        x : BigInt6, y : BigInt6) -> (res : BigInt6):
+    x : BigInt6, y : BigInt6
+) -> (res : BigInt6):
     alloc_locals
 
     let res_0 = x.d0 + y.d0
@@ -115,11 +116,13 @@ func multi_precision_sub{range_check_ptr}(x : BigInt6, y : BigInt6) -> (res : Bi
         d3=d3,
         d4=d4,
         d5=trunacted_d5
-        ))
+        )
+    )
 end
 
 func mul_digit{range_check_ptr}(x : felt, c : felt, y : BigInt6) -> (
-        carry : felt, product : BigInt6):
+    carry : felt, product : BigInt6
+):
     # TODO research if product(d0) > BASE then subtracting base will cost less gas
     let (r_0, d0) = unsigned_div_rem(x * y.d0, BASE)
     let (r_1, d1) = unsigned_div_rem((x * y.d1) + r_0, BASE)
@@ -133,8 +136,8 @@ end
 
 # @dev internal
 func sum_products{range_check_ptr}(
-        p0 : BigInt6, p1 : BigInt6, p2 : BigInt6, p3 : BigInt6, p4 : BigInt6, p5 : BigInt6,
-        c : felt) -> (sum : BigInt12):
+    p0 : BigInt6, p1 : BigInt6, p2 : BigInt6, p3 : BigInt6, p4 : BigInt6, p5 : BigInt6, c : felt
+) -> (sum : BigInt12):
     let (sum_zero) = big_int_12_zero()
 
     let (c0, d0) = unsigned_div_rem(p0.d0, BASE)
@@ -152,7 +155,8 @@ func sum_products{range_check_ptr}(
     return (
         sum=BigInt12(
         d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10, d11=c10 + c
-        ))
+        ),
+    )
 end
 
 func multi_precision_mul{range_check_ptr}(x : BigInt6, y : BigInt6) -> (product : BigInt12):
@@ -165,7 +169,7 @@ func multi_precision_mul{range_check_ptr}(x : BigInt6, y : BigInt6) -> (product 
     let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
     let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
 
-    let (product) = sum_products(p0, p1, p2, p3, p4, p5, c5)
+    let (product : BigInt12) = sum_products(p0, p1, p2, p3, p4, p5, c5)
     return (product)
 end
 
@@ -218,7 +222,8 @@ func multi_precision_square{range_check_ptr}(x : BigInt6) -> (product : BigInt12
     return (
         product=BigInt12(
         d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10, d11=c10 + r11
-        ))
+        ),
+    )
 end
 
 # @dev uses is_not_zero, which assumes limb is non-negative
@@ -365,7 +370,8 @@ end
 # @dev the initial call should assign quotient to 0
 # @dev does not check if y is 0
 func divide_same_limb{range_check_ptr}(x : BigInt6, y : BigInt6, quotient : felt) -> (
-        r : BigInt6, q : felt):
+    r : BigInt6, q : felt
+):
     let (y_gt_x) = multi_precision_gt(y, x)
     if y_gt_x == 1:
         return (x, quotient)
