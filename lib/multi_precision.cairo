@@ -27,6 +27,10 @@ func multi_precision_add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     # If x + y = sum, sum >= BASE then remainder
     # sum = 2^64 - 1 : No Remainder
     # sum = 2^64 : Remainder
+    
+    # @albert_g: TODO: If I'm not mistaken here `has_remainder_0` should be
+    # `(res_0 - (res_0 mod BASE))/BASE`, and so on with the other
+    # `has_remainder_i`
     let (has_remainder_0) = is_le(BASE, res_0)
 
     let res_1 = x.d1 + y.d1 + has_remainder_0
