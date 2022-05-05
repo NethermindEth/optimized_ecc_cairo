@@ -36,11 +36,15 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
 
     # Note that wath the `left_shift_limbs` function actually does is compute `floor(x/(BASE**shift))` in a supper efficient way
     let (q1) = left_shift_limbs(number=x, shift=5)
+    
+    #TODO: q2 can have more than 2k (i.e. 12) limbs. Need a BigInt18
     let (q2) = multi_precision_mul_bigint12(q1, m)
     let (local q3) = left_shift_limbs(number=q2, shift=7)
 
     let (r1) = mod_by_power_of_base(x, 7)
-    let (q3_times_m) = multi_precision_mul_bigint12(q3, m)
+    
+    #TODO: At this point `q3` and `m` have 6 limbs, convert them to BigInt6
+    let (q3_times_m) = mp.multi_precision_mul(q3, m)
     let (r2) = mod_by_power_of_base(q3_times_m, 7)
 
     let (is_r1_le_r2) = multi_precision_ge_bigint12(r2, r1)
@@ -58,6 +62,7 @@ end
 func multi_precision_mul_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -> (
     product : BigInt12
 ):
+    # TODO: implement for BigInt12
     alloc_locals
 
     let (c0 : felt, p0 : BigInt12) = mul_digit_bigint12(x.d0, 0, y)
