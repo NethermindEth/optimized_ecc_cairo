@@ -29,7 +29,7 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
     let m = modulo
 
     let mu = 0
-    
+
     # Note that wath the `left_shift_limbs` function actually does is compute `floor(x/(BASE**shift))` in a supper efficient way
     let (q1) = left_shift_limbs(number=x, shift=5)
     let (q2) = multi_precision_mul(q1, m)
@@ -44,7 +44,7 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
     return (r)
 end
 
-func _aux_fun_for_barret_reduction(r : BigInt12, m : BigInt6) -> (new_r: BigInt12):
+func _aux_fun_for_barret_reduction(r : BigInt12, m : BigInt6) -> (new_r : BigInt12):
     if (is_nn_le(r, m - 1)) == 1:
         return (r)
     end
@@ -61,7 +61,9 @@ func mod_by_power_of_base(number : BigInt12, power : felt) -> (result : BigInt12
     end
 
     let result = new BigInt12()
-
+    
+    # NOTE: This could be a recursion, but perhaps it is more efficient
+    # to hard code it like this.
     result.d0 = number.d0
     if power == 1:
         return (result)
@@ -117,7 +119,7 @@ func mod_by_power_of_base(number : BigInt12, power : felt) -> (result : BigInt12
 end
 
 # @albert_g takes a BigInt12 with limbs d_0, ..., d_11 and returns the BigInt12 with
-# limbs d_shift, ..., d_11, 0, ..., 0
+# limbs d_(shift+1), ..., d_11, 0, ..., 0
 func left_shift_limbs(number : BigInt12, shift : felt) -> (shifted_number : BigInt12):
     let (bool) = is_nn_le(shift, 11)
     assert bool = 1
@@ -333,6 +335,22 @@ func sum_products{range_check_ptr}(
 end
 
 func multi_precision_mul{range_check_ptr}(x : BigInt6, y : BigInt6) -> (product : BigInt12):
+    alloc_locals
+
+    let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
+    let (c1 : felt, p1 : BigInt6) = mul_digit(x.d1, c0, y)
+    let (c2 : felt, p2 : BigInt6) = mul_digit(x.d2, c1, y)
+    let (c3 : felt, p3 : BigInt6) = mul_digit(x.d3, c2, y)
+    let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
+    let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
+
+    let (product : BigInt12) = sum_products(p0, p1, p2, p3, p4, p5, c5)
+    return (product)
+end
+
+func multi_precision_mul_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -> (
+    product : BigInt12
+):
     alloc_locals
 
     let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
