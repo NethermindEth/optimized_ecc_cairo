@@ -28,6 +28,7 @@ def pack(z):
 
 
 FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
+G1_CONTRACT = os.path.join("contracts", "g1.cairo")
 
 
 @pytest.fixture(scope="module")
@@ -51,3 +52,14 @@ async def fq_factory(starknet_factory):
     fq_contract = await starknet.deploy(contract_def=contract_def)
 
     return fq_contract
+
+@pytest.fixture(scope="module")
+async def g1_factory(starknet_factory):
+    
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def= compile_starknet_files(files=[G1_CONTRACT], disable_hint_validation=True)
+    g1_contract = await starknet.deploy(contract_def=contract_def)
+
+    return g1_contract

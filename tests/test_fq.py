@@ -1,7 +1,5 @@
-"""contract.cairo test file."""
-
 import pytest
-from utils import split, packEnum,  pack,pack12, max_base_bigint6_sum, field_modulus
+from utils import split, pack, field_modulus
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 

@@ -74,6 +74,18 @@ func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
     return (reduced)
 end
 
+func reduce_bigint_6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
+    %{
+        modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+        limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5
+        packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+        value = reduced = packed % modulus
+    %}
+
+    let (reduced : BigInt6) = nondet_bigint6()
+    return (reduced)
+end
+
 func fq_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
     product : BigInt6
 ):
@@ -86,6 +98,24 @@ end
 func fq_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (product : BigInt6):
     let (res : BigInt12) = multi_precision_square(x)
     let (reduced : BigInt6) = reduce(res)
+
+    return (reduced)
+end
+
+func fq_scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : BigInt6) -> (
+    product : BigInt6
+):
+    alloc_locals
+    let res : BigInt6 = BigInt6(
+        d0=scalar * x.d0,
+        d1=scalar * x.d1,
+        d2=scalar * x.d2,
+        d3=scalar * x.d3,
+        d4=scalar * x.d4,
+        d5=scalar * x.d5,
+    )
+
+    let (reduced : BigInt6) = reduce_bigint_6(res)
 
     return (reduced)
 end

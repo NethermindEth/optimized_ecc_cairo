@@ -41,3 +41,14 @@ def pack12(z):
 
 def packEnum(z):
     return z[0] + z[1] * 2 ** 64  + z[2]   * 2 ** (64 * 2 ) + z[3]  * 2 ** (64 * 3)  + z[4] * 2 ** (64 * 4) + z[5]  * 2 ** (64 * 5)
+
+
+
+def G1Point(x, y, z):
+    return (split(x), split(y), split(z))
+
+
+def assertG1PointEquals(x, y):
+    assert pack(x[0]) == y[0]
+    assert pack(x[1]) == y[1]
+    assert pack(x[2]) == y[2]
