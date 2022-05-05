@@ -119,3 +119,9 @@ func nondet_bigint6{range_check_ptr}() -> (res : BigInt6):
     static_assert &res + BigInt6.SIZE == ap
     return (res=res)
 end
+
+# @albert_g takes a BigInt12 and forms a BigInt6 with the first 6 limbs of the BigInt12. It is supposed to be used on BigInt12's where d6 = ... = d11 = 0
+func from_bigint12_to_bigint6(num : BigInt12) -> (new_num : BigInt6):
+    let new_num = BigInt6(d0=num.d0, d1=num.d1, d2=num.d2, d3=num.d3, d4=num.d4, d5=num.d5)
+    return (new_num)
+end
