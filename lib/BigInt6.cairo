@@ -2,6 +2,7 @@
 # @author Non
 # @notice Unigned 384 bit number split into six 64-bit limbs
 
+
 # The base of the representation.
 const BASE = 2 ** 64
 
@@ -123,5 +124,23 @@ end
 # @albert_g takes a BigInt12 and forms a BigInt6 with the first 6 limbs of the BigInt12. It is supposed to be used on BigInt12's where d6 = ... = d11 = 0
 func from_bigint12_to_bigint6(num : BigInt12) -> (new_num : BigInt6):
     let new_num = BigInt6(d0=num.d0, d1=num.d1, d2=num.d2, d3=num.d3, d4=num.d4, d5=num.d5)
+    return (new_num)
+end
+
+func from_bigint6_to_bigint12(num : BigInt6) -> (new_num : BigInt12):
+    let new_num = BigInt12(
+        d0=num.d0,
+        d1=num.d1,
+        d2=num.d2,
+        d3=num.d3,
+        d4=num.d4,
+        d5=num.d5,
+        d6=0,
+        d7=0,
+        d8=0,
+        d9=0,
+        d10=0,
+        d11=0,
+    )
     return (new_num)
 end
