@@ -55,6 +55,29 @@ struct BigInt12:
     member d11 : felt
 end
 
+
+struct BigInt18:
+    member d0 : felt
+    member d1 : felt
+    member d2 : felt
+    member d3 : felt
+    member d4 : felt
+    member d5 : felt
+    member d6 : felt
+    member d7 : felt
+    member d8 : felt
+    member d9 : felt
+    member d10 : felt
+    member d11 : felt
+    member d12 : felt
+    member d13 : felt
+    member d14 : felt
+    member d15 : felt
+    member d16 : felt
+    member d17 : felt
+end
+
+
 func big_int_12_zero() -> (res : BigInt12):
     return (
         res=BigInt12(

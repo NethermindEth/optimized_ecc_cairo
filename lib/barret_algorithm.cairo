@@ -1,6 +1,7 @@
 from lib.BigInt6 import (
     BigInt6,
     BigInt12,
+    BigInt18,
     BASE,
     big_int_12_zero,
     from_bigint12_to_bigint6,
@@ -27,40 +28,72 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
     alloc_locals
 
     # This is only to match the notation of the book
-    let x = number
-
-    # This is to have `m` have the same type as `x`. Makes adapting all functions from `multi_precision_cairo.cairo` simpler. TODO: However we may want to keep `m` as a BigInt6 for efficiency purposes.
-    let (m) = from_bigint6_to_bigint12(modulo)
+    let x_bigint12 = number
+    let (m_bigint6) = modulo
+    let (m_bigint12) = from_bigint6_to_bigint12(modulo)
 
     let mu = 0
 
-    # Note that wath the `left_shift_limbs` function actually does is compute `floor(x/(BASE**shift))` in a supper efficient way
-    let (q1) = left_shift_limbs(number=x, shift=5)
+    let (q1_bigint12) = floor_divide_by_power_of_base_bigint12(number=x_bigint12, power=5)
 
     # TODO: q2 can have more than 2k (i.e. 12) limbs. Need a BigInt18
-    let (q2) = multi_precision_mul_bigint12(q1, m)
-    let (local q3) = left_shift_limbs(number=q2, shift=7)
+    let (local q3_bigint12) = get_q3(q1_bigint12, mu, m_bigint6)
 
-    let (r1) = mod_by_power_of_base(x, 7)
+    let (r1_bigint12) = mod_by_power_of_base_bigint12(x_bigint12, 7)
+    let (r1_bigint6) = from_bigint12_to_bigint6(r1_bigint6)
 
-    # TODO: At this point `q3` and `m` have 6 limbs, convert them to BigInt6
-    let (q3_times_m) = mp.multi_precision_mul(q3, m)
-    let (r2) = mod_by_power_of_base(q3_times_m, 7)
+    let (m_bigint6) = modulo
+    # TODO: is there a more efficient way to do these two steps?
+    let (q3_times_m_bigint18) = multi_precision_mul_bigint12_by_bigint6(q3_bigint12, m_bigint6)
 
-    let (is_r1_le_r2) = multi_precision_ge_bigint12(r2, r1)
+    let (r2_bigint18) = mod_by_power_of_base_bigint18(q3_times_m_bigint18, 7)
+    # At this point we can be certain that r2 uses at most 7 limbs
+    let (r2_bigint12) = from_bigint18_to_bigint12(r2_bigint18)
+
+    let (is_r1_le_r2) = multi_precision_ge_bigint12(r2_bigint12, r1_bigint12)
+
     if is_r1_le_r2 == 1:
-        assert r1.d7 = r1.d7 + 1
+        assert r1_bigint12.d7 = r1_bigint12.d7 + 1
     end
 
-    let (r) = multi_precision_sub_bigint12(r1, r2)
-
-    let (final_r_bigint12) = _aux_fun_for_barret_reduction(r, m)
+    let (r_bigint6) = multi_precision_sub_bigint12(r1_bigint12, r2_bigint12)
+    let (final_r_bigint12) = _aux_fun_for_barret_reduction_bigint12(r_bigint12, m_bigint12)
     let (final_r_bigint6) = from_bigint12_to_bigint6(final_r_bigint12)
     return (final_r_bigint6)
 end
 
-func multi_precision_mul_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -> (
-    product : BigInt12
+func get_q3(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (q3_bigint12 : BigInt12):
+    # q3 = math.floor(q1 * mu / b^{k+1})
+    # TODO: is there some more specialized way to do this=
+
+    # We need up to 18 limbs here because we know that m has only the first 6 nonzero limbs
+    let (q2_bigint18) = multi_precision_mul_bigint12_by_bigint6(q1_bigint12, m_bigint6)
+    # Some math shows that `q3` needs at most 7 limbs. Hence we get a BigInt12
+    let (q3_bigint12) = divide_q2_by_b_power_7(q2_bigint18)
+    return (q3_bigint12)
+end
+
+# @albert_g Specialized helper function for the function `get_q3`.
+func divide_q2_by_b_power_7(q2_bigint18 : BigInt18) -> (result : BigInt12):
+    let result = BigInt12(
+        d0=q2_bigint18.d7,
+        d1=q2_bigint18.d8,
+        d2=q2_bigint18.d9,
+        d3=q2_bigint18.d10,
+        d4=q2_bigint18.d11,
+        d5=q2_bigint18.d12,
+        d6=q2_bigint18.d13,
+        d7=q2_bigint18.d14,
+        d8=0,
+        d9=0,
+        d10=0,
+        d11=0,
+    )
+    return (result)
+end
+
+func multi_precision_mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : BigInt6) -> (
+    product : BigInt18
 ):
     # TODO: modify
     alloc_locals
@@ -76,16 +109,25 @@ func multi_precision_mul_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -
     return (product)
 end
 
-func _aux_fun_for_barret_reduction(r : BigInt12, m : BigInt12) -> (new_r : BigInt12):
+func _aux_fun_for_barret_reduction_bigint6(r : BigInt6, m : BigInt6) -> (new_r : BigInt6):
     let (aux_bool) = is_nn_le(r, m - 1)
     if aux_bool == 1:
         return (r)
     end
     let (new_r) = mp.multi_precision_sub(r, m)
-    return _aux_fun_for_barret_reduction(new_r, m)
+    return _aux_fun_for_barret_reduction_bigint6(new_r, m)
 end
 
-func mod_by_power_of_base(number : BigInt12, power : felt) -> (result : BigInt12):
+func _aux_fun_for_barret_reduction_bigint12(r : BigInt12, m : BigInt12) -> (new_r : BigInt12):
+    let (aux_bool) = is_nn_le(r, m - 1)
+    if aux_bool == 1:
+        return (r)
+    end
+    let (new_r) = multi_precision_sub_bigint12(r, m)
+    return _aux_fun_for_barret_reduction_bigint12(new_r, m)
+end
+
+func mod_by_power_of_base_bigint12(number : BigInt12, power : felt) -> (result : BigInt12):
     assert (is_nn_le(power, 11)) = 1
 
     if power == 0:
@@ -151,78 +193,80 @@ func mod_by_power_of_base(number : BigInt12, power : felt) -> (result : BigInt12
     return (result)
 end
 
-# @albert_g takes a BigInt12 with limbs d_0, ..., d_11 and returns the BigInt12 with limbs d_(shift), ..., d_11, 0, ..., 0
+# @albert_g takes a BigInt12 with limbs d_0, ..., d_11 and returns the BigInt12 with limbs d_(power), ..., d_11, 0, ..., 0
 # @albert_g NOTE: The function could be written much more succintly with using recursion calls. Instead I wrote it in this "hardcoded" form for efficiency (I understand that nested recursion is quite expensive)
-func left_shift_limbs(number : BigInt12, shift : felt) -> (shifted_number : BigInt12):
-    with_attr error_message("`shift` should be >=0 and <=12. Provided shift = {shift}"):
-        let (bool) = is_nn_le(shift, 12)
+func floor_divide_by_power_of_base_bigint12(number : BigInt12, power : felt) -> (
+    shifted_number : BigInt12
+):
+    with_attr error_message("`power` should be >=0 and <=12. Provided power = {power}"):
+        let (bool) = is_nn_le(power, 12)
         assert bool = 1
     end
 
-    if shift == 0:
+    if power == 0:
         return (number)
     end
 
     # Initialize the final BigInt12
     let shifted_number = big_int_12_zero()
-    if shift == 12:
+    if power == 12:
         return (shifted_number)
     end
 
-    let (number_memory_location_plus_shift) = number + shift
+    let (number_memory_location_plus_shift) = number + power
 
     assert shifted_number.d0 = [number_memory_location_plus_shift]
-    if shift == 11:
+    if power == 11:
         return (shifted_number)
     end
 
     assert shifted_number.d1 = [number_memory_location_plus_shift + 1]
-    if shift == 10:
+    if power == 10:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 2]
-    if shift == 9:
+    if power == 9:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 3]
-    if shift == 8:
+    if power == 8:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 4]
-    if shift == 7:
+    if power == 7:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 5]
-    if shift == 6:
+    if power == 6:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 6]
-    if shift == 5:
+    if power == 5:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 7]
-    if shift == 4:
+    if power == 4:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 8]
-    if shift == 3:
+    if power == 3:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 9]
-    if shift == 2:
+    if power == 2:
         return (shifted_number)
     end
 
     assert shifted_number.d2 = [number_memory_location_plus_shift + 10]
-    if shift == 1:
+    if power == 1:
         return (shifted_number)
     end
 end
