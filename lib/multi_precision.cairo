@@ -4,6 +4,8 @@ from starkware.cairo.common.math_cmp import is_le, is_nn, is_not_zero, is_nn_le
 from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.bitwise import bitwise_and
 from starkware.cairo.common.cairo_builtins import HashBuiltin, BitwiseBuiltin
+from starkware.cairo.common.alloc import alloc
+from starkware.cairo.common.registers import get_fp_and_pc
 
 namespace multi_precision:
     const MASK = 2 ** 64 - 1
@@ -125,41 +127,33 @@ namespace multi_precision:
         )
     end
 
+    func multi_precision_mul{range_check_ptr}(x : BigInt6, y : BigInt6) -> (product : BigInt12):
+        alloc_locals
+
+        let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
+        let (c1 : felt, p1 : BigInt6) = mul_digit(x.d1, c0, y)
+        let (c2 : felt, p2 : BigInt6) = mul_digit(x.d2, c1, y)
+        let (c3 : felt, p3 : BigInt6) = mul_digit(x.d3, c2, y)
+        let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
+        let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
+
+        # TODO: Would it be more consistent to just use `multi_precision_sum` on p0, p1*b, p2*b**2, etc`? Mult by b**i would be implemented by shifting the d's of pi
+        let (product : BigInt12) = sum_products(p0, p1, p2, p3, p4, p5, c5)
+        return (product)
+    end
+
     func mul_digit{range_check_ptr}(x : felt, c : felt, y : BigInt6) -> (
         carry : felt, product : BigInt6
     ):
         # TODO research if product(d0) > BASE then subtracting base will cost less gas
-        let (r_0, d0) = unsigned_div_rem(x * y.d0, BASE)
-        let (r_1, d1) = unsigned_div_rem((x * y.d1) + r_0, BASE)
-        let (r_2, d2) = unsigned_div_rem((x * y.d2) + r_1, BASE)
-        let (r_3, d3) = unsigned_div_rem((x * y.d3) + r_2, BASE)
-        let (r_4, d4) = unsigned_div_rem((x * y.d4) + r_3, BASE)
-        let (r_5, d5) = unsigned_div_rem((x * y.d5) + r_4 + c, BASE)
+        let (q_0, d0) = unsigned_div_rem(x * y.d0, BASE)
+        let (q_1, d1) = unsigned_div_rem((x * y.d1) + q_0, BASE)
+        let (q_2, d2) = unsigned_div_rem((x * y.d2) + q_1, BASE)
+        let (q_3, d3) = unsigned_div_rem((x * y.d3) + q_2, BASE)
+        let (q_4, d4) = unsigned_div_rem((x * y.d4) + q_3, BASE)
+        let (q_5, d5) = unsigned_div_rem((x * y.d5) + q_4 + c, BASE)
 
-        return (carry=r_5, product=BigInt6(d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5))
-    end
-
-    func mul_digit_bigint12{range_check_ptr}(x : felt, c : felt, y : BigInt12) -> (
-        carry : felt, product : BigInt12
-    ):
-        # TODO research if product(d0) > BASE then subtracting base will cost less gas
-        let (r_0, d0) = unsigned_div_rem(x * y.d0, BASE)
-        let (r_1, d1) = unsigned_div_rem((x * y.d1) + r_0, BASE)
-        let (r_2, d2) = unsigned_div_rem((x * y.d2) + r_1, BASE)
-        let (r_3, d3) = unsigned_div_rem((x * y.d3) + r_2, BASE)
-        let (r_4, d4) = unsigned_div_rem((x * y.d4) + r_3, BASE)
-        let (r_5, d5) = unsigned_div_rem((x * y.d5) + r_4, BASE)
-        let (r_6, d6) = unsigned_div_rem((x * y.d6) + r_5, BASE)
-        let (r_7, d7) = unsigned_div_rem((x * y.d7) + r_6, BASE)
-        let (r_8, d8) = unsigned_div_rem((x * y.d8) + r_7, BASE)
-        let (r_9, d9) = unsigned_div_rem((x * y.d9) + r_8, BASE)
-        let (r_10, d10) = unsigned_div_rem((x * y.d10) + r_9, BASE)
-        let (r_11, d11) = unsigned_div_rem((x * y.d11) + r_10 + c, BASE)
-
-        return (
-            carry=r_11,
-            product=BigInt6(d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10, d11=d11),
-        )
+        return (carry=q_5, product=BigInt6(d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5))
     end
 
     # @dev internal
@@ -187,6 +181,30 @@ namespace multi_precision:
         )
     end
 
+    func multi_precision_mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : BigInt6) -> (
+        product : BigInt18
+    ):
+        alloc_locals
+
+        let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
+        let (c1 : felt, p1 : BigInt6) = mul_digit(x.d1, c0, y)
+        let (c2 : felt, p2 : BigInt6) = mul_digit(x.d2, c1, y)
+        let (c3 : felt, p3 : BigInt6) = mul_digit(x.d3, c2, y)
+        let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
+        let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
+        let (c6 : felt, p6 : BigInt6) = mul_digit(x.d6, c5, y)
+        let (c7 : felt, p7 : BigInt6) = mul_digit(x.d7, c6, y)
+        let (c8 : felt, p8 : BigInt6) = mul_digit(x.d8, c7, y)
+        let (c9 : felt, p9 : BigInt6) = mul_digit(x.d9, c8, y)
+        let (c10 : felt, p10 : BigInt6) = mul_digit(x.d10, c9, y)
+        let (c11 : felt, p11 : BigInt6) = mul_digit(x.d11, c10, y)
+
+        let (product : BigInt18) = sum_products_bigint12(
+            p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, c11
+        )
+        return (product)
+    end
+
     # TODO: RENAME
     # @dev internal
     func sum_products_bigint12{range_check_ptr}(
@@ -212,46 +230,19 @@ namespace multi_precision:
         let (c3, d3) = unsigned_div_rem(p0.d3 + p1.d2 + p2.d1 + p3.d0 + c2, BASE)
         let (c4, d4) = unsigned_div_rem(p0.d4 + p1.d3 + p2.d2 + p3.d1 + p4.d0 + c3, BASE)
         let (c5, d5) = unsigned_div_rem(p0.d5 + p1.d4 + p2.d3 + p3.d2 + p4.d1 + p5.d0 + c4, BASE)
-        let (c6, d6) = unsigned_div_rem(
-            p0.d6 + p1.d5 + p2.d4 + p3.d3 + p4.d2 + p5.d1 + p6.d0 + c5, BASE
-        )
-        let (c7, d7) = unsigned_div_rem(
-            p0.d7 + p1.d6 + p2.d5 + p3.d4 + p4.d3 + p5.d2 + p6.d1 + p7.d0 + c6, BASE
-        )
-        let (c8, d8) = unsigned_div_rem(
-            p0.d8 + p1.d7 + p2.d6 + p3.d5 + p4.d4 + p5.d3 + p6.d2 + p7.d1 + p8.d0 + c7, BASE
-        )
-        let (c9, d9) = unsigned_div_rem(
-            p0.d9 + p1.d8 + p2.d7 + p3.d6 + p4.d5 + p5.d4 + p6.d3 + p7.d2 + p8.d1 + p9.d0 + c8, BASE
-        )
-        let (c10, d10) = unsigned_div_rem(
-            p0.d10 + p1.d9 + p2.d8 + p3.d7 + p4.d6 + p5.d5 + p6.d4 + p7.d3 + p8.d2 + p9.d1 + p10.d0 + c9,
-            BASE,
-        )
+        let (c6, d6) = unsigned_div_rem(p1.d5 + p2.d4 + p3.d3 + p4.d2 + p5.d1 + p6.d0 + c5, BASE)
+        let (c7, d7) = unsigned_div_rem(p2.d5 + p3.d4 + p4.d3 + p5.d2 + p6.d1 + p7.d0 + c6, BASE)
+        let (c8, d8) = unsigned_div_rem(p3.d5 + p4.d4 + p5.d3 + p6.d2 + p7.d1 + p8.d0 + c7, BASE)
+        let (c9, d9) = unsigned_div_rem(p4.d5 + p5.d4 + p6.d3 + p7.d2 + p8.d1 + p9.d0 + c8, BASE)
+        let (c10, d10) = unsigned_div_rem(p5.d5 + p6.d4 + p7.d3 + p8.d2 + p9.d1 + p10.d0 + c9, BASE)
         let (c11, d11) = unsigned_div_rem(
-            p0.d11 + p1.d10 + p2.d9 + p3.d8 + p4.d7 + p5.d6 + p6.d5 + p7.d4 + p8.d3 + p9.d2 + p10.d1 + p11.d0 + c10,
-            BASE,
+            p6.d5 + p7.d4 + p8.d3 + p9.d2 + p10.d1 + p11.d0 + c10, BASE
         )
-        let (c12, d22) = unsigned_div_rem(
-            p1.d11 + p2.d10 + p3.d9 + p4.d8 + p5.d7 + p6.d6 + p7.d5 + p8.d4 + p9.d3 + p10.d2 + p11.d1 + c11,
-            BASE,
-        )
-        let (c13, d21) = unsigned_div_rem(
-            p2.d11 + p3.d10 + p4.d9 + p5.d8 + p6.d7 + p7.d6 + p8.d5 + p9.d4 + p10.d3 + p11.d2 + c12,
-            BASE,
-        )
-        let (c14, d20) = unsigned_div_rem(
-            p3.d11 + p4.d10 + p5.d9 + p6.d8 + p7.d7 + p8.d6 + p9.d5 + p10.d4 + p11.d3 + c13, BASE
-        )
-        let (c15, d19) = unsigned_div_rem(
-            p4.d11 + p5.d10 + p6.d9 + p7.d8 + p8.d7 + p9.d6 + p10.d5 + p11.d4 + c14, BASE
-        )
-        let (c16, d18) = unsigned_div_rem(
-            p5.d11 + p6.d10 + p7.d9 + p8.d8 + p9.d7 + p10.d6 + p11.d5 + c15, BASE
-        )
-        let (c17, d17) = unsigned_div_rem(
-            p6.d11 + p7.d10 + p8.d9 + p9.d8 + p10.d7 + p11.d6 + c16, BASE
-        )
+        let (c12, d12) = unsigned_div_rem(p7.d5 + p8.d4 + p9.d3 + p10.d2 + p11.d1 + c11, BASE)
+        let (c13, d13) = unsigned_div_rem(p8.d5 + p9.d4 + p10.d3 + p11.d2 + c12, BASE)
+        let (c14, d14) = unsigned_div_rem(p9.d5 + p10.d4 + p11.d3 + c13, BASE)
+        let (c15, d15) = unsigned_div_rem(p10.d5 + p11.d4 + c14, BASE)
+        let (c16, d16) = unsigned_div_rem(p11.d5 + c15, BASE)
 
         # TODO: does it need to continue? Should I use BigInt24 for more generality?
         return (
@@ -259,44 +250,6 @@ namespace multi_precision:
             d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10, d11=d11, d12=d12, d13=d13, d14=d14, d15=d15, d16=d16, d17=c16 + c
             ),
         )
-    end
-
-    func multi_precision_mul{range_check_ptr}(x : BigInt6, y : BigInt6) -> (product : BigInt12):
-        alloc_locals
-
-        let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
-        let (c1 : felt, p1 : BigInt6) = mul_digit(x.d1, c0, y)
-        let (c2 : felt, p2 : BigInt6) = mul_digit(x.d2, c1, y)
-        let (c3 : felt, p3 : BigInt6) = mul_digit(x.d3, c2, y)
-        let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
-        let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
-
-        let (product : BigInt12) = sum_products(p0, p1, p2, p3, p4, p5, c5)
-        return (product)
-    end
-
-    func multi_precision_mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : BigInt6) -> (
-        product : BigInt18
-    ):
-        alloc_locals
-
-        let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
-        let (c1 : felt, p1 : BigInt6) = mul_digit(x.d1, c0, y)
-        let (c2 : felt, p2 : BigInt6) = mul_digit(x.d2, c1, y)
-        let (c3 : felt, p3 : BigInt6) = mul_digit(x.d3, c2, y)
-        let (c4 : felt, p4 : BigInt6) = mul_digit(x.d4, c3, y)
-        let (c5 : felt, p5 : BigInt6) = mul_digit(x.d5, c4, y)
-        let (c6 : felt, p6 : BigInt6) = mul_digit(x.d6, c5, y)
-        let (c7 : felt, p7 : BigInt6) = mul_digit(x.d7, c6, y)
-        let (c8 : felt, p8 : BigInt6) = mul_digit(x.d8, c7, y)
-        let (c9 : felt, p9 : BigInt6) = mul_digit(x.d9, c8, y)
-        let (c10 : felt, p10 : BigInt6) = mul_digit(x.d10, c9, y)
-        let (c11 : felt, p11 : BigInt6) = mul_digit(x.d11, c10, y)
-
-        let (product : BigInt18) = sum_products_bigint12(
-            p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, c11
-        )
-        return (product)
     end
 
     # @dev algorithm is twice as efficent as multi-precision multiplication
@@ -540,15 +493,18 @@ namespace multi_precision:
         return (zero, zero)
     end
 
-    func mod_by_power_of_base_bigint12(number : BigInt12, power : felt) -> (result : BigInt12):
-        assert (is_nn_le(power, 11)) = 1
+    func mod_by_power_of_base_bigint12{range_check_ptr}(number : BigInt12, power : felt) -> (
+        result : BigInt12
+    ):
+        let (is_power_nn_and_le_11) = is_nn_le(power, 11)
+        assert is_power_nn_and_le_11 = 1
 
         if power == 0:
             let (result) = big_int_12_zero()
             return (result)
         end
 
-        let result = new BigInt12()
+        let (result : BigInt12) = big_int_12_zero()
 
         # NOTE: This could be a recursion, but perhaps it is more efficient
         # to hard code it like this.
@@ -608,9 +564,9 @@ namespace multi_precision:
 
     # @albert_g takes a BigInt12 with limbs d_0, ..., d_11 and returns the BigInt12 with limbs d_(power), ..., d_11, 0, ..., 0
     # @albert_g NOTE: The function could be written much more succintly with using recursion calls. Instead I wrote it in this "hardcoded" form for efficiency (I understand that nested recursion is quite expensive)
-    func floor_divide_by_power_of_base_bigint12(number : BigInt12, power : felt) -> (
-        shifted_number : BigInt12
-    ):
+    func floor_divide_by_power_of_base_bigint12{range_check_ptr}(
+        number : BigInt12, power : felt
+    ) -> (shifted_number : BigInt12):
         with_attr error_message("`power` should be >=0 and <=12. Provided power = {power}"):
             let (bool) = is_nn_le(power, 12)
             assert bool = 1
@@ -621,12 +577,15 @@ namespace multi_precision:
         end
 
         # Initialize the final BigInt12
-        let shifted_number = big_int_12_zero()
+        let (shifted_number) = big_int_12_zero()
         if power == 12:
             return (shifted_number)
         end
 
-        let (number_memory_location_plus_shift) = number + power
+        # TODO: check that this & operator works as expected
+        let (__fp__, _) = get_fp_and_pc()
+        let memory_ptr : felt* = &number
+        let number_memory_location_plus_shift = memory_ptr + power
 
         assert shifted_number.d0 = [number_memory_location_plus_shift]
         if power == 11:
@@ -682,13 +641,14 @@ namespace multi_precision:
         if power == 1:
             return (shifted_number)
         end
+
+        # This should never be reached
+        return (shifted_number)
     end
 
     func multi_precision_sub_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -> (
         res : BigInt12
     ):
-        # TODO: implement for BigInt12
-
         alloc_locals
 
         let res_0 = x.d0 - y.d0
@@ -697,27 +657,41 @@ namespace multi_precision:
         # Cairo only has <= operator so add one to the left hand side to make <
         # sum = 0 : No Carry
         # sum = -1 : Carry
-        let (has_carry_0) = is_le(res_0 + 1, ZERO)
 
+        let (has_carry_0) = is_le(res_0 + 1, ZERO)
         let res_1 = x.d1 - y.d1 - has_carry_0
 
         let (has_carry_1) = is_le(res_1 + 1, ZERO)
-
         let res_2 = x.d2 - y.d2 - has_carry_1
 
         let (has_carry_2) = is_le(res_2 + 1, ZERO)
-
         let res_3 = x.d3 - y.d3 - has_carry_2
 
         let (has_carry_3) = is_le(res_3 + 1, ZERO)
-
         let res_4 = x.d4 - y.d4 - has_carry_3
 
         let (has_carry_4) = is_le(res_4 + 1, ZERO)
-
         let res_5 = x.d5 - y.d5 - has_carry_4
 
-        let (is_res_gte_zero) = is_nn(res_5)
+        let (has_carry_5) = is_le(res_5 + 1, ZERO)
+        let res_6 = x.d6 - y.d6 - has_carry_5
+
+        let (has_carry_6) = is_le(res_6 + 1, ZERO)
+        let res_7 = x.d7 - y.d7 - has_carry_6
+
+        let (has_carry_7) = is_le(res_7 + 1, ZERO)
+        let res_8 = x.d8 - y.d8 - has_carry_7
+
+        let (has_carry_8) = is_le(res_8 + 1, ZERO)
+        let res_9 = x.d9 - y.d9 - has_carry_8
+
+        let (has_carry_9) = is_le(res_8 + 1, ZERO)
+        let res_10 = x.d10 - y.d10 - has_carry_9
+
+        let (has_carry_10) = is_le(res_10 + 1, ZERO)
+        let res_11 = x.d11 - y.d11 - has_carry_10
+
+        let (is_res_gte_zero) = is_nn(res_11)
 
         # Modulus on negative numbers
         let d0 = (res_0 + has_carry_0 * BASE) * is_res_gte_zero
@@ -725,9 +699,15 @@ namespace multi_precision:
         let d2 = (res_2 + has_carry_2 * BASE) * is_res_gte_zero
         let d3 = (res_3 + has_carry_3 * BASE) * is_res_gte_zero
         let d4 = (res_4 + has_carry_4 * BASE) * is_res_gte_zero
+        let d5 = (res_5 + has_carry_5 * BASE) * is_res_gte_zero
+        let d6 = (res_6 + has_carry_6 * BASE) * is_res_gte_zero
+        let d7 = (res_7 + has_carry_7 * BASE) * is_res_gte_zero
+        let d8 = (res_8 + has_carry_8 * BASE) * is_res_gte_zero
+        let d9 = (res_9 + has_carry_9 * BASE) * is_res_gte_zero
+        let d10 = (res_10 + has_carry_10 * BASE) * is_res_gte_zero
 
         # Underflow  trunaction
-        let trunacted_d5 = res_5 * is_res_gte_zero
+        let trunacted_d11 = res_11 * is_res_gte_zero
 
         return (
             BigInt12(
@@ -736,7 +716,8 @@ namespace multi_precision:
             d2=d2,
             d3=d3,
             d4=d4,
-            d5=trunacted_d5
+            d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10,
+            d11=trunacted_d11
             ),
         )
     end
@@ -744,8 +725,6 @@ namespace multi_precision:
     # @dev determines if x >= y
     # @dev returns 1 if true, 0 if false
     func multi_precision_ge_bigint12{range_check_ptr}(x : BigInt12, y : BigInt12) -> (is_ge : felt):
-        # TODO: adapt to BigInt12
-
         alloc_locals
 
         let (lead_limb_x : felt) = find_lead_limb_index_bigint12(x)
@@ -759,6 +738,36 @@ namespace multi_precision:
 
         if y_strictly_greater == 1:
             return (0)
+        end
+
+        if lead_limb_x == 11:
+            let (limb_11_ge : felt) = is_nn(x.d11 - y.d11)
+            return (limb_11_ge)
+        end
+
+        if lead_limb_x == 10:
+            let (limb_10_ge : felt) = is_nn(x.d10 - y.d10)
+            return (limb_10_ge)
+        end
+
+        if lead_limb_x == 9:
+            let (limb_9_ge : felt) = is_nn(x.d9 - y.d9)
+            return (limb_9_ge)
+        end
+
+        if lead_limb_x == 8:
+            let (limb_8_ge : felt) = is_nn(x.d8 - y.d8)
+            return (limb_8_ge)
+        end
+
+        if lead_limb_x == 7:
+            let (limb_7_ge : felt) = is_nn(x.d7 - y.d7)
+            return (limb_7_ge)
+        end
+
+        if lead_limb_x == 6:
+            let (limb_6_ge : felt) = is_nn(x.d6 - y.d6)
+            return (limb_6_ge)
         end
 
         if lead_limb_x == 5:
@@ -797,40 +806,127 @@ namespace multi_precision:
     # @dev uses is_not_zero, which assumes limb is non-negative
     # @dev returns 0 index even if x is 0
     func find_lead_limb_index_bigint12{range_check_ptr}(x : BigInt12) -> (lead : felt):
-        # TODO: adapt to BigInt12
-
         alloc_locals
 
-        let (index_5_gt_0) = is_not_zero(x.d5)
+        # NOTE: As in other spots, this could be done with recursion but probably it is more efficient as it is now
 
+        let (index_11_gt_0) = is_not_zero(x.d11)
+        if index_11_gt_0 == 1:
+            return (11)
+        end
+
+        let (index_10_gt_0) = is_not_zero(x.d10)
+        if index_10_gt_0 == 1:
+            return (10)
+        end
+
+        let (index_9_gt_0) = is_not_zero(x.d9)
+        if index_9_gt_0 == 1:
+            return (9)
+        end
+
+        let (index_8_gt_0) = is_not_zero(x.d8)
+        if index_8_gt_0 == 1:
+            return (8)
+        end
+
+        let (index_7_gt_0) = is_not_zero(x.d7)
+        if index_7_gt_0 == 1:
+            return (7)
+        end
+
+        let (index_6_gt_0) = is_not_zero(x.d6)
+        if index_6_gt_0 == 1:
+            return (6)
+        end
+
+        let (index_5_gt_0) = is_not_zero(x.d5)
         if index_5_gt_0 == 1:
             return (5)
         end
 
         let (index_4_gt_0) = is_not_zero(x.d4)
-
         if index_4_gt_0 == 1:
             return (4)
         end
 
         let (index_3_gt_0) = is_not_zero(x.d3)
-
         if index_3_gt_0 == 1:
             return (3)
         end
 
         let (index_2_gt_0) = is_not_zero(x.d2)
-
         if index_2_gt_0 == 1:
             return (2)
         end
 
         let (index_1_gt_0) = is_not_zero(x.d1)
-
         if index_1_gt_0 == 1:
             return (1)
         end
 
         return (0)
+    end
+
+    func are_eq_bigint6(num1 : BigInt6, num2 : BigInt6) -> (bool : felt):
+        if num1.d5 != num2.d5:
+            return (0)
+        end
+        if num1.d4 != num2.d4:
+            return (0)
+        end
+        if num1.d3 != num2.d3:
+            return (0)
+        end
+        if num1.d2 != num2.d2:
+            return (0)
+        end
+        if num1.d1 != num2.d1:
+            return (0)
+        end
+        if num1.d0 != num2.d0:
+            return (0)
+        end
+        return (1)
+    end
+
+    func are_eq_bigint12(num1 : BigInt12, num2 : BigInt12) -> (bool : felt):
+        if num1.d11 != num2.d11:
+            return (0)
+        end
+        if num1.d10 != num2.d10:
+            return (0)
+        end
+        if num1.d9 != num2.d9:
+            return (0)
+        end
+        if num1.d8 != num2.d8:
+            return (0)
+        end
+        if num1.d7 != num2.d7:
+            return (0)
+        end
+        if num1.d6 != num2.d6:
+            return (0)
+        end
+        if num1.d5 != num2.d5:
+            return (0)
+        end
+        if num1.d4 != num2.d4:
+            return (0)
+        end
+        if num1.d3 != num2.d3:
+            return (0)
+        end
+        if num1.d2 != num2.d2:
+            return (0)
+        end
+        if num1.d1 != num2.d1:
+            return (0)
+        end
+        if num1.d0 != num2.d0:
+            return (0)
+        end
+        return (1)
     end
 end

@@ -22,6 +22,7 @@ const ZERO = 0
 # @albert_g TODO: if the parameter `modulo` is fixed, then `mu` should be precomputed (e.g. hardcoded) as it
 # is a fixed constant. At some point we should make a leaner version of this function by removing the argument
 # `modulo` and removing the computation of `mu` (as both modulo and mu will be hardcoded in our applications)
+
 func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
     remainder : BigInt6
 ):
@@ -29,15 +30,16 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
 
     # This is only to match the notation of the book
     let x_bigint12 = number
-    let (m_bigint6) = modulo
+    let m_bigint6 = modulo
     let (m_bigint12) = from_bigint6_to_bigint12(modulo)
 
-    let mu = 0
+    # TODO: compute mu
+    let (MU) = big_int_12_zero()
 
     let (q1_bigint12) = get_q1(x_bigint12)
-    let (local q3_bigint12) = get_q3(q1_bigint12, mu, m_bigint6)
+    let (local q3_bigint12) = get_q3(q1_bigint12, MU, m_bigint6)
     let (r1_bigint12) = get_r1(x_bigint12)
-    let (r1_bigint6) = from_bigint12_to_bigint6(r1_bigint6)
+    let (r1_bigint6) = from_bigint12_to_bigint6(r1_bigint12)
     let (r2_bigint12) = get_r2(q3_bigint12, m_bigint6)
 
     let (is_r1_le_r2) = mp.multi_precision_ge_bigint12(r2_bigint12, r1_bigint12)
@@ -50,17 +52,19 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
     return (final_r_bigint6)
 end
 
-func get_q1(x_bigint12 : BigInt12) -> (q1_bigint12 : BigInt12):
+func get_q1{range_check_ptr}(x_bigint12 : BigInt12) -> (q1_bigint12 : BigInt12):
     let (q1_bigint12) = mp.floor_divide_by_power_of_base_bigint12(number=x_bigint12, power=5)
     return (q1_bigint12)
 end
 
-func get_r1(x_bigint12 : BigInt12) -> (r1_bigint12 : BigInt12):
+func get_r1{range_check_ptr}(x_bigint12 : BigInt12) -> (r1_bigint12 : BigInt12):
     let (r1_bigint12) = mp.mod_by_power_of_base_bigint12(x_bigint12, 7)
     return (r1_bigint12)
 end
 
-func get_r2(q3_bigint12, m_bigint6) -> (r2_bigint12 : BigInt12):
+func get_r2{range_check_ptr}(q3_bigint12 : BigInt12, m_bigint6 : BigInt6) -> (
+    r2_bigint12 : BigInt12
+):
     let (q3_times_m_bigint18) = mp.multi_precision_mul_bigint12_by_bigint6(q3_bigint12, m_bigint6)
     # Now we mod `q3_times_m_bigint18` by b**7
     let r2_bigint12 = BigInt12(
@@ -80,14 +84,16 @@ func get_r2(q3_bigint12, m_bigint6) -> (r2_bigint12 : BigInt12):
     return (r2_bigint12)
 end
 
-func get_q3(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (q3_bigint12 : BigInt12):
+func get_q3{range_check_ptr}(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (
+    q3_bigint12 : BigInt12
+):
     # q3 = math.floor(q1 * mu / b^{k+1})
     # TODO: is there some more specialized way to do this
     # We need up to 18 limbs here because we know that m has only the first 6 nonzero limbs
     let (q2_bigint18) = mp.multi_precision_mul_bigint12_by_bigint6(q1_bigint12, m_bigint6)
     # Here we are computing `math.floor(q2_bigint18/ b**7)`
     # NOTE: some math shows that `q2_bigint18` needs at most 14 limbs. Hence the result of the computation uses at most 7 limbs (in particular, it is a coincidence that we are dividing by b**7 and that we end up with 7 nonzero limbs).
-    let (q3_bigint12) = BigInt12(
+    let q3_bigint12 = BigInt12(
         d0=q2_bigint18.d7,
         d1=q2_bigint18.d8,
         d2=q2_bigint18.d9,
@@ -104,11 +110,20 @@ func get_q3(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (q3_b
     return (q3_bigint12)
 end
 
-func _aux_fun_for_barret_reduction_bigint12(r : BigInt12, m : BigInt12) -> (new_r : BigInt12):
-    let (is_r_less_than_m) = is_nn_le(r, m - 1)
-    if is_r_less_than_m == 1:
-        return (r)
+func _aux_fun_for_barret_reduction_bigint12{range_check_ptr}(r : BigInt12, m : BigInt12) -> (
+    new_r : BigInt12
+):
+    alloc_locals
+    # TODO: check if this is the correct way to deal with `range_check_ptr` getting revoked
+    local range_ptr = range_check_ptr
+
+    let (is_r_leq_than_m) = mp.multi_precision_ge_bigint12(m, r)
+    if is_r_leq_than_m == 1:
+        let (is_m_equal_to_r) = mp.are_eq_bigint12(r, m)
+        if is_m_equal_to_r == 0:
+            return (r)
+        end
     end
     let (new_r) = mp.multi_precision_sub_bigint12(r, m)
-    return _aux_fun_for_barret_reduction_bigint12(new_r, m)
+    return _aux_fun_for_barret_reduction_bigint12{range_check_ptr=range_ptr}(new_r, m)
 end
