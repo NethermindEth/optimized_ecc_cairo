@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Union, TypeVar
 
 one_bigint6 = ( 1, 0, 0, 0, 0, 0 )
 
@@ -48,7 +48,75 @@ def G1Point(x, y, z):
     return (split(x), split(y), split(z))
 
 
-def assertG1PointEquals(x, y):
-    assert pack(x[0]) == y[0]
-    assert pack(x[1]) == y[1]
-    assert pack(x[2]) == y[2]
+T_BigInt6 = TypeVar('T_BigInt6', bound="BigInt6")
+IntOrBigInt6 = Union[int, T_BigInt6]
+IntOrTuple = Union[int, tuple]
+class BigInt6:
+    def __init__(self, val : IntOrTuple):
+
+        if isinstance(val, int):
+            parts = split(val)
+            self.d0 = parts[0]
+            self.d1 = parts[1]
+            self.d2 = parts[2]
+            self.d3 = parts[3]
+            self.d4 = parts[4]
+            self.d5 = parts[5]
+        elif isinstance(val, tuple):
+            self.d0 = val[0]
+            self.d1 = val[1]
+            self.d2 = val[2]
+            self.d3 = val[3]
+            self.d4 = val[4]
+            self.d5 = val[5]
+        else:
+            raise TypeError(
+                "Expected an int or tuple, but got object of type {}"
+                .format(type(val))
+            )
+
+    def __str__(self):
+        return f'Bigint6 value is {pack(self)})'
+
+    def __eq__(self, other:  IntOrBigInt6 ) -> bool:
+        if isinstance(other, int):
+            return pack(self) == int
+        elif isinstance(other, BigInt6):
+            return pack(self) == pack(other)
+        else:
+            raise TypeError(
+                "Expected an int or BigInt6, but got object of type {}"
+                .format(type(other))
+            )
+
+    def asTuple(self) -> tuple:
+        return (self.d0, self.d1, self.d2, self.d3, self.d4, self.d5)
+
+T_G1Point = TypeVar('T_G1Point', bound="G1Point")
+IntTuple = (int,int,int)
+BigInt6Tuple = (T_BigInt6, T_BigInt6, T_BigInt6)
+TupleOrG1Point = Union[tuple, T_G1Point]
+class G1Point: 
+    def __init__(self, values: tuple): 
+        self.x = BigInt6(values[0])
+        self.y = BigInt6(values[1])
+        self.z = BigInt6(values[2])
+
+    def __eq__(self, other : TupleOrG1Point) -> bool:
+        if isinstance(other, tuple):
+            return self.x == BigInt6(other[0]) &  self.y == BigInt6(other[1]) & self.z == BigInt6(other[2])
+        elif isinstance(other, tuple):
+            return self.x == other[0] & self.y == other[1] & self.z == other[2]
+        elif isinstance(other, G1Point):
+            return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
+        else:
+            raise TypeError(
+                "Expected an tuple or G1Point, but got object of type {}"
+                .format(type(other))
+            )
+
+    def asTuple(self) -> tuple:
+        return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
+
+    def __str__(self):
+        return f'G1Point coordinates are {pack(self.x)}, {pack(self.y)}, {pack(self.z)})'
