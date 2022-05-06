@@ -34,48 +34,60 @@ func barret_reduction{range_check_ptr}(number : BigInt12, modulo : BigInt6) -> (
 
     let mu = 0
 
-    let (q1_bigint12) = floor_divide_by_power_of_base_bigint12(number=x_bigint12, power=5)
-
-    # TODO: q2 can have more than 2k (i.e. 12) limbs. Need a BigInt18
+    let (q1_bigint12) = get_q1(x_bigint12)
     let (local q3_bigint12) = get_q3(q1_bigint12, mu, m_bigint6)
-
-    let (r1_bigint12) = mod_by_power_of_base_bigint12(x_bigint12, 7)
+    let (r1_bigint12) = get_r1(x_bigint12)
     let (r1_bigint6) = from_bigint12_to_bigint6(r1_bigint6)
-
-    let (m_bigint6) = modulo
-    # TODO: is there a more efficient way to do these two steps?
-    let (q3_times_m_bigint18) = multi_precision_mul_bigint12_by_bigint6(q3_bigint12, m_bigint6)
-
-    let (r2_bigint18) = mod_by_power_of_base_bigint18(q3_times_m_bigint18, 7)
-    # At this point we can be certain that r2 uses at most 7 limbs
-    let (r2_bigint12) = from_bigint18_to_bigint12(r2_bigint18)
+    let (r2_bigint12) = get_r2(q3_bigint12, m_bigint6)
 
     let (is_r1_le_r2) = multi_precision_ge_bigint12(r2_bigint12, r1_bigint12)
-
     if is_r1_le_r2 == 1:
         assert r1_bigint12.d7 = r1_bigint12.d7 + 1
     end
-
-    let (r_bigint6) = multi_precision_sub_bigint12(r1_bigint12, r2_bigint12)
+    let (r_bigint12) = multi_precision_sub_bigint12(r1_bigint12, r2_bigint12)
     let (final_r_bigint12) = _aux_fun_for_barret_reduction_bigint12(r_bigint12, m_bigint12)
     let (final_r_bigint6) = from_bigint12_to_bigint6(final_r_bigint12)
     return (final_r_bigint6)
 end
 
-func get_q3(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (q3_bigint12 : BigInt12):
-    # q3 = math.floor(q1 * mu / b^{k+1})
-    # TODO: is there some more specialized way to do this=
-
-    # We need up to 18 limbs here because we know that m has only the first 6 nonzero limbs
-    let (q2_bigint18) = multi_precision_mul_bigint12_by_bigint6(q1_bigint12, m_bigint6)
-    # Some math shows that `q3` needs at most 7 limbs. Hence we get a BigInt12
-    let (q3_bigint12) = divide_q2_by_b_power_7(q2_bigint18)
-    return (q3_bigint12)
+func get_q1(x_bigint12 : BigInt12) -> (q1_bigint12 : BigInt12):
+    let (q1_bigint12) = floor_divide_by_power_of_base_bigint12(number=x_bigint12, power=5)
+    return (q1_bigint12)
 end
 
-# @albert_g Specialized helper function for the function `get_q3`.
-func divide_q2_by_b_power_7(q2_bigint18 : BigInt18) -> (result : BigInt12):
-    let result = BigInt12(
+func get_r1(x_bigint12 : BigInt12) -> (r1_bigint12 : BigInt12):
+    let (r1_bigint12) = mod_by_power_of_base_bigint12(x_bigint12, 7)
+    return (r1_bigint12)
+end
+
+func get_r2(q3_bigint12, m_bigint6) -> (r2_bigint12 : BigInt12):
+    let (q3_times_m_bigint18) = multi_precision_mul_bigint12_by_bigint6(q3_bigint12, m_bigint6)
+    # Now we mod `q3_times_m_bigint18` by b**7
+    let r2_bigint12 = BigInt12(
+        d0=q3_times_m_bigint18.d0,
+        d1=q3_times_m_bigint18.d1,
+        d2=q3_times_m_bigint18.d2,
+        d3=q3_times_m_bigint18.d3,
+        d4=q3_times_m_bigint18.d4,
+        d5=q3_times_m_bigint18.d5,
+        d6=q3_times_m_bigint18.d6,
+        d7=0,
+        d8=0,
+        d9=0,
+        d10=0,
+        d11=0,
+    )
+    return (r2_bigint12)
+end
+
+func get_q3(q1_bigint12 : BigInt12, mu : BigInt12, m_bigint6 : BigInt6) -> (q3_bigint12 : BigInt12):
+    # q3 = math.floor(q1 * mu / b^{k+1})
+    # TODO: is there some more specialized way to do this
+    # We need up to 18 limbs here because we know that m has only the first 6 nonzero limbs
+    let (q2_bigint18) = multi_precision_mul_bigint12_by_bigint6(q1_bigint12, m_bigint6)
+    # Here we are computing `math.floor(q2_bigint18/ b**7)`
+    # NOTE: some math shows that `q2_bigint18` needs at most 14 limbs. Hence the result of the computation uses at most 7 limbs (in particular, it is a coincidence that we are dividing by b**7 and that we end up with 7 nonzero limbs).
+    let (q3_bigint12) = BigInt12(
         d0=q2_bigint18.d7,
         d1=q2_bigint18.d8,
         d2=q2_bigint18.d9,
@@ -89,7 +101,16 @@ func divide_q2_by_b_power_7(q2_bigint18 : BigInt18) -> (result : BigInt12):
         d10=0,
         d11=0,
     )
-    return (result)
+    return (q3_bigint12)
+end
+
+func _aux_fun_for_barret_reduction_bigint12(r : BigInt12, m : BigInt12) -> (new_r : BigInt12):
+    let (is_r_less_than_m) = is_nn_le(r, m - 1)
+    if is_r_less_than_m == 1:
+        return (r)
+    end
+    let (new_r) = multi_precision_sub_bigint12(r, m)
+    return _aux_fun_for_barret_reduction_bigint12(new_r, m)
 end
 
 func multi_precision_mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : BigInt6) -> (
@@ -107,24 +128,6 @@ func multi_precision_mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : 
 
     let (product : BigInt12) = sum_products_bigint12(p0, p1, p2, p3, p4, p5, c5)
     return (product)
-end
-
-func _aux_fun_for_barret_reduction_bigint6(r : BigInt6, m : BigInt6) -> (new_r : BigInt6):
-    let (aux_bool) = is_nn_le(r, m - 1)
-    if aux_bool == 1:
-        return (r)
-    end
-    let (new_r) = mp.multi_precision_sub(r, m)
-    return _aux_fun_for_barret_reduction_bigint6(new_r, m)
-end
-
-func _aux_fun_for_barret_reduction_bigint12(r : BigInt12, m : BigInt12) -> (new_r : BigInt12):
-    let (aux_bool) = is_nn_le(r, m - 1)
-    if aux_bool == 1:
-        return (r)
-    end
-    let (new_r) = multi_precision_sub_bigint12(r, m)
-    return _aux_fun_for_barret_reduction_bigint12(new_r, m)
 end
 
 func mod_by_power_of_base_bigint12(number : BigInt12, power : felt) -> (result : BigInt12):
