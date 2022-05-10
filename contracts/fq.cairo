@@ -1,7 +1,7 @@
 %lang starknet
 %builtins range_check bitwise
 
-from lib.fq import fq_add, fq_sub, fq_mul, fq_square
+from lib.fq import fq
 from lib.BigInt6 import BigInt6
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
@@ -11,7 +11,7 @@ func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt
     res : BigInt6
 ):
     alloc_locals
-    let (res : BigInt6) = fq_add(x, y)
+    let (res : BigInt6) = fq.add(x, y)
 
     return (res)
 end
@@ -22,7 +22,7 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt
 ):
     alloc_locals
 
-    let (res : BigInt6) = fq_sub(x, y)
+    let (res : BigInt6) = fq.sub(x, y)
 
     return (res)
 end
@@ -33,7 +33,7 @@ func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt
 ):
     alloc_locals
 
-    let (res : BigInt6) = fq_mul(x, y)
+    let (res : BigInt6) = fq.mul(x, y)
 
     return (res)
 end
@@ -42,7 +42,7 @@ end
 func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (res : BigInt6):
     alloc_locals
 
-    let (res : BigInt6) = fq_square(x)
+    let (res : BigInt6) = fq.square(x)
 
     return (res)
 end

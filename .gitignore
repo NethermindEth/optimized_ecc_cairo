@@ -2,3 +2,4 @@
 /artifacts/
 /.hypothesis/
 /.pytest_cache/
+node.json
