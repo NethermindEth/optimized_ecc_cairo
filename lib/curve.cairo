@@ -13,3 +13,7 @@ const P5 = 1873798617647539866
 func get_modulus{range_check_ptr}() -> (mod : BigInt6):
     return (mod=BigInt6(d0=P0, d1=P1, d2=P2, d3=P3, d4=P4, d5=P5))
 end
+
+# Modulus coefficients for fq2
+const fq2_c0 = 1
+const fq2_c1 = 0
