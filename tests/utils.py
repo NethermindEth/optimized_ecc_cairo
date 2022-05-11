@@ -7,7 +7,9 @@ max_base_bigint6_sum =( 2 ** 384 ) - 1
 base = 2 ** 64
 
 field_modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-                
+
+max_felt = 2**241
+
 def split(num: int, length:int=6) -> List[int]:
     BASE = 2 ** 64
     a = []
@@ -26,13 +28,14 @@ def unsafe_split(num: int, length:int=6) -> List[int]:
         a.append(residue)
     return tuple(a),num
 
-
 def pack(z):
 
     limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5
 
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
+def packFQ2(z):
+    return (pack(z.e0), pack(z.e1))
 
 def pack12(z):
     limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5, z.d6, z.d7, z.d8, z.d9, z.d10, z.d11

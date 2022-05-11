@@ -1,5 +1,3 @@
-"""contract.cairo test file."""
-
 import pytest
 from utils import split,  pack, field_modulus
 from math import sqrt
