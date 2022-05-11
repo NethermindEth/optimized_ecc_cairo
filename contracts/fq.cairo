@@ -2,7 +2,7 @@
 %builtins range_check bitwise
 
 from lib.fq import fq
-from lib.BigInt6 import BigInt6
+from lib.BigInt6 import BigInt6, BigInt12
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 # Returns the current balance.
@@ -44,5 +44,13 @@ func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (res
 
     let (res : BigInt6) = fq.square(x)
 
+    return (res)
+end
+
+@view 
+func reduce{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: BigInt12) -> (res: BigInt6):
+    
+    let (res: BigInt6) = fq.reduce(x)
+    
     return (res)
 end

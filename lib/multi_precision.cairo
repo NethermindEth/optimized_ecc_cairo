@@ -507,8 +507,7 @@ end
 # @dev divide one BigInt6 by another BigInt6 that have the same maximum limb
 # @dev the initial call should assign quotient to 0
 # @dev does not check if y is 0
-func divide_same_limb{range_check_ptr}(x : BigInt6, y : BigInt6, quotient : felt) -> (
-        r : BigInt6, q : felt):
+func divide_same_limb{range_check_ptr}(x : BigInt6, y : BigInt6, quotient : felt) -> (r : BigInt6, q : felt):
     let (y_gt_x) = multi_precision.gt(y, x)
     if y_gt_x == 1:
         return (x, quotient)

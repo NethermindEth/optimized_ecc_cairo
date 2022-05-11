@@ -1,6 +1,7 @@
-from lib.BigInt6 import BigInt6, BigInt12, BASE, nondet_bigint6
+from lib.BigInt6 import BigInt6, BigInt12, BASE, nondet_bigint6, big_int_6_zero
 from lib.multi_precision import multi_precision
 from lib.curve import get_modulus
+from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 namespace fq:
@@ -69,18 +70,11 @@ namespace fq:
 
         return (reduced)
     end
-end
 
-func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
-    %{
-        modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-        limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5, ids.x.d6, ids.x.d7, ids.x.d8, ids.x.d9, ids.x.d10, ids.x.d11
-        packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
-        value = reduced = packed % modulus
-    %}
-
-    let (reduced : BigInt6) = nondet_bigint6()
-    return (reduced)
+    func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
+        let (res) = barret_reduction(x)
+        return (res)
+    end
 end
 
 func reduce_bigint6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
@@ -94,3 +88,15 @@ func reduce_bigint6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
     let (reduced : BigInt6) = nondet_bigint6()
     return (reduced)
 end
+
+# func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
+#     %{
+#         modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+#         limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5, ids.x.d6, ids.x.d7, ids.x.d8, ids.x.d9, ids.x.d10, ids.x.d11
+#         packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+#         value = reduced = packed % modulus
+#     %}
+#
+#     let (reduced : BigInt6) = nondet_bigint6()
+#     return (reduced)
+# end

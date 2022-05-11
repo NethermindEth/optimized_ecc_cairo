@@ -5,13 +5,14 @@ import pytest
 from starkware.starknet.testing.starknet import Starknet
 from starkware.starknet.compiler.compile import compile_starknet_files
 
-one_bigint6 = ( 1, 0, 0, 0, 0, 0 )
+one_bigint6 = (1, 0, 0, 0, 0, 0)
 
-max_base_bigint6 = (2 ** 64 - 1, 0, 0, 0, 0, 0)
+max_base_bigint6 = (2**64 - 1, 0, 0, 0, 0, 0)
 max_base_bigint6_sum = 2 ** (64 * 5)
 
+
 def split(num: int) -> List[int]:
-    BASE = 2 ** 64
+    BASE = 2**64
     a = ()
     for _ in range(6):
         num, residue = divmod(num, BASE)
@@ -28,6 +29,7 @@ def pack(z):
 
 
 FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
+BARRET_ALGORITHM_CONTRACT = os.path.join("contracts", "barret_algorithm.cairo")
 
 
 @pytest.fixture(scope="module")
@@ -43,11 +45,17 @@ async def starknet_factory():
 
 @pytest.fixture(scope="module")
 async def fq_factory(starknet_factory):
-    
+
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def= compile_starknet_files(files=[FQ_CONTRACT], disable_hint_validation=True)
+    contract_def = compile_starknet_files(
+        files=[FQ_CONTRACT], disable_hint_validation=True
+    )
     fq_contract = await starknet.deploy(contract_def=contract_def)
 
     return fq_contract
+
+
+
+
