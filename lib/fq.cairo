@@ -29,19 +29,19 @@ namespace fq:
 
         let (is_mod_gt_sum : felt) = multi_precision.gt(mod, sum)
 
-        # %{ print("sum d0 " + str(ids.sum.d0)) %}
-        # %{ print("sum d1 " + str(ids.sum.d1)) %}
-        # %{ print("sum d2 " + str(ids.sum.d2)) %}
-        # %{ print("sum d3 " + str(ids.sum.d3)) %}
-        # %{ print("sum d4 " + str(ids.sum.d4)) %}
-        # %{ print("sum d5 " + str(ids.sum.d5)) %}
+        %{ print("sum d0 " + str(ids.sum.d0)) %}
+        %{ print("sum d1 " + str(ids.sum.d1)) %}
+        %{ print("sum d2 " + str(ids.sum.d2)) %}
+        %{ print("sum d3 " + str(ids.sum.d3)) %}
+        %{ print("sum d4 " + str(ids.sum.d4)) %}
+        %{ print("sum d5 " + str(ids.sum.d5)) %}
 
         if is_mod_gt_sum == 1:
-            # %{ print("mod > sum") %}
+            %{ print("mod > sum") %}
             return (sum)
         end
 
-        # %{ print("mod < sum") %}
+        %{ print("mod < sum") %}
         let (_, sum_mod : BigInt6) = multi_precision.div(sum, mod)
 
         return (sum_mod)
@@ -74,6 +74,7 @@ namespace fq:
         return (reduced)
     end
 
+
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (product : BigInt6):
         let (res : BigInt12) = multi_precision.square(x)
         let (reduced : BigInt6) = reduce(res)
@@ -100,3 +101,4 @@ end
 #     let (reduced : BigInt6) = nondet_bigint6()
 #     return (reduced)
 # end
+
