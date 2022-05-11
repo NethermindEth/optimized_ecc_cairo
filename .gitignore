@@ -2,4 +2,5 @@
 /artifacts/
 /.hypothesis/
 /.pytest_cache/
+.gitignore
 node.json
