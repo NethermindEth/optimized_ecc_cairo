@@ -97,6 +97,20 @@ func big_int_12_zero() -> (res : BigInt12):
     )
 end
 
+
+func big_int_6_zero() -> (res : BigInt6):
+    return (
+        res=BigInt6(
+        d0=0,
+        d1=0,
+        d2=0,
+        d3=0,
+        d4=0,
+        d5=0,
+        ),
+    )
+end
+
 func assert_bigint_is_equal(x : BigInt6, y : BigInt6):
     assert x.d0 = y.d0
     assert x.d1 = y.d1
