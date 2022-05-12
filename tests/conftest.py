@@ -29,6 +29,7 @@ def pack(z):
 
 
 FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
+FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")
 BARRET_ALGORITHM_CONTRACT = os.path.join("contracts", "barret_algorithm.cairo")
 
 
@@ -51,6 +52,19 @@ async def fq_factory(starknet_factory):
     # Deploy the account contract
     contract_def = compile_starknet_files(
         files=[FQ_CONTRACT], disable_hint_validation=True
+    )
+    fq_contract = await starknet.deploy(contract_def=contract_def)
+
+    return fq_contract
+
+@pytest.fixture(scope="module")
+async def fq2_factory(starknet_factory):
+
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def = compile_starknet_files(
+        files=[FQ2_CONTRACT], disable_hint_validation=True
     )
     fq_contract = await starknet.deploy(contract_def=contract_def)
 

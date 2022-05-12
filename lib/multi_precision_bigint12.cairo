@@ -2,27 +2,22 @@
 # @dev Some of these functions are only used within Barret's algorithm at the moment
 
 from lib.BigInt6 import (
-    BigInt12,
-    BigInt6,
-    from_bigint12_to_bigint6,
-    from_bigint6_to_bigint12,
-    BigInt18,
-    BASE,
-    big_int_12_zero,
-)
+    BigInt12, BigInt6, from_bigint12_to_bigint6, from_bigint6_to_bigint12, BigInt18, BASE,
+    big_int_12_zero)
 from lib.multi_precision import multi_precision as mp
 from lib.multi_precision import mul_digit
 from starkware.cairo.common.math_cmp import is_le, is_nn, is_not_zero, is_nn_le
 from starkware.cairo.common.math import unsigned_div_rem
-
+from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.bitwise import bitwise_and
 const ZERO = 0
+const MASK = 2 ** 64 - 1
 
 # Public namespace for BigInt12 multi_precision math
 namespace multi_precision_bigint12:
     # @dev Multiplies a BigInt12 by a BigInt6. Used in Barret's algorithm
     func mul_bigint12_by_bigint6{range_check_ptr}(x : BigInt12, y : BigInt6) -> (
-        product : BigInt18
-    ):
+            product : BigInt18):
         alloc_locals
 
         let (c0 : felt, p0 : BigInt6) = mul_digit(x.d0, 0, y)
@@ -39,8 +34,7 @@ namespace multi_precision_bigint12:
         let (c11 : felt, p11 : BigInt6) = mul_digit(x.d11, c10, y)
 
         let (product : BigInt18) = sum_products_bigint12(
-            p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, c11
-        )
+            p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, c11)
         return (product)
     end
 
@@ -112,16 +106,14 @@ namespace multi_precision_bigint12:
             d4=d4,
             d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10,
             d11=trunacted_d11
-            ),
-        )
+            ))
     end
 
     # @dev takes a BigInt12 with limbs d_0, ..., d_11 and returns the BigInt12 with limbs d_(power), ..., d_11, 0, ..., 0
     # @dev This is equivalent to computing `math.floor(number / BASE**power)
     # @albert_g NOTE: The function is written in this "hardcoded" form for efficiency (otherwise we could use recursion or pointers in some more elegant way TODO: check if we want to do the latter)
     func floor_divide_by_power_of_base_bigint12{range_check_ptr}(
-        number : BigInt12, power : felt
-    ) -> (shifted_number : BigInt12):
+            number : BigInt12, power : felt) -> (shifted_number : BigInt12):
         with_attr error_message("`power` should be >=0 and <=12. Provided power = {power}"):
             let (bool) = is_nn_le(power, 12)
             assert bool = 1
@@ -151,8 +143,7 @@ namespace multi_precision_bigint12:
                     d8=number.d9,
                     d9=number.d10,
                     d10=number.d11,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 2:
@@ -168,8 +159,7 @@ namespace multi_precision_bigint12:
                     d8=number.d10,
                     d9=number.d11,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 3:
@@ -185,8 +175,7 @@ namespace multi_precision_bigint12:
                     d8=number.d11,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 4:
@@ -202,8 +191,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 5:
@@ -219,8 +207,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 6:
@@ -236,8 +223,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 7:
@@ -253,8 +239,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 8:
@@ -270,8 +255,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 9:
@@ -287,8 +271,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 10:
@@ -304,15 +287,13 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
 
             # Case `power = 11`
             let shifted_number = BigInt12(
-                d0=number.d11, d1=0, d2=0, d3=0, d4=0, d5=0, d6=0, d7=0, d8=0, d9=0, d10=0, d11=0
-            )
+                d0=number.d11, d1=0, d2=0, d3=0, d4=0, d5=0, d6=0, d7=0, d8=0, d9=0, d10=0, d11=0)
         end
         return (shifted_number)
     end
@@ -548,8 +529,7 @@ namespace multi_precision_bigint12:
 
     # @dev This is an auxiliary function used in Barret's algorithm. Likely to be merged with `floor_divide_by_power_of_base_bigint12`
     func mult_by_power_of_base_bigint12{range_check_ptr}(number : BigInt12, power : felt) -> (
-        shifted_number : BigInt12
-    ):
+            shifted_number : BigInt12):
         with_attr error_message("`power` should be >=0 and <=12. Provided power = {power}"):
             # @dev Placeholder requirement
             let (bool) = is_nn_le(power, 6)
@@ -575,8 +555,7 @@ namespace multi_precision_bigint12:
                     d8=number.d2,
                     d9=number.d3,
                     d10=number.d4,
-                    d11=number.d5,
-                )
+                    d11=number.d5)
                 return (shifted_number)
             end
 
@@ -593,8 +572,7 @@ namespace multi_precision_bigint12:
                     d8=number.d3,
                     d9=number.d4,
                     d10=number.d5,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
 
@@ -611,8 +589,7 @@ namespace multi_precision_bigint12:
                     d8=number.d4,
                     d9=number.d5,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
 
@@ -629,8 +606,7 @@ namespace multi_precision_bigint12:
                     d8=number.d5,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
 
@@ -647,8 +623,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             if power == 1:
@@ -664,8 +639,7 @@ namespace multi_precision_bigint12:
                     d8=0,
                     d9=0,
                     d10=0,
-                    d11=0,
-                )
+                    d11=0)
                 return (shifted_number)
             end
             return (number)
@@ -674,11 +648,9 @@ namespace multi_precision_bigint12:
 
     # @dev Mods a BigInt12 by a power of BASE
     func mod_by_power_of_base_bigint12{range_check_ptr}(number : BigInt12, power : felt) -> (
-        result : BigInt12
-    ):
+            result : BigInt12):
         let (is_power_nn_and_le_11) = is_nn_le(power, 11)
         assert is_power_nn_and_le_11 = 1
-        
 
         if power == 0:
             let (result) = big_int_12_zero()
@@ -687,80 +659,293 @@ namespace multi_precision_bigint12:
 
         # NOTE: Hardcoded the cases for efficiency
         if power == 1:
-            let result = BigInt12(d0 =number.d0, d1=0,  d2=0, d3=0,d4=0, d5=0, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0, d1=0, d2=0, d3=0, d4=0, d5=0, d6=0, d7=0, d8=0, d9=0, d10=0, d11=0)
             return (result)
         end
 
         if power == 2:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=0, d3=0,d4=0, d5=0, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=0,
+                d3=0,
+                d4=0,
+                d5=0,
+                d6=0,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 3:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=0, d4=0, d5=0, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=0,
+                d4=0,
+                d5=0,
+                d6=0,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 4:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=0, d5=0, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=0,
+                d5=0,
+                d6=0,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 5:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=0, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=0,
+                d6=0,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 6:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=0, d7=0, d8=0, d9=0,d10= 0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=0,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 7:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=number.d6, d7=0, d8=0, d9=0, d10=0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=number.d6,
+                d7=0,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 8:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=number.d5, d7=number.d7, d8=0, d9=0, d10=0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=number.d5,
+                d7=number.d7,
+                d8=0,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 9:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=number.d5, d7=number.d7, d8=number.d8, d9=0, d10=0,d11= 0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=number.d5,
+                d7=number.d7,
+                d8=number.d8,
+                d9=0,
+                d10=0,
+                d11=0)
             return (result)
         end
 
         if power == 10:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=number.d5, d7=number.d7, d8=number.d8, d9=number.d9, d10=0, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=number.d5,
+                d7=number.d7,
+                d8=number.d8,
+                d9=number.d9,
+                d10=0,
+                d11=0)
             return (result)
         end
-        
+
         if power == 11:
-            let result = BigInt12(d0 =number.d0, d1=number.d1, d2=number.d2, d3=number.d3, d4=number.d4, d5=number.d5, d6=number.d5, d7=number.d7, d8=number.d8, d9=number.d9, d10=number.d10, d11=0)
+            let result = BigInt12(
+                d0=number.d0,
+                d1=number.d1,
+                d2=number.d2,
+                d3=number.d3,
+                d4=number.d4,
+                d5=number.d5,
+                d6=number.d5,
+                d7=number.d7,
+                d8=number.d8,
+                d9=number.d9,
+                d10=number.d10,
+                d11=0)
             return (result)
         end
         # power == 12: nothing changes
         return (number)
     end
+
+    func scalar_mul{range_check_ptr}(scalar : felt, x : BigInt12) -> (product : BigInt12):
+        alloc_locals
+        let res : BigInt12 = BigInt12(
+            d0=scalar * x.d0,
+            d1=scalar * x.d1,
+            d2=scalar * x.d2,
+            d3=scalar * x.d3,
+            d4=scalar * x.d4,
+            d5=scalar * x.d5,
+            d6=scalar * x.d6,
+            d7=scalar * x.d7,
+            d8=scalar * x.d8,
+            d9=scalar * x.d9,
+            d10=scalar * x.d10,
+            d11=scalar * x.d11)
+
+        return (res)
+    end
+
+    func add_bigint12{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : BigInt12, y : BigInt12) -> (res : BigInt12):
+        alloc_locals
+
+        let res_0 = x.d0 + y.d0
+
+        # If x + y = sum, sum >= BASE then remainder
+        # sum = 2^64 - 1 : No Remainder
+        # sum = 2^64 : Remainder
+        let (has_remainder_0) = is_le(BASE, res_0)
+
+        let res_1 = x.d1 + y.d1 + has_remainder_0
+
+        let (has_remainder_1) = is_le(BASE, res_1)
+
+        let res_2 = x.d2 + y.d2 + has_remainder_1
+
+        let (has_remainder_2) = is_le(BASE, res_2)
+
+        let res_3 = x.d3 + y.d3 + has_remainder_2
+
+        let (has_remainder_3) = is_le(BASE, res_3)
+
+        let res_4 = x.d4 + y.d4 + has_remainder_3
+
+        let (has_remainder_4) = is_le(BASE, res_4)
+
+        let res_5 = x.d5 + y.d5 + has_remainder_4
+
+        let (has_remainder_5) = is_le(BASE, res_5)
+
+        let res_6 = x.d6 + y.d6 + has_remainder_5
+
+        let (has_remainder_6) = is_le(BASE, res_6)
+
+        let res_7 = x.d7 + y.d7 + has_remainder_6
+
+        let (has_remainder_7) = is_le(BASE, res_6)
+
+        let res_8 = x.d8 + y.d8 + has_remainder_7
+
+        let (has_remainder_8) = is_le(BASE, res_8)
+
+        let res_9 = x.d9 + y.d9 + has_remainder_8
+
+        let (has_remainder_9) = is_le(BASE, res_9)
+
+        let res_10 = x.d10 + y.d10 + has_remainder_9
+
+        let (has_remainder_10) = is_le(BASE, res_10)
+
+        let res_11 = x.d11 + y.d11 + has_remainder_10
+
+        # Overflow trunaction
+        let (d0) = bitwise_and(res_0, MASK)
+        let (d1) = bitwise_and(res_1, MASK)
+        let (d2) = bitwise_and(res_2, MASK)
+        let (d3) = bitwise_and(res_3, MASK)
+        let (d4) = bitwise_and(res_4, MASK)
+        let (d5) = bitwise_and(res_5, MASK)
+        let (d6) = bitwise_and(res_6, MASK)
+        let (d7) = bitwise_and(res_7, MASK)
+        let (d8) = bitwise_and(res_8, MASK)
+        let (d9) = bitwise_and(res_9, MASK)
+        let (d10) = bitwise_and(res_10, MASK)
+        let (trunacted_d11) = bitwise_and(res_11, MASK)
+
+        return (
+            BigInt12(
+            d0=d0,
+            d1=d1,
+            d2=d2,
+            d3=d3,
+            d4=d4,
+            d5=d5,
+            d6=d6,
+            d7=d7,
+            d8=d8,
+            d9=d9,
+            d10=d10,
+            d11=trunacted_d11
+            ))
+    end
 end
 
 # @dev internal
 func sum_products_bigint12{range_check_ptr}(
-    p0 : BigInt6,
-    p1 : BigInt6,
-    p2 : BigInt6,
-    p3 : BigInt6,
-    p4 : BigInt6,
-    p5 : BigInt6,
-    p6 : BigInt6,
-    p7 : BigInt6,
-    p8 : BigInt6,
-    p9 : BigInt6,
-    p10 : BigInt6,
-    p11 : BigInt6,
-    c : felt,
-) -> (sum : BigInt18):
+        p0 : BigInt6, p1 : BigInt6, p2 : BigInt6, p3 : BigInt6, p4 : BigInt6, p5 : BigInt6,
+        p6 : BigInt6, p7 : BigInt6, p8 : BigInt6, p9 : BigInt6, p10 : BigInt6, p11 : BigInt6,
+        c : felt) -> (sum : BigInt18):
     let (sum_zero) = big_int_12_zero()
 
     let (c0, d0) = unsigned_div_rem(p0.d0, BASE)
@@ -785,8 +970,7 @@ func sum_products_bigint12{range_check_ptr}(
     return (
         sum=BigInt18(
         d0=d0, d1=d1, d2=d2, d3=d3, d4=d4, d5=d5, d6=d6, d7=d7, d8=d8, d9=d9, d10=d10, d11=d11, d12=d12, d13=d13, d14=d14, d15=d15, d16=d16, d17=c16 + c
-        ),
-    )
+        ))
 end
 
 # @dev uses is_not_zero, which assumes limb is non-negative
