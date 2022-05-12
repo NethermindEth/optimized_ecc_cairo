@@ -28,7 +28,7 @@ def unsafe_split(num: int, length:int=6) -> List[int]:
     for _ in range(length):
         num, residue = divmod(num, BASE)
         a.append(residue)
-    return tuple(a),num
+    return tuple(a), num
 
 
 def pack(z):

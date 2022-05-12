@@ -123,6 +123,6 @@ async def test_barret_reduction_specific_number(fq_factory):
     msg = f"Input number: {number}\nSplit input number: {split(number, 12)}\nResult: {execution_info.result[0]}\n"
     print(msg)
     result = pack(execution_info.result[0])
-    assert result == number %field_modulus
+    assert result == number % field_modulus
 
 
