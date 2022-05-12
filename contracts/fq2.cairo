@@ -34,3 +34,13 @@ func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : fq
 
     return (res)
 end
+
+@view
+func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : fq2.FQ2, y : fq2.FQ2) -> (
+        res : fq2.FQ2):
+    alloc_locals
+
+    let (res : fq2.FQ2) = fq2.mul(x, y)
+
+    return (res)
+end

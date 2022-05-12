@@ -857,7 +857,7 @@ namespace multi_precision_bigint12:
     end
 
     func add_bigint12{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-            x : BigInt12, y : BigInt12) -> (res : BigInt6):
+            x : BigInt12, y : BigInt12) -> (res : BigInt12):
         alloc_locals
 
         let res_0 = x.d0 + y.d0
@@ -924,7 +924,7 @@ namespace multi_precision_bigint12:
         let (trunacted_d11) = bitwise_and(res_11, MASK)
 
         return (
-            BigInt6(
+            BigInt12(
             d0=d0,
             d1=d1,
             d2=d2,

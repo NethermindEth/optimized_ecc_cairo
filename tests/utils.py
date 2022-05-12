@@ -20,8 +20,8 @@ def split(num: int, length:int=6) -> List[int]:
     assert num == 0
     return tuple(a)
 
-                
-
+def splitFQ2(z):
+    return (split(z[0]), split(z[1]))
 
 # Not checking for num = 0 
 def unsafe_split(num: int, length:int=6) -> List[int]:

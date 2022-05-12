@@ -1,5 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.BigInt6 import BigInt6
+from lib.BigInt6 import BigInt6, BigInt12
 from lib.fq import fq
 from lib.multi_precision import multi_precision as mp
 from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
@@ -40,6 +40,7 @@ namespace fq2:
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (product : FQ2):
+        alloc_locals
         let (first_term : BigInt12) = mp.mul(x.e0, y.e0)
 
         let (b_0_1 : BigInt12) = mp.mul(x.e0, y.e1)
@@ -56,6 +57,6 @@ namespace fq2:
 
         let (e0) = fq.reduce(unreduced_e0)
         let (e1) = fq.reduce(unreduced_e1)
-        return (FQ2=(e0=e0, e1=e1))
+        return (FQ2(e0=e0, e1=e1))
     end
 end
