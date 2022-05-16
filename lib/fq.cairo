@@ -1,4 +1,6 @@
-from lib.BigInt6 import BigInt6, BigInt12, BASE, nondet_bigint6, big_int_6_zero
+from lib.BigInt6 import (
+    BigInt6, BigInt12, BASE, nondet_bigint6, big_int_6_zero, big_int_6_one,
+    from_bigint6_to_bigint12, is_equal)
 from lib.multi_precision import multi_precision
 from lib.curve import get_modulus
 from lib.barret_algorithm import barret_reduction
@@ -71,6 +73,22 @@ namespace fq:
         return (reduced)
     end
 
+    # finds x in a x ≅ 1 (mod m)
+    func inverse{range_check_ptr}(a : BigInt6, m : BigInt6) -> (res : BigInt6):
+        alloc_locals
+
+        if a == 0:
+            return (BigInt6(d0=0, d1=0, d2=0, d3=0, d4=0, d5=0))
+        end
+
+        let (x : BigInt6) = big_int_6_zero()
+        let (y : BigInt6) = big_int_6_one()
+
+        let (inv : BigInt6) = inverse_inner(a, m, x, y)
+
+        return (inv)
+    end
+
     func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
         %{
             modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
@@ -94,4 +112,26 @@ func reduce_bigint6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
 
     let (reduced : BigInt6) = nondet_bigint6()
     return (reduced)
+end
+
+func inverse_inner{range_check_ptr}(a : BigInt6, m : BigInt6, x : BigInt6, y : BigInt6) -> (
+        res : BigInt6):
+    alloc_locals
+
+    let (one : BigInt6) = big_int_6_one()
+
+    let (a_eq_one : felt) = is_equal(a, one)
+    if a_eq_one == 1:
+        return (x)
+    end
+
+    let (q : BigInt6, _) = multi_precision.div(a, m)
+    let (a_as_bigint12 : BigInt12) = from_bigint6_to_bigint12(a)
+    let (a_mod_m : BigInt6) = fq.reduce(a_as_bigint12)
+
+    let (q_mul_y : BigInt12) = multi_precision.mul(q, y)
+    let (new_y : BigInt6) = multi_precision.sub(x, q_mul_y)
+
+    let (res : BigInt6) = inverse_inner(m, a_mod_m, m, new_y)
+    return (res)
 end
