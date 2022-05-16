@@ -68,7 +68,8 @@ async def g1_factory(starknet_factory):
     g1_contract = await starknet.deploy(contract_def=contract_def)
 
     return g1_contract
-    
+
+@pytest.fixture(scope="module")
 async def fq2_factory(starknet_factory):
 
     starknet = starknet_factory
