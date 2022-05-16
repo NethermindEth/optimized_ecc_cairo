@@ -130,7 +130,8 @@ func inverse_inner{range_check_ptr}(a : BigInt6, m : BigInt6, x : BigInt6, y : B
     let (a_mod_m : BigInt6) = fq.reduce(a_as_bigint12)
 
     let (q_mul_y : BigInt12) = multi_precision.mul(q, y)
-    let (new_y : BigInt6) = multi_precision.sub(x, q_mul_y)
+    let (reduced : BigInt6) = fq.reduce(q_mul_y)
+    let (new_y : BigInt6) = multi_precision.sub(x, reduced)
 
     let (res : BigInt6) = inverse_inner(m, a_mod_m, m, new_y)
     return (res)

@@ -1,10 +1,9 @@
 import pytest
+from utils import split, pack, field_modulus
 from utils import (
     split,
-    packEnum,
     pack,
     pack12,
-    max_base_bigint6_sum,
     max_base_bigint12_sum,
     field_modulus,
 )
