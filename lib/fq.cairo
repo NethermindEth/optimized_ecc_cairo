@@ -1,71 +1,111 @@
-from lib.BigInt6 import BigInt6, BigInt12, BASE, nondet_bigint6
-from lib.multi_precision import (
-    multi_precision_add,
-    multi_precision_sub,
-    multi_precision_gt,
-    multi_precision_ge,
-    divide_same_limb,
-    multi_precision_mul,
-    multi_precision_square,
-)
+from lib.BigInt6 import (
+    BigInt6, BigInt12, BASE, nondet_bigint6, big_int_6_zero, big_int_6_one,
+    from_bigint6_to_bigint12, is_equal)
+from lib.multi_precision import multi_precision
+from lib.curve import get_modulus
+from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
-# Default modulus is field modulus for bls12-381 elliptic curve.
-# decimal p = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-const P0 = 13402431016077863595
-const P1 = 2210141511517208575
-const P2 = 7435674573564081700
-const P3 = 7239337960414712511
-const P4 = 5412103778470702295
-const P5 = 1873798617647539866
+namespace fq:
+    func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
+            sum_mod : BigInt6):
+        alloc_locals
 
-# @dev modify the returned value of this function to adjust the modulus
-# @dev modulus must be less than 2 ** (64 * 6)
-func get_modulus{range_check_ptr}() -> (mod : BigInt6):
-    return (mod=BigInt6(d0=P0, d1=P1, d2=P2, d3=P3, d4=P4, d5=P5))
-end
+        let (sum : BigInt6) = multi_precision.add(x, y)
+        let (mod) = get_modulus()
 
-func fq_add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
-    sum_mod : BigInt6
-):
-    alloc_locals
+        let (is_mod_gt_sum : felt) = multi_precision.gt(mod, sum)
 
-    let (sum : BigInt6) = multi_precision_add(x, y)
-    let (mod) = get_modulus()
+        if is_mod_gt_sum == 1:
+            return (sum)
+        end
 
-    let (is_mod_gt_sum : felt) = multi_precision_gt(mod, sum)
+        let (_, sum_mod : BigInt6) = multi_precision.div(sum, mod)
 
-    if is_mod_gt_sum == 1:
-        return (sum)
+        return (sum_mod)
     end
 
-    let (sum_mod : BigInt6, _) = divide_same_limb(sum, mod, 0)
+    func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
+            difference : BigInt6):
+        alloc_locals
 
-    return (sum_mod)
-end
+        let (x_ge_y : felt) = multi_precision.ge(x, y)
 
-func fq_sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
-    difference : BigInt6
-):
-    alloc_locals
+        if x_ge_y == 1:
+            let (difference : BigInt6) = multi_precision.sub(x, y)
+            return (difference)
+        end
 
-    let (x_ge_y : felt) = multi_precision_ge(x, y)
-
-    if x_ge_y == 1:
-        let (difference : BigInt6) = multi_precision_sub(x, y)
-        return (difference)
+        let (mod) = get_modulus()
+        let (difference : BigInt6) = multi_precision.sub(y, x)
+        let (mod_difference : BigInt6) = multi_precision.sub(mod, difference)
+        return (mod_difference)
     end
 
-    let (mod) = get_modulus()
-    let (difference : BigInt6) = multi_precision_sub(y, x)
-    let (mod_difference : BigInt6) = multi_precision_sub(mod, difference)
-    return (mod_difference)
+    func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
+            product : BigInt6):
+        let (res : BigInt12) = multi_precision.mul(x, y)
+        let (reduced : BigInt6) = reduce(res)
+
+        return (reduced)
+    end
+
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (product : BigInt6):
+        let (res : BigInt12) = multi_precision.square(x)
+        let (reduced : BigInt6) = reduce(res)
+
+        return (reduced)
+    end
+
+    func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : BigInt6) -> (
+            product : BigInt6):
+        alloc_locals
+        let res : BigInt6 = BigInt6(
+            d0=scalar * x.d0,
+            d1=scalar * x.d1,
+            d2=scalar * x.d2,
+            d3=scalar * x.d3,
+            d4=scalar * x.d4,
+            d5=scalar * x.d5)
+
+        let (reduced : BigInt6) = reduce_bigint6(res)
+
+        return (reduced)
+    end
+
+    # finds x in a x ≅ 1 (mod m)
+    func inverse{range_check_ptr}(a : BigInt6, m : BigInt6) -> (res : BigInt6):
+        alloc_locals
+
+        if a == 0:
+            return (BigInt6(d0=0, d1=0, d2=0, d3=0, d4=0, d5=0))
+        end
+
+        let (x : BigInt6) = big_int_6_zero()
+        let (y : BigInt6) = big_int_6_one()
+
+        let (inv : BigInt6) = inverse_inner(a, m, x, y)
+
+        return (inv)
+    end
+
+    func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
+        %{
+            modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+            limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5, ids.x.d6, ids.x.d7, ids.x.d8, ids.x.d9, ids.x.d10, ids.x.d11
+            packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+            value = reduced = packed % modulus
+        %}
+
+        let (reduced : BigInt6) = nondet_bigint6()
+        return (reduced)
+    end
 end
 
-func reduce{range_check_ptr}(x : BigInt12) -> (reduced : BigInt6):
+func reduce_bigint6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
     %{
         modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-        limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5, ids.x.d6, ids.x.d7, ids.x.d8, ids.x.d9, ids.x.d10, ids.x.d11
+        limbs = ids.x.d0, ids.x.d1, ids.x.d2, ids.x.d3, ids.x.d4, ids.x.d5
         packed = sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
         value = reduced = packed % modulus
     %}
@@ -87,24 +127,30 @@ func reduce_bigint_6{range_check_ptr}(x : BigInt6) -> (reduced : BigInt6):
 end
 
 func fq_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6, y : BigInt6) -> (
-    product : BigInt6
-):
+        product : BigInt6):
     let (res : BigInt12) = multi_precision_mul(x, y)
     let (reduced : BigInt6) = reduce(res)
 
-    return (reduced)
-end
+    let (one : BigInt6) = big_int_6_one()
 
-func fq_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : BigInt6) -> (product : BigInt6):
-    let (res : BigInt12) = multi_precision_square(x)
-    let (reduced : BigInt6) = reduce(res)
+    let (a_eq_one : felt) = is_equal(a, one)
+    if a_eq_one == 1:
+        return (x)
+    end
 
-    return (reduced)
+    let (q : BigInt6, _) = multi_precision.div(a, m)
+    let (a_as_bigint12 : BigInt12) = from_bigint6_to_bigint12(a)
+    let (a_mod_m : BigInt6) = fq.reduce(a_as_bigint12)
+
+    let (q_mul_y : BigInt12) = multi_precision.mul(q, y)
+    let (new_y : BigInt6) = multi_precision.sub(x, q_mul_y)
+
+    let (res : BigInt6) = inverse_inner(m, a_mod_m, m, new_y)
+    return (res)
 end
 
 func fq_scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : BigInt6) -> (
-    product : BigInt6
-):
+        product : BigInt6):
     alloc_locals
     let res : BigInt6 = BigInt6(
         d0=scalar * x.d0,
@@ -112,8 +158,7 @@ func fq_scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt
         d2=scalar * x.d2,
         d3=scalar * x.d3,
         d4=scalar * x.d4,
-        d5=scalar * x.d5,
-    )
+        d5=scalar * x.d5)
 
     let (reduced : BigInt6) = reduce_bigint_6(res)
 
