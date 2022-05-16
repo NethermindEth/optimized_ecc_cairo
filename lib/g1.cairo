@@ -11,8 +11,7 @@ struct G1Point:
 end
 
 func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-    x : BigInt6, y : BigInt6, z : BigInt6
-) -> (res : BigInt6):
+        x : BigInt6, y : BigInt6, z : BigInt6) -> (res : BigInt6):
     alloc_locals
 
     let (x_sub_y : BigInt6) = fq_sub(x, y)
@@ -21,10 +20,19 @@ func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     return (res)
 end
 
+func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        x : BigInt6, y : BigInt6, z : BigInt6) -> (res : BigInt6):
+    alloc_locals
+
+    let (x_mul_y : BigInt6) = fq_mul(x, y)
+    let (res : BigInt6) = fq_mul(x_mul_y, z)
+
+    return (res)
+end
+
 # http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, right : G1Point) -> (
-    res : G1Point
-):
+        res : G1Point):
     alloc_locals
 
     if left.z.d0 == 0:
@@ -34,25 +42,36 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
         return (left)
     end
 
+    # z1z1 = z1^2
     let (z1_squared : BigInt6) = fq_square(left.z)
+    # z2z2 = z2^2
     let (z2_squared : BigInt6) = fq_square(right.z)
 
+    # U1 = X1*Z2Z2
     let (U1 : BigInt6) = fq_mul(left.x, z2_squared)
+    # U2 = X2*Z1Z1
     let (U2 : BigInt6) = fq_mul(right.x, z1_squared)
 
-    let (S1 : BigInt6) = fq_mul(left.y, z2_squared)
-    let (S2 : BigInt6) = fq_mul(right.y, z1_squared)
+    # S1 = Y1*Z2*Z2Z2
+    let (S1 : BigInt6) = mul_three_terms(left.y, right.z, z2_squared)
+    # S2 = Y2*Z1*Z1Z1
+    let (S2 : BigInt6) = mul_three_terms(right.y, left.z, z1_squared)
 
+    # H = U2-U1
     let (H : BigInt6) = fq_sub(U2, U1)
+
+    # I = (2*H)^2
     let (two_H : BigInt6) = fq_scalar_mul(2, H)
     let (I : BigInt6) = fq_square(two_H)
 
+    # J = H*I
     let (J : BigInt6) = fq_mul(H, I)
 
-    let (S_one_sub_S_two) = fq_sub(S2, S1)
+    # r = 2*(S2-S1)
+    let (S_two_sub_S_one) = fq_sub(S2, S1)
+    let (r : BigInt6) = fq_scalar_mul(2, S_two_sub_S_one)
 
-    let (r : BigInt6) = fq_scalar_mul(2, S_one_sub_S_two)
-
+    # V = U1*I
     let (V : BigInt6) = fq_mul(U1, I)
 
     # X3 = r^2-J-2*V
@@ -60,9 +79,7 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
 
     let (r_squared : BigInt6) = fq_square(r)
 
-    let (r_squared_sub_J : BigInt6) = fq_sub(r_squared, J)
-
-    let (X3 : BigInt6) = fq_sub(r_squared_sub_J, two_V)
+    let (X3 : BigInt6) = sub_three_terms(r_squared, J, two_V)
 
     # Y3 = r*(V-X3)-2*S1*J
     let (V_sub_X3 : BigInt6) = fq_sub(V, X3)
@@ -74,9 +91,7 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
     # Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2)*H
     let (Z1_plus_Z2 : BigInt6) = fq_add(left.z, right.z)
     let (Z1_plus_Z2_squared : BigInt6) = fq_square(Z1_plus_Z2)
-    let (Z1_squared) = fq_square(left.z)
-    let (Z2_squared) = fq_square(right.z)
-    let (inner : BigInt6) = sub_three_terms(Z1_plus_Z2_squared, Z1_squared, Z2_squared)
+    let (inner : BigInt6) = sub_three_terms(Z1_plus_Z2_squared, z1_squared, z2_squared)
     let (Z3 : BigInt6) = fq_mul(inner, H)
 
     let res : G1Point = G1Point(x=X3, y=Y3, z=Z3)
@@ -100,6 +115,5 @@ func g1() -> (res : G1Point):
             0x08b3f481e3aaa0f1),
         z=BigInt6(
             0, 0, 0, 0, 0, 0)
-        ),
-    )
+        ))
 end
