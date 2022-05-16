@@ -2,7 +2,6 @@
 # @author Non
 # @notice Unigned 384 bit number split into six 64-bit limbs
 
-
 # The base of the representation.
 const BASE = 2 ** 64
 
@@ -55,7 +54,6 @@ struct BigInt12:
     member d11 : felt
 end
 
-
 struct BigInt18:
     member d0 : felt
     member d1 : felt
@@ -77,7 +75,6 @@ struct BigInt18:
     member d17 : felt
 end
 
-
 func big_int_12_zero() -> (res : BigInt12):
     return (
         res=BigInt12(
@@ -93,22 +90,29 @@ func big_int_12_zero() -> (res : BigInt12):
         d9=0,
         d10=0,
         d11=0
-        ),
-    )
+        ))
 end
 
-
 func big_int_6_zero() -> (res : BigInt6):
-    return (
-        res=BigInt6(
+    return (res=BigInt6(
         d0=0,
         d1=0,
         d2=0,
         d3=0,
         d4=0,
         d5=0,
-        ),
-    )
+        ))
+end
+
+func big_int_6_one() -> (res : BigInt6):
+    return (res=BigInt6(
+        d0=1,
+        d1=0,
+        d2=0,
+        d3=0,
+        d4=0,
+        d5=0,
+        ))
 end
 
 func assert_bigint_is_equal(x : BigInt6, y : BigInt6):
@@ -121,6 +125,33 @@ func assert_bigint_is_equal(x : BigInt6, y : BigInt6):
     return ()
 end
 
+func is_equal(x : BigInt6, y : BigInt6) -> (res : felt):
+    if x.d0 != y.d0:
+        return (0)
+    end
+
+    if x.d1 != y.d1:
+        return (0)
+    end
+
+    if x.d2 != y.d2:
+        return (0)
+    end
+
+    if x.d3 != y.d3:
+        return (0)
+    end
+
+    if x.d4 != y.d4:
+        return (0)
+    end
+
+    if x.d5 != y.d5:
+        return (0)
+    end
+
+    return (1)
+end
 # Returns a BigInt6 instance whose value is controlled by a prover hint.
 #
 # Soundness guarantee: each limb is in the range [0, 3 * BASE).
@@ -177,7 +208,6 @@ func from_bigint6_to_bigint12(num : BigInt6) -> (new_num : BigInt12):
         d8=0,
         d9=0,
         d10=0,
-        d11=0,
-    )
+        d11=0)
     return (new_num)
 end
