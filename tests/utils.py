@@ -10,15 +10,15 @@ base = 2 ** 64
 field_modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 
 max_felt = 2**241
+max_limb = 2**128 - 1
 
-def split(num: int, length:int=6) -> List[int]:
-    BASE = 2 ** 64
+def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
     a = []
     for _ in range(length):
-        num, residue = divmod(num, BASE)
-        a.append(residue)
-    assert num == 0
+        a.append( num & ((1 << num_bits_shift) - 1) )
+        num = num >> num_bits_shift 
     return tuple(a)
+
 
 def splitFQ2(z):
     return (split(z[0]), split(z[1]))
@@ -32,11 +32,9 @@ def unsafe_split(num: int, length:int=6) -> List[int]:
         a.append(residue)
     return tuple(a),num
 
-def pack(z):
-
-    limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5
-
-    return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+def pack(z, num_bits_shift: int = 128) -> int:
+    limbs = (limb for limb in z)
+    return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
 def packFQ2(z):
     return (pack(z.e0), pack(z.e1))
@@ -55,10 +53,10 @@ def G1Point(x, y, z):
     return (split(x), split(y), split(z))
 
 
-T_BigInt6 = TypeVar('T_BigInt6', bound="BigInt6")
-IntOrBigInt6 = Union[int, T_BigInt6]
+T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
+IntOrUint384 = Union[int, T_Uint384]
 IntOrTuple = Union[int, tuple]
-class BigInt6:
+class Uint384:
     def __init__(self, val : IntOrTuple):
 
         if isinstance(val, int):
@@ -66,16 +64,11 @@ class BigInt6:
             self.d0 = parts[0]
             self.d1 = parts[1]
             self.d2 = parts[2]
-            self.d3 = parts[3]
-            self.d4 = parts[4]
-            self.d5 = parts[5]
         elif isinstance(val, tuple):
             self.d0 = val[0]
             self.d1 = val[1]
             self.d2 = val[2]
-            self.d3 = val[3]
-            self.d4 = val[4]
-            self.d5 = val[5]
+
         else:
             raise TypeError(
                 "Expected an int or tuple, but got object of type {}"
@@ -83,35 +76,35 @@ class BigInt6:
             )
 
     def __str__(self):
-        return f'Bigint6 value is {pack(self)})'
+        return f'Uint384 value is {pack(self)})'
 
-    def __eq__(self, other:  IntOrBigInt6 ) -> bool:
+    def __eq__(self, other:  IntOrUint384 ) -> bool:
         if isinstance(other, int):
             return pack(self) == int
-        elif isinstance(other, BigInt6):
+        elif isinstance(other, Uint384):
             return pack(self) == pack(other)
         else:
             raise TypeError(
-                "Expected an int or BigInt6, but got object of type {}"
+                "Expected an int or Uint384, but got object of type {}"
                 .format(type(other))
             )
 
     def asTuple(self) -> tuple:
-        return (self.d0, self.d1, self.d2, self.d3, self.d4, self.d5)
+        return (self.d0, self.d1, self.d2)
 
 T_G1Point = TypeVar('T_G1Point', bound="G1Point")
 IntTuple = (int,int,int)
-BigInt6Tuple = (T_BigInt6, T_BigInt6, T_BigInt6)
+BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
 TupleOrG1Point = Union[tuple, T_G1Point]
 class G1Point: 
     def __init__(self, values: tuple): 
-        self.x = BigInt6(values[0])
-        self.y = BigInt6(values[1])
-        self.z = BigInt6(values[2])
+        self.x = Uint384(values[0])
+        self.y = Uint384(values[1])
+        self.z = Uint384(values[2])
 
     def __eq__(self, other : TupleOrG1Point) -> bool:
         if isinstance(other, tuple):
-            return self.x == BigInt6(other[0]) &  self.y == BigInt6(other[1]) & self.z == BigInt6(other[2])
+            return self.x == Uint384(other[0]) &  self.y == Uint384(other[1]) & self.z == Uint384(other[2])
         elif isinstance(other, tuple):
             return self.x == other[0] & self.y == other[1] & self.z == other[2]
         elif isinstance(other, G1Point):
