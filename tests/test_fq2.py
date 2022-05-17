@@ -1,6 +1,6 @@
 from numpy import right_shift
 import pytest
-from utils import split,  packFQ2, field_modulus, max_felt, splitFQ2
+from utils import split,  packFQ2, field_modulus, max_limb, splitFQ2
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 
@@ -34,7 +34,7 @@ async def test_fq2_mul(fq2_factory):
     assert left_side == right_side
 
 @given(
-    x=st.integers(min_value=1,  max_value=(max_felt)),
+    x=st.integers(min_value=1,  max_value=(max_limb)),
     y=st.integers(min_value=1,  max_value=(field_modulus)),
 )
 @settings(deadline=None)
