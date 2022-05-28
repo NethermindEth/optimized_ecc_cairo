@@ -15,3 +15,17 @@ end
 # Modulus coefficients for fq2
 const fq2_c0 = 1
 const fq2_c1 = 0
+
+# Modulus coefficients for fq12
+const fq12_c0 = 2
+const fq12_c1 = 0
+const fq12_c2 = 0
+const fq12_c3 = 0
+const fq12_c4 = 0
+const fq12_c5 = 0
+const fq12_c6 = -2
+const fq12_c7 = 0
+const fq12_c8 = 0
+const fq12_c9 = 0
+const fq12_c10 = 0
+const fq12_c11 = 0
