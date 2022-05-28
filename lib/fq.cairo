@@ -3,86 +3,68 @@ from lib.BigInt6 import (
     from_bigint6_to_bigint12, is_equal)
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
+from lib.field_arithmetic import field_arithmetic_lib
 from lib.multi_precision import multi_precision
 from lib.curve import get_modulus
 from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 namespace fq:
+    
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             sum_mod : Uint384):
-        alloc_locals
-
-        let (sum : Uint384, _) = uint384_lib.add(x, y)
-        let (mod : Uint384) = get_modulus()
-
-        let (is_mod_lt_sum : felt) = uint384_lib.lt(mod, sum)
-
-        if is_mod_lt_sum == 0:
-            return (sum)
-        end
-
-        let (_, sum_mod : Uint384) = uint384_lib.unsigned_div_rem(sum, mod)
-
-        return (sum_mod)
+        let (q : Uint384) = get_modulus()
+        let (sum : Uint384) = field_arithmetic_lib.add(x, y, q)
+        return (sum)
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             difference : Uint384):
         alloc_locals
+        let (local q: Uint384) = get_modulus()
+        local range_check_ptr =range_check_ptr
+        
+        # x and y need to be reduced modulo p         
+        # TODO: check that they are not already reduced before (more efficiency?)   
+        let (_, x: Uint384) = uint384_lib.unsigned_div_rem(x, q)
+        let (_, y: Uint384) = uint384_lib.unsigned_div_rem(y, q)
 
-        let (x_lt_y : felt) = uint384_lib.lt(x, y)
-
-        if x_lt_y == 0:
-            let (difference : Uint384) = uint384_lib.sub(x, y)
-            return (difference)
-        end
-
-        let (mod) = get_modulus()
-        let (difference : Uint384) = uint384_lib.sub(y, x)
-        let (mod_difference : Uint384) = uint384_lib.sub(mod, difference)
-        return (mod_difference)
+        let (res) = field_arithmetic_lib.sub_reduced_a_and_reduced_b(x, y, q)
+        return (res)
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             product : Uint384):
-        let (low : Uint384, high : Uint384) = uint384_lib.mul(x, y)
-        let (mod : Uint384) = get_modulus()
-        let (_, reduced : Uint384) = uint384_extension_lib.unsigned_div_rem_768_bits_by_uint384(
-            Uint768(d0=low.d0, d1=low.d1, d2=low.d2, d3=high.d0, d4=high.d1, d5=high.d2), mod)
-
-        return (reduced)
+        let (q : Uint384) = get_modulus()
+        let (res : Uint384) = field_arithmetic_lib.mul(x, y, q)
+        return (res)
     end
 
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (product : Uint384):
         let (res : Uint384) = mul(x, x)
         return (res)
     end
-
+    
+    # NOTE: Scalar has to be at most than 2**128 - 1
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : Uint384) -> (
             product : Uint384):
-        alloc_locals
-
+        
+        # TODO: this assertion fails but not sure why
+        # assert [range_check_ptr] = scalar
+        
         let packed : Uint384 = Uint384(d0=scalar, d1=0, d2=0)
         let (reduced : Uint384) = mul(packed, x)
 
         return (reduced)
     end
 
-    # finds x in a x ≅ 1 (mod m)
-    func inverse{range_check_ptr}(a : BigInt6, m : BigInt6) -> (res : BigInt6):
+    # finds x in a x ≅ 1 (mod q)
+    func inverse{range_check_ptr}(a : Uint384) -> (res : Uint384):
         alloc_locals
-
-        if a == 0:
-            return (BigInt6(d0=0, d1=0, d2=0, d3=0, d4=0, d5=0))
-        end
-
-        let (x : BigInt6) = big_int_6_zero()
-        let (y : BigInt6) = big_int_6_one()
-
-        # let (inv : BigInt6) = inverse_inner(a, m, x, y)
-
-        return (x)
+        let (q : Uint384) = get_modulus()
+        let one = Uint384(1, 0,0)
+        let (res: Uint384) =  field_arithmetic_lib.div(one, a)
+        return (res)
     end
 end
 
