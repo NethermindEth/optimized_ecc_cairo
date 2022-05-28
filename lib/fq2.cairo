@@ -24,7 +24,6 @@ namespace fq2:
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (sum_mod : FQ2):
         alloc_locals
-
         let (e0 : Uint384) = fq.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq.sub(x.e1, y.e1)
 
@@ -41,48 +40,20 @@ namespace fq2:
         return (FQ2(e0=e0, e1=e1))
     end
 
-    # https://github.com/ethereum/py_ecc/blob/master/py_ecc/fields/optimized_field_elements.py#L284
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (product : FQ2):
         alloc_locals
-        let (first_term_low : Uint384, first_term_high : Uint384) = uint384_lib.mul(x.e0, y.e0)
-
-        let (b_0_1_low : Uint384, b_0_1_high : Uint384) = uint384_lib.mul(x.e0, y.e1)
-        let (b_1_0_low : Uint384, b_1_0_high : Uint384) = uint384_lib.mul(x.e1, y.e0)
-        let (second_term_low : Uint384, _) = uint384_lib.add(b_0_1_low, b_0_1_low)
-        let (second_term_high : Uint384, _) = uint384_lib.add(b_0_1_high, b_0_1_high)
-
-        let (third_term_low : Uint384, third_term_high : Uint384) = uint384_lib.mul(x.e1, y.e1)
-
-        let (third_term_mul_coeff_0_low : Uint384, _) = uint384_lib.mul(
-            Uint384(d0=fq2_c0, d1=0, d2=0), third_term_low)
-        let (third_term_mul_coeff_0_high : Uint384, _) = uint384_lib.mul(
-            Uint384(d0=fq2_c0, d1=0, d2=0), third_term_high)
-
-        let (third_term_mul_coeff_1_low : Uint384, _) = uint384_lib.mul(
-            Uint384(d0=fq2_c1, d1=0, d2=0), third_term_low)
-        let (third_term_mul_coeff_1_high : Uint384, _) = uint384_lib.mul(
-            Uint384(d0=fq2_c1, d1=0, d2=0), third_term_high)
-
-        let (unreduced_e0_low : Uint384) = uint384_lib.sub(
-            first_term_low, third_term_mul_coeff_0_low)
-        let (unreduced_e0_high : Uint384) = uint384_lib.sub(
-            first_term_high, third_term_mul_coeff_0_high)
-
-        let (unreduced_e1_low : Uint384) = uint384_lib.sub(
-            second_term_low, third_term_mul_coeff_1_low)
-        let (unreduced_e1_high : Uint384) = uint384_lib.sub(
-            second_term_high, third_term_mul_coeff_1_high)
-
-        let (mod : Uint384) = get_modulus()
-
-        let (_, e0 : Uint384) = uint384_extension_lib.unsigned_div_rem_768_bits_by_uint384(
-            Uint768(d0=unreduced_e0_low.d0, d1=unreduced_e0_low.d1, d2=unreduced_e0_low.d2, d3=unreduced_e0_high.d0, d4=unreduced_e0_high.d1, d5=unreduced_e0_high.d2),
-            mod)
-
-        let (_, e1 : Uint384) = uint384_extension_lib.unsigned_div_rem_768_bits_by_uint384(
-            Uint768(d0=unreduced_e1_low.d0, d1=unreduced_e1_low.d1, d2=unreduced_e1_low.d2, d3=unreduced_e1_high.d0, d4=unreduced_e1_high.d1, d5=unreduced_e1_high.d2),
-            mod)
-
-        return (FQ2(e0=e0, e1=e1))
+        let (first_term : Uint384) = fq.mul(x.e0, y.e0)
+        let (b_0_1 : Uint384) = fq.mul(x.e0, y.e1)
+        let (b_1_0 : Uint384) = fq.mul(x.e1, y.e0)
+        let (second_term : Uint384) = fq.add(b_0_1, b_1_0)
+        let (third_term : Uint384) = fq.mul(x.e1, y.e1)
+        
+        # Using the irreducible polynomial x**2 + 1 as modulus, we get that
+        # x**2 = -1, so the multiplication term `x.e1 * y.e1 * x**2` becomes
+        # `- x.e1 * y.e1` (always reducing mod p). This way the first term of
+        # the multiplicaiton is `x.e0 * y.e0 - x.e1 * y.e1`
+        let (first_term) = fq.sub(first_term, third_term)
+        
+        return (FQ2(e0=first_term, e1=second_term))
     end
 end

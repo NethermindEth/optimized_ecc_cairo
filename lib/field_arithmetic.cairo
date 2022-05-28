@@ -5,12 +5,12 @@ from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.pow import pow
 from starkware.cairo.common.registers import get_ap, get_fp_and_pc
 # Import uint384 files (path may change in the future)
-from uint384_cairo_imported.lib.uint384 import uint384_lib, Uint384
+from lib.uint384 import uint384_lib, Uint384
 from lib.uint384_extension import uint384_extension_lib, Uint768
 
 # Functions for operating elements in a finite field F_p (i.e. modulo a prime p), with p of at most 384 bits
 
-namespace field_arithmetic:
+namespace field_arithmetic_lib:
     # Computes (a + b) modulo p .
     func add{range_check_ptr}(a : Uint384, b : Uint384, p : Uint384) -> (res : Uint384):
         let (sum : Uint384, carry) = uint384_lib.add(a, b)
