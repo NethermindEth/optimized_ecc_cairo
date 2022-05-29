@@ -1,3 +1,4 @@
+from turtle import ycor
 from numpy import right_shift
 import pytest
 from utils import split, packFQP, field_modulus, splitFQP
@@ -9,63 +10,73 @@ from py_ecc.fields import bls12_381_FQ12 as FQ12
 largest_factor = sqrt(2 ** (64 * 11))
 
 
+    
 @given(
-    x0=st.integers(min_value=1, max_value=(field_modulus)),
-    x1=st.integers(min_value=0, max_value=(field_modulus)),
-    x2=st.integers(min_value=0, max_value=(field_modulus)),
-    x3=st.integers(min_value=0, max_value=(field_modulus)),
-    x4=st.integers(min_value=0, max_value=(field_modulus)),
-    x5=st.integers(min_value=0, max_value=(field_modulus)),
-    x6=st.integers(min_value=0, max_value=(field_modulus)),
-    x7=st.integers(min_value=0, max_value=(field_modulus)),
-    x8=st.integers(min_value=0, max_value=(field_modulus)),
-    x9=st.integers(min_value=0, max_value=(field_modulus)),
-    x10=st.integers(min_value=0, max_value=(field_modulus)),
-    x11=st.integers(min_value=0, max_value=(field_modulus)),
-    y0=st.integers(min_value=1, max_value=(field_modulus)),
-    y1=st.integers(min_value=0, max_value=(field_modulus)),
-    y2=st.integers(min_value=0, max_value=(field_modulus)),
-    y3=st.integers(min_value=0, max_value=(field_modulus)),
-    y4=st.integers(min_value=0, max_value=(field_modulus)),
-    y5=st.integers(min_value=0, max_value=(field_modulus)),
-    y6=st.integers(min_value=0, max_value=(field_modulus)),
-    y7=st.integers(min_value=0, max_value=(field_modulus)),
-    y8=st.integers(min_value=0, max_value=(field_modulus)),
-    y9=st.integers(min_value=0, max_value=(field_modulus)),
-    y10=st.integers(min_value=0, max_value=(field_modulus)),
-    y11=st.integers(min_value=0, max_value=(field_modulus)),
+    x0=st.integers(min_value=1, max_value=(field_modulus - 1)),
+    y0=st.integers(min_value=1, max_value=(field_modulus - 1)),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_fq12_mul(
+async def test_fq12_mul_short(
     fq12_factory,
     x0,
-    x1,
-    x2,
-    x3,
-    x4,
-    x5,
-    x6,
-    x7,
-    x8,
-    x9,
-    x10,
-    x11,
     y0,
-    y1,
-    y2,
-    y3,
-    y4,
-    y5,
-    y6,
-    y7,
-    y8,
-    y9,
-    y10,
-    y11,
 ):
-    x = (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)
-    y = (y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11)
+    # In this test we manually fill in some of the components of x and y to make it shorter
+    x = [ pow(x0, i, field_modulus)  for i in range(1, 13) ]
+    x= tuple(x)
+    y = [ pow(y0, i, field_modulus)  for i in range(1, 13) ]
+    y= tuple(y)
+    
+    print(x)
+    print(y)
+    print()
+    
+    contract = fq12_factory
+    x_split = splitFQP(x)
+    y_split = splitFQP(y)
+    execution_info = await contract.mul(x_split, y_split).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq12 = FQ12(x)
+    y_fq12 = FQ12(y)
+    python_result = x_fq12 * y_fq12
+
+    assert cairo_result == python_result.coeffs
+
+
+@pytest.mark.asyncio
+async def test_fq12_mul_specific(
+    fq12_factory,
+):
+    x = (
+        3807692610,
+        30752,
+        105,
+        242,
+        62770,
+        36968,
+        48815,
+        13658594255010710970,
+        46637,
+        33096,
+        123,
+        143,
+    )
+    y = (
+        2954,
+        194,
+        259,
+        63707,
+        6,
+        53,
+        196,
+        183,
+        31935,
+        3020,
+        59970,
+        56226,
+    )
 
     contract = fq12_factory
     x_split = splitFQP(x)

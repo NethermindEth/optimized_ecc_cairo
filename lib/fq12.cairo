@@ -88,73 +88,60 @@ namespace fq12:
         let res  = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
         return (res)
     end
-
+    
+    # TODO: would it be better to compute multiplication using a tower of small extensions?
     # The modulus polynomial coeffs are : 2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12, b : FQ12) -> (
         product : FQ12
     ):
         alloc_locals
-        let (first_term : Uint384) = fq.mul(a.e0, b.e0)
-
         # d0
-        let (b_0_1 : Uint384) = fq.mul(a.e0, b.e1)
-        let (b_1_0 : Uint384) = fq.mul(a.e1, b.e0)
-        let (d0 : Uint384) = fq.add(b_0_1, b_1_0)
+        let (d0 : Uint384) = fq.mul(a.e0, b.e0)
 
         # d1
+        let (b_0_1 : Uint384) = fq.mul(a.e0, b.e1)
+        let (b_1_0 : Uint384) = fq.mul(a.e1, b.e0)
+        let (d1 : Uint384) = fq.add(b_0_1, b_1_0)
+
+        # d2
         let (b_0_2 : Uint384) = fq.mul(a.e0, b.e2)
         let (b_1_1 : Uint384) = fq.mul(a.e1, b.e1)
         let (b_2_0 : Uint384) = fq.mul(a.e2, b.e0)
-        let (d1 : Uint384) = fq.add(b_0_2, b_1_1)
-        let (d1 : Uint384) = fq.add(d1, b_2_0)
+        let (d2 : Uint384) = fq.add(b_0_2, b_1_1)
+        let (d2 : Uint384) = fq.add(d2, b_2_0)
 
-        # d2
+        # d3
         let (b_0_3 : Uint384) = fq.mul(a.e0, b.e3)
         let (b_1_2 : Uint384) = fq.mul(a.e1, b.e2)
         let (b_2_1 : Uint384) = fq.mul(a.e2, b.e1)
         let (b_3_0 : Uint384) = fq.mul(a.e3, b.e0)
-        let (d2 : Uint384) = fq.add(b_0_3, b_1_2)
-        let (d2 : Uint384) = fq.add(d2, b_2_1)
-        let (d2 : Uint384) = fq.add(d2, b_3_0)
+        let (d3 : Uint384) = fq.add(b_0_3, b_1_2)
+        let (d3 : Uint384) = fq.add(d3, b_2_1)
+        let (d3 : Uint384) = fq.add(d3, b_3_0)
 
-        # d3
+        # d4
         let (b_0_4 : Uint384) = fq.mul(a.e0, b.e4)
         let (b_1_3 : Uint384) = fq.mul(a.e1, b.e3)
         let (b_2_2 : Uint384) = fq.mul(a.e2, b.e2)
         let (b_3_1 : Uint384) = fq.mul(a.e3, b.e1)
         let (b_4_0 : Uint384) = fq.mul(a.e4, b.e0)
-        let (d3 : Uint384) = fq.add(b_0_4, b_1_3)
-        let (d3 : Uint384) = fq.add(d3, b_2_2)
-        let (d3 : Uint384) = fq.add(d3, b_3_1)
-        let (d3 : Uint384) = fq.add(d3, b_4_0)
+        let (d4 : Uint384) = fq.add(b_0_4, b_1_3)
+        let (d4 : Uint384) = fq.add(d4, b_2_2)
+        let (d4 : Uint384) = fq.add(d4, b_3_1)
+        let (d4 : Uint384) = fq.add(d4, b_4_0)
 
-        # d4
+        # d5
         let (b_0_5 : Uint384) = fq.mul(a.e0, b.e5)
         let (b_1_4 : Uint384) = fq.mul(a.e1, b.e4)
         let (b_2_3 : Uint384) = fq.mul(a.e2, b.e3)
         let (b_3_2 : Uint384) = fq.mul(a.e3, b.e2)
         let (b_4_1 : Uint384) = fq.mul(a.e4, b.e1)
         let (b_5_0 : Uint384) = fq.mul(a.e5, b.e0)
-        let (d4 : Uint384) = fq.add(b_0_5, b_1_4)
-        let (d4 : Uint384) = fq.add(d4, b_2_3)
-        let (d4 : Uint384) = fq.add(d4, b_3_2)
-        let (d4 : Uint384) = fq.add(d4, b_4_1)
-        let (d4 : Uint384) = fq.add(d4, b_5_0)
-
-        # d5
-        let (b_0_6 : Uint384) = fq.mul(a.e0, b.e6)
-        let (b_1_5 : Uint384) = fq.mul(a.e1, b.e5)
-        let (b_2_4 : Uint384) = fq.mul(a.e2, b.e4)
-        let (b_3_3 : Uint384) = fq.mul(a.e3, b.e3)
-        let (b_4_2 : Uint384) = fq.mul(a.e4, b.e2)
-        let (b_5_1 : Uint384) = fq.mul(a.e5, b.e1)
-        let (b_6_0 : Uint384) = fq.mul(a.e6, b.e0)
-        let (d5 : Uint384) = fq.add(b_0_6, b_1_5)
-        let (d5 : Uint384) = fq.add(d5, b_2_4)
-        let (d5 : Uint384) = fq.add(d5, b_3_3)
-        let (d5 : Uint384) = fq.add(d5, b_4_2)
-        let (d5 : Uint384) = fq.add(d5, b_5_1)
-        let (d5 : Uint384) = fq.add(d5, b_6_0)
+        let (d5 : Uint384) = fq.add(b_0_5, b_1_4)
+        let (d5 : Uint384) = fq.add(d5, b_2_3)
+        let (d5 : Uint384) = fq.add(d5, b_3_2)
+        let (d5 : Uint384) = fq.add(d5, b_4_1)
+        let (d5 : Uint384) = fq.add(d5, b_5_0)
 
         # d6
         let (b_0_6 : Uint384) = fq.mul(a.e0, b.e6)
@@ -176,10 +163,10 @@ namespace fq12:
         let (b_1_6 : Uint384) = fq.mul(a.e1, b.e6)
         let (b_2_5 : Uint384) = fq.mul(a.e2, b.e5)
         let (b_3_4 : Uint384) = fq.mul(a.e3, b.e4)
-        let (b_4_3 : Uint384) = fq.mul(a.e3, b.e4)
-        let (b_5_2 : Uint384) = fq.mul(a.e4, b.e3)
-        let (b_6_1 : Uint384) = fq.mul(a.e5, b.e2)
-        let (b_7_0 : Uint384) = fq.mul(a.e6, b.e1)
+        let (b_4_3 : Uint384) = fq.mul(a.e4, b.e3)
+        let (b_5_2 : Uint384) = fq.mul(a.e5, b.e2)
+        let (b_6_1 : Uint384) = fq.mul(a.e6, b.e1)
+        let (b_7_0 : Uint384) = fq.mul(a.e7, b.e0)
         let (d7 : Uint384) = fq.add(b_0_7, b_1_6)
         let (d7 : Uint384) = fq.add(d7, b_2_5)
         let (d7 : Uint384) = fq.add(d7, b_3_4)
@@ -420,24 +407,18 @@ namespace fq12:
         let (d22 : Uint384) = fq.mul(a.e11, b.e11)
 
         # Reducing the results modulo the irreducible polynomial
-        let (d0 : Uint384, d6 : Uint384) = _aux_polynomial_reduction(d12, d0, d6)
-        let (d1 : Uint384, d7 : Uint384) = _aux_polynomial_reduction(d13, d1, d7)
-        let (d2 : Uint384, d8 : Uint384) = _aux_polynomial_reduction(d14, d2, d8)
-        let (d3 : Uint384, d9 : Uint384) = _aux_polynomial_reduction(d15, d3, d9)
-        let (d4 : Uint384, d10 : Uint384) = _aux_polynomial_reduction(d16, d4, d10)
-        let (d5 : Uint384, d11 : Uint384) = _aux_polynomial_reduction(d17, d5, d11)
-        let (d6 : Uint384, d12 : Uint384) = _aux_polynomial_reduction(d18, d6, d12)
-        let (d7 : Uint384, d13 : Uint384) = _aux_polynomial_reduction(d19, d7, d13)
-        let (d8 : Uint384, d14 : Uint384) = _aux_polynomial_reduction(d20, d8, d14)
-        let (d9 : Uint384, d15 : Uint384) = _aux_polynomial_reduction(d21, d9, d15)
+        # Note that the order in which _aux_polynomial_reduction is called is important here
         let (d10 : Uint384, d16 : Uint384) = _aux_polynomial_reduction(d22, d10, d16)
-
-        # Reduce the "new" d12, ..., d16
-        let (d0 : Uint384, d6 : Uint384) = _aux_polynomial_reduction(d12, d0, d6)
-        let (d1 : Uint384, d7 : Uint384) = _aux_polynomial_reduction(d13, d1, d7)
-        let (d2 : Uint384, d8 : Uint384) = _aux_polynomial_reduction(d14, d2, d8)
-        let (d3 : Uint384, d9 : Uint384) = _aux_polynomial_reduction(d15, d3, d9)
+        let (d9 : Uint384, d15 : Uint384) = _aux_polynomial_reduction(d21, d9, d15)
+        let (d8 : Uint384, d14 : Uint384) = _aux_polynomial_reduction(d20, d8, d14)
+        let (d7 : Uint384, d13 : Uint384) = _aux_polynomial_reduction(d19, d7, d13)
+        let (d6 : Uint384, d12 : Uint384) = _aux_polynomial_reduction(d18, d6, d12)
+        let (d5 : Uint384, d11 : Uint384) = _aux_polynomial_reduction(d17, d5, d11)
         let (d4 : Uint384, d10 : Uint384) = _aux_polynomial_reduction(d16, d4, d10)
+        let (d3 : Uint384, d9 : Uint384) = _aux_polynomial_reduction(d15, d3, d9)
+        let (d2 : Uint384, d8 : Uint384) = _aux_polynomial_reduction(d14, d2, d8)
+        let (d1 : Uint384, d7 : Uint384) = _aux_polynomial_reduction(d13, d1, d7)
+        let (d0 : Uint384, d6 : Uint384) = _aux_polynomial_reduction(d12, d0, d6)
 
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11))
     end
