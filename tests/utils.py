@@ -49,9 +49,6 @@ def packEnum(z):
 
 
 
-def G1Point(x, y, z):
-    return (split(x), split(y), split(z))
-
 
 T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
 IntOrUint384 = Union[int, T_Uint384]
@@ -111,7 +108,7 @@ class G1Point:
             return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
         else:
             raise TypeError(
-                "Expected an tuple or G1Point, but got object of type {}"
+                "Expected a tuple or G1Point, but got object of type {}"
                 .format(type(other))
             )
 
@@ -119,4 +116,4 @@ class G1Point:
         return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
 
     def __str__(self):
-        return f'G1Point coordinates are {pack(self.x)}, {pack(self.y)}, {pack(self.z)})'
+        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'
