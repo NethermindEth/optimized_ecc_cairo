@@ -36,8 +36,8 @@ namespace g2_lib:
         let (V1 : FQ2) = fq2_lib.mul(p2.x, p1.z)
         let (V2 : FQ2) = fq2_lib.mul(p1.x, p2.z)
 
-        let (is_v1_eq_v2) = fq2_lib.is_equal(V1, V2)
-        let (is_u1_eq_u2) = fq2_lib.is_equal(U1, U2)
+        let (is_v1_eq_v2) = fq2_lib.eq(V1, V2)
+        let (is_u1_eq_u2) = fq2_lib.eq(U1, U2)
         if is_v1_eq_v2 == 1:
             if is_u1_eq_u2 == 1:
                 let (double_p1 : G2Point) = double(p1)

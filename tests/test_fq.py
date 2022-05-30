@@ -14,8 +14,8 @@ largest_factor = sqrt(2 ** (64 * 11))
 
 
 @given(
-    x=st.integers(min_value=1,  max_value=(field_modulus)),
-    y=st.integers(min_value=1,  max_value=(field_modulus)),
+    x=st.integers(min_value=1, max_value=(field_modulus)),
+    y=st.integers(min_value=1, max_value=(field_modulus)),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
@@ -28,9 +28,7 @@ async def test_fq_add(fq_factory, x, y):
     assert result == (x + y) % field_modulus
 
 
-@given(
-    x=st.integers(min_value=1,  max_value=field_modulus)
-)
+@given(x=st.integers(min_value=1, max_value=field_modulus))
 @settings(deadline=None)
 @pytest.mark.asyncio
 async def test_fq_square(fq_factory, x):
@@ -73,3 +71,22 @@ async def test_fq_sub(fq_factory, x, y):
     result = pack(execution_info.result[0])
 
     assert result == (x - y) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=(field_modulus)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_is_square(fq_factory, x):
+    contract = fq_factory
+
+    execution_info = await contract.is_square(split(x)).call()
+
+    result = pack(execution_info.result[0])
+    python_result = pow(x, int((field_modulus - 1) / 2))
+    python_result = 1 if python_result >= 0 else 0
+    assert result == python_result
+
+
+# TODO: test for fq_lib.pow

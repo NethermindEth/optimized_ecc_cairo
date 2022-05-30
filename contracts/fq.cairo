@@ -47,7 +47,7 @@ func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (res
 end
 
 @view
-func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent: felt) -> (res : Uint384):
+func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent: Uint384) -> (res : Uint384):
     alloc_locals
 
     let (res : Uint384) = fq_lib.pow(x,exponent)
