@@ -1,5 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.fq import fq
+from lib.fq import fq_lib
 from lib.uint384 import Uint384
 
 # Jacobian coordinate representation
@@ -15,7 +15,7 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
         res : G1Point):
     alloc_locals
     
-    # alb: Are these ifs correct? I think one needs to check that the whole `left` point is the point at infinity, and vice-versa
+    # TODO: These should check that the whole left.x and right.z is (0,0,0) (this means that left or right is the point at infintiy)
     if left.z.d0 == 0:
         return (right)
     end
@@ -24,14 +24,14 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
     end
 
     # z1z1 = z1^2
-    let (z1_squared : Uint384) = fq.square(left.z)
+    let (z1_squared : Uint384) = fq_lib.square(left.z)
     # z2z2 = z2^2
-    let (z2_squared : Uint384) = fq.square(right.z)
+    let (z2_squared : Uint384) = fq_lib.square(right.z)
 
     # U1 = X1*Z2Z2
-    let (U1 : Uint384) = fq.mul(left.x, z2_squared)
+    let (U1 : Uint384) = fq_lib.mul(left.x, z2_squared)
     # U2 = X2*Z1Z1
-    let (U2 : Uint384) = fq.mul(right.x, z1_squared)
+    let (U2 : Uint384) = fq_lib.mul(right.x, z1_squared)
 
     # S1 = Y1*Z2*Z2Z2
     let (S1 : Uint384) = mul_three_terms(left.y, right.z, z2_squared)
@@ -39,41 +39,41 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
     let (S2 : Uint384) = mul_three_terms(right.y, left.z, z1_squared)
 
     # H = U2-U1
-    let (H : Uint384) = fq.sub(U2, U1)
+    let (H : Uint384) = fq_lib.sub(U2, U1)
 
     # I = (2*H)^2
-    let (two_H : Uint384) = fq.scalar_mul(2, H)
-    let (I : Uint384) = fq.square(two_H)
+    let (two_H : Uint384) = fq_lib.scalar_mul(2, H)
+    let (I : Uint384) = fq_lib.square(two_H)
 
     # J = H*I
-    let (J : Uint384) = fq.mul(H, I)
+    let (J : Uint384) = fq_lib.mul(H, I)
 
     # r = 2*(S2-S1)
-    let (S_two_sub_S_one) = fq.sub(S2, S1)
-    let (r : Uint384) = fq.scalar_mul(2, S_two_sub_S_one)
+    let (S_two_sub_S_one) = fq_lib.sub(S2, S1)
+    let (r : Uint384) = fq_lib.scalar_mul(2, S_two_sub_S_one)
 
     # V = U1*I
-    let (V : Uint384) = fq.mul(U1, I)
+    let (V : Uint384) = fq_lib.mul(U1, I)
 
     # X3 = r^2-J-2*V
-    let (two_V : Uint384) = fq.scalar_mul(2, V)
+    let (two_V : Uint384) = fq_lib.scalar_mul(2, V)
 
-    let (r_squared : Uint384) = fq.square(r)
+    let (r_squared : Uint384) = fq_lib.square(r)
 
     let (X3 : Uint384) = sub_three_terms(r_squared, J, two_V)
 
     # Y3 = r*(V-X3)-2*S1*J
-    let (V_sub_X3 : Uint384) = fq.sub(V, X3)
-    let (r_mul_V_sub_X3 : Uint384) = fq.mul(r, V_sub_X3)
-    let (two_S1 : Uint384) = fq.scalar_mul(2, S1)
-    let (two_S1_mul_J : Uint384) = fq.mul(two_S1, J)
-    let (Y3 : Uint384) = fq.sub(r_mul_V_sub_X3, two_S1_mul_J)
+    let (V_sub_X3 : Uint384) = fq_lib.sub(V, X3)
+    let (r_mul_V_sub_X3 : Uint384) = fq_lib.mul(r, V_sub_X3)
+    let (two_S1 : Uint384) = fq_lib.scalar_mul(2, S1)
+    let (two_S1_mul_J : Uint384) = fq_lib.mul(two_S1, J)
+    let (Y3 : Uint384) = fq_lib.sub(r_mul_V_sub_X3, two_S1_mul_J)
 
     # Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2)*H
-    let (Z1_plus_Z2 : Uint384) = fq.add(left.z, right.z)
-    let (Z1_plus_Z2_squared : Uint384) = fq.square(Z1_plus_Z2)
+    let (Z1_plus_Z2 : Uint384) = fq_lib.add(left.z, right.z)
+    let (Z1_plus_Z2_squared : Uint384) = fq_lib.square(Z1_plus_Z2)
     let (inner : Uint384) = sub_three_terms(Z1_plus_Z2_squared, z1_squared, z2_squared)
-    let (Z3 : Uint384) = fq.mul(inner, H)
+    let (Z3 : Uint384) = fq_lib.mul(inner, H)
 
     let res : G1Point = G1Point(x=X3, y=Y3, z=Z3)
     return (res)
@@ -84,8 +84,8 @@ func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         x : Uint384, y : Uint384, z : Uint384) -> (res : Uint384):
     alloc_locals
 
-    let (x_sub_y : Uint384) = fq.sub(x, y)
-    let (res : Uint384) = fq.sub(x_sub_y, z)
+    let (x_sub_y : Uint384) = fq_lib.sub(x, y)
+    let (res : Uint384) = fq_lib.sub(x_sub_y, z)
 
     return (res)
 end
@@ -94,8 +94,8 @@ func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         x : Uint384, y : Uint384, z : Uint384) -> (res : Uint384):
     alloc_locals
 
-    let (x_mul_y : Uint384) = fq.mul(x, y)
-    let (res : Uint384) = fq.mul(x_mul_y, z)
+    let (x_mul_y : Uint384) = fq_lib.mul(x, y)
+    let (res : Uint384) = fq_lib.mul(x_mul_y, z)
 
     return (res)
 end

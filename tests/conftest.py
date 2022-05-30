@@ -28,8 +28,9 @@ def pack(z):
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
 
-FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
+FQ_CONTRACT = os.path.join("contracts", "fq_lib.cairo")
 G1_CONTRACT = os.path.join("contracts", "g1.cairo")
+G1_CONTRACT = os.path.join("contracts", "g2.cairo")
 FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")
 FQ12_CONTRACT = os.path.join("contracts", "fq12.cairo")
 BARRET_ALGORITHM_CONTRACT = os.path.join("contracts", "barret_algorithm.cairo")
@@ -59,16 +60,34 @@ async def fq_factory(starknet_factory):
 
     return fq_contract
 
+
 @pytest.fixture(scope="module")
 async def g1_factory(starknet_factory):
-    
+
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def= compile_starknet_files(files=[G1_CONTRACT], disable_hint_validation=True)
+    contract_def = compile_starknet_files(
+        files=[G1_CONTRACT], disable_hint_validation=True
+    )
     g1_contract = await starknet.deploy(contract_def=contract_def)
 
     return g1_contract
+
+
+@pytest.fixture(scope="module")
+async def g2_factory(starknet_factory):
+
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def = compile_starknet_files(
+        files=[G2_CONTRACT], disable_hint_validation=True
+    )
+    g2_contract = await starknet.deploy(contract_def=contract_def)
+
+    return g2_contract
+
 
 @pytest.fixture(scope="module")
 async def fq2_factory(starknet_factory):
@@ -84,7 +103,6 @@ async def fq2_factory(starknet_factory):
     return fq_contract
 
 
-
 @pytest.fixture(scope="module")
 async def fq12_factory(starknet_factory):
 
@@ -97,6 +115,3 @@ async def fq12_factory(starknet_factory):
     fq_contract = await starknet.deploy(contract_def=contract_def)
 
     return fq_contract
-
-
-
