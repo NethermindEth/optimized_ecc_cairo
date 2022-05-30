@@ -19,9 +19,8 @@ def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
         num = num >> num_bits_shift 
     return tuple(a)
 
-
-def splitFQ2(z):
-    return (split(z[0]), split(z[1]))
+def splitFQP(z):
+    return tuple(split(z_component) for z_component in z)
 
 # Not checking for num = 0 
 def unsafe_split(num: int, length:int=6) -> List[int]:
@@ -36,21 +35,19 @@ def pack(z, num_bits_shift: int = 128) -> int:
     limbs = (limb for limb in z)
     return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
-def packFQ2(z):
-    return (pack(z.e0), pack(z.e1))
+def packFQP(z):
+    return tuple(pack(z_component) for z_component in z)
 
+# TODO: Not used?
 def pack12(z):
     limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5, z.d6, z.d7, z.d8, z.d9, z.d10, z.d11
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
-
+# TODO: Not used?
 def packEnum(z):
     return z[0] + z[1] * 2 ** 64  + z[2]   * 2 ** (64 * 2 ) + z[3]  * 2 ** (64 * 3)  + z[4] * 2 ** (64 * 4) + z[5]  * 2 ** (64 * 5)
 
 
-
-def G1Point(x, y, z):
-    return (split(x), split(y), split(z))
 
 
 T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
@@ -111,7 +108,7 @@ class G1Point:
             return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
         else:
             raise TypeError(
-                "Expected an tuple or G1Point, but got object of type {}"
+                "Expected a tuple or G1Point, but got object of type {}"
                 .format(type(other))
             )
 
@@ -119,4 +116,4 @@ class G1Point:
         return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
 
     def __str__(self):
-        return f'G1Point coordinates are {pack(self.x)}, {pack(self.y)}, {pack(self.z)})'
+        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'

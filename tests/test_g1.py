@@ -2,7 +2,7 @@ import pytest
 
 from utils import G1Point
 
-@pytest.mark.skip(reason="Pending math updates")
+#@pytest.mark.skip(reason="Pending math updates")
 @pytest.mark.asyncio
 async def test_g1_add_properties(g1_factory):
     contract = g1_factory
@@ -11,7 +11,7 @@ async def test_g1_add_properties(g1_factory):
     b = G1Point((2,2,1))
     zero = G1Point((0,0,0))
     # a + 0
-    execution_info = await contract.add(a.asTuple(),zero.asTuple()).call()
+    execution_info = await contract.add(a.asTuple(), zero.asTuple()).call()
     res = execution_info.result[0]
     
     assert a == G1Point(res)

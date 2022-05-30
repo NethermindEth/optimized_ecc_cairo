@@ -1,6 +1,6 @@
 from numpy import right_shift
 import pytest
-from utils import split, packFQ2, field_modulus, max_limb, splitFQ2
+from utils import split, packFQP, field_modulus, max_limb, splitFQP
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 import py_ecc
@@ -24,8 +24,8 @@ async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
 
     
     contract = fq2_factory
-    execution_info = await contract.mul(splitFQ2(x), splitFQ2(y)).call()
-    cairo_result = packFQ2(execution_info.result[0])
+    execution_info = await contract.mul(splitFQP(x), splitFQP(y)).call()
+    cairo_result = packFQP(execution_info.result[0])
     
     x_fq2 = FQ2(x)
     y_fq2 = FQ2(y)
@@ -50,20 +50,20 @@ async def test_fq2_mul_associativity(fq2_factory, x1, x2, y1, y2):
     y = (y1, y2)
     contract = fq2_factory
 
-    execution_info = await contract.mul(splitFQ2(one), splitFQ2(y)).call()
-    one_mul_y = packFQ2(execution_info.result[0])
+    execution_info = await contract.mul(splitFQP(one), splitFQP(y)).call()
+    one_mul_y = packFQP(execution_info.result[0])
 
-    execution_info = await contract.mul(splitFQ2(x), splitFQ2(y)).call()
-    x_mul_y = packFQ2(execution_info.result[0])
+    execution_info = await contract.mul(splitFQP(x), splitFQP(y)).call()
+    x_mul_y = packFQP(execution_info.result[0])
 
-    execution_info = await contract.add(splitFQ2(one_mul_y), splitFQ2(x_mul_y)).call()
-    left_side = packFQ2(execution_info.result[0])
+    execution_info = await contract.add(splitFQP(one_mul_y), splitFQP(x_mul_y)).call()
+    left_side = packFQP(execution_info.result[0])
 
-    execution_info = await contract.add(splitFQ2(one), splitFQ2(x)).call()
-    one_plus_x = packFQ2(execution_info.result[0])
+    execution_info = await contract.add(splitFQP(one), splitFQP(x)).call()
+    one_plus_x = packFQP(execution_info.result[0])
 
-    execution_info = await contract.mul(splitFQ2(one_plus_x), splitFQ2(y)).call()
-    right_side = packFQ2(execution_info.result[0])
+    execution_info = await contract.mul(splitFQP(one_plus_x), splitFQP(y)).call()
+    right_side = packFQP(execution_info.result[0])
 
     assert left_side == right_side
 
@@ -79,7 +79,7 @@ async def test_fq2_scalar_mul(fq2_factory, x, y1, y2):
     contract = fq2_factory
     execution_info = await contract.scalar_mul(x, (split(y1), split(y2))).call()
 
-    result = packFQ2(execution_info.result[0])
+    result = packFQP(execution_info.result[0])
 
     assert result[0] == (x * y1) % field_modulus
     assert result[1] == (x * y2) % field_modulus
@@ -99,7 +99,7 @@ async def test_fq2_add(fq2_factory, x1, x2, y1, y2):
         (split(x1), split(x2)), (split(y1), split(y2))
     ).call()
 
-    result = packFQ2(execution_info.result[0])
+    result = packFQP(execution_info.result[0])
 
     assert result[0] == (x1 + y1) % field_modulus
     assert result[1] == (x2 + y2) % field_modulus
@@ -119,7 +119,7 @@ async def test_fq2_sub(fq2_factory, x1, x2, y1, y2):
         (split(x1), split(x2)), (split(y1), split(y2))
     ).call()
 
-    result = packFQ2(execution_info.result[0])
+    result = packFQP(execution_info.result[0])
 
     assert result[0] == (x1 - y1) % field_modulus
     assert result[1] == (x2 - y2) % field_modulus
