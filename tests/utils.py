@@ -72,14 +72,14 @@ class Uint384:
                 .format(type(val))
             )
 
-    def __str__(self):
+    def __repr__(self):
         return f'Uint384 value is {pack(self)})'
-
+    
     def __eq__(self, other:  IntOrUint384 ) -> bool:
         if isinstance(other, int):
-            return pack(self) == int
+            return pack(self.asTuple()) == int
         elif isinstance(other, Uint384):
-            return pack(self) == pack(other)
+            return pack(self.asTuple()) == pack(other.asTuple())
         else:
             raise TypeError(
                 "Expected an int or Uint384, but got object of type {}"
@@ -98,6 +98,36 @@ class G1Point:
         self.x = Uint384(values[0])
         self.y = Uint384(values[1])
         self.z = Uint384(values[2])
+
+    def __eq__(self, other : TupleOrG1Point) -> bool:
+        if isinstance(other, tuple):
+            return self.x == Uint384(other[0]) &  self.y == Uint384(other[1]) & self.z == Uint384(other[2])
+        elif isinstance(other, tuple):
+            return self.x == other[0] & self.y == other[1] & self.z == other[2]
+        elif isinstance(other, G1Point):
+            return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
+        else:
+            raise TypeError(
+                "Expected a tuple or G1Point, but got object of type {}"
+                .format(type(other))
+            )
+
+    def asTuple(self) -> tuple:
+        return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
+
+    def __str__(self):
+        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'
+    
+
+T_G2Point = TypeVar('T_G2Point', bound="G2Point")
+IntTuple = (int,int,int)
+BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
+TupleOrG2Point = Union[tuple, T_G2Point]
+class G2Point: 
+    def __init__(self, values: tuple): 
+        self.x = G1Point(values[0])
+        self.y = G1Point(values[1])
+        self.z = G1Point(values[2])
 
     def __eq__(self, other : TupleOrG1Point) -> bool:
         if isinstance(other, tuple):

@@ -5,11 +5,11 @@ from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic import field_arithmetic_lib
 from lib.multi_precision import multi_precision
-from lib.curve import get_modulus
+from lib.curve import get_modulus, p_minus_one_div_2
 from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
-namespace fq:
+namespace fq_lib:
     
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             sum_mod : Uint384):
@@ -65,6 +65,30 @@ namespace fq:
         let one = Uint384(1, 0,0)
         let (res: Uint384) =  field_arithmetic_lib.div(one, a)
         return (res)
+    end
+    
+    func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent: felt) -> (res: Uint384):
+        alloc_locals
+        let (q : Uint384) = get_modulus()
+        let (res: Uint384) =  field_arithmetic_lib.pow(x, exponent)
+        return (res)
+    end
+    
+    # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
+    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: Uint384) -> (bool: felt):
+        alloc_locals
+        let (is_x_zero) =uint384_lib.eq(x, Uint384(0, 0, 0))
+        if is_x_zero==1:
+            return (1)
+        end
+        let (res : Uint384) = pow(x, p_minus_one_div_2)
+        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
+        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
+        if is_res_one == 1:
+            return (1)
+        else:
+            return (0)
+        end
     end
 end
 

@@ -15,7 +15,7 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
         res : G1Point):
     alloc_locals
     
-    # alb: Are these ifs correct? I think one needs to check that the whole `left` point is the point at infinity, and vice-versa
+    # TODO: These should check that the whole left.x and right.z is (0,0,0) (this means that left or right is the point at infintiy)
     if left.z.d0 == 0:
         return (right)
     end

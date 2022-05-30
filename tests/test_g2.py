@@ -1,25 +1,24 @@
 import pytest
 
-from utils import G1Point
+from utils import G2Point
 
-#@pytest.mark.skip(reason="Pending math updates")
 @pytest.mark.asyncio
-async def test_g1_add_properties(g1_factory):
-    contract = g1_factory
+async def test_g1_add_properties(g2_factory):
+    contract = g2_factory
 
-    a = G1Point((1,0,1))
-    b = G1Point((2,1,1))
-    zero = G1Point((0,0,0))
+    a = G2Point((1,0,1))
+    b = G2Point((2,1,1))
+    zero = G2Point((0,0,0))
     # a + 0
     execution_info = await contract.add(a.asTuple(), zero.asTuple()).call()
     res = execution_info.result[0]
     
-    assert a == G1Point(res)
+    assert a == G2Point(res)
 
     # 0 + b
     execution_info = await contract.add(zero.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
-    assert G1Point(res) == b
+    assert G2Point(res) == b
 
     # a + b = b + a
     execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
@@ -28,6 +27,6 @@ async def test_g1_add_properties(g1_factory):
     execution_info = await contract.add(b.asTuple(), a.asTuple()).call()
     res_2 = execution_info.result[0]
 
-    print( G1Point(res_1))
-    print( G1Point(res_2))
-    assert G1Point(res_1) == G1Point(res_2)
+    print( G2Point(res_1))
+    print( G2Point(res_2))
+    assert G2Point(res_1) == G2Point(res_2)

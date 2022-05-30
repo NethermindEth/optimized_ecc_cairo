@@ -1,7 +1,7 @@
 %lang starknet
 %builtins range_check bitwise
 
-from lib.fq import fq
+from lib.fq import fq_lib
 from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768
@@ -12,7 +12,7 @@ from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
         res : Uint384):
     alloc_locals
-    let (res : Uint384) = fq.add(x, y)
+    let (res : Uint384) = fq_lib.add(x, y)
 
     return (res)
 end
@@ -22,7 +22,7 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint38
         res : Uint384):
     alloc_locals
 
-    let (res : Uint384) = fq.sub(x, y)
+    let (res : Uint384) = fq_lib.sub(x, y)
 
     return (res)
 end
@@ -32,7 +32,7 @@ func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint38
         res : Uint384):
     alloc_locals
 
-    let (res : Uint384) = fq.mul(x, y)
+    let (res : Uint384) = fq_lib.mul(x, y)
 
     return (res)
 end
@@ -41,7 +41,26 @@ end
 func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (res : Uint384):
     alloc_locals
 
-    let (res : Uint384) = fq.square(x)
+    let (res : Uint384) = fq_lib.square(x)
 
     return (res)
+end
+
+@view
+func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent: felt) -> (res : Uint384):
+    alloc_locals
+
+    let (res : Uint384) = fq_lib.pow(x,exponent)
+
+    return (res)
+end
+
+
+@view
+func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
+    alloc_locals
+
+    let (bool) = fq_lib.is_square(x)
+
+    return (bool)
 end
