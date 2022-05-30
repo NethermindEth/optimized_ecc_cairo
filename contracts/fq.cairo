@@ -6,7 +6,7 @@ from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-
+from starkware.cairo.common.uint256 import Uint256
 # Returns the current balance.
 @view
 func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
@@ -42,6 +42,16 @@ func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (res
     alloc_locals
 
     let (res : Uint384) = fq.square(x)
+
+    return (res)
+end
+
+@view
+func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint256, y : Uint256) -> (
+        res : Uint384):
+    alloc_locals
+
+    let (res : Uint384) = fq.from_64_bytes(x, y)
 
     return (res)
 end
