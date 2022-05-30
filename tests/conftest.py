@@ -28,7 +28,7 @@ def pack(z):
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
 
-FQ_CONTRACT = os.path.join("contracts", "fq_lib.cairo")
+FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
 G1_CONTRACT = os.path.join("contracts", "g1.cairo")
 G1_CONTRACT = os.path.join("contracts", "g2.cairo")
 FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")

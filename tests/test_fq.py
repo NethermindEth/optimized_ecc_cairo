@@ -79,12 +79,13 @@ async def test_fq_sub(fq_factory, x, y):
 @settings(deadline=None)
 @pytest.mark.asyncio
 async def test_fq_is_square(fq_factory, x):
+    print(x)
     contract = fq_factory
 
     execution_info = await contract.is_square(split(x)).call()
 
-    result = pack(execution_info.result[0])
-    python_result = pow(x, int((field_modulus - 1) / 2))
+    result = execution_info.result[0]
+    python_result = pow(x, int((field_modulus - 1) / 2), field_modulus)
     python_result = 1 if python_result >= 0 else 0
     assert result == python_result
 
