@@ -1,4 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.math_cmp import is_not_zero
 from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
@@ -46,13 +47,41 @@ namespace fq2:
         let (b_1_0 : Uint384) = fq.mul(a.e1, b.e0)
         let (second_term : Uint384) = fq.add(b_0_1, b_1_0)
         let (third_term : Uint384) = fq.mul(a.e1, b.e1)
-        
+
         # Using the irreducible polynomial x**2 + 1 as modulus, we get that
         # x**2 = -1, so the term `a.e1 * b.e1 * x**2` becomes
         # `- a.e1 * b.e1` (always reducing mod p). This way the first term of
         # the multiplicaiton is `a.e0 * b.e0 - a.e1 * b.e1`
         let (first_term) = fq.sub(first_term, third_term)
-        
+
         return (FQ2(e0=first_term, e1=second_term))
+    end
+
+    # TODO : Is there a more efficient algorithm
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
+        let (res : FQ2) = mul(a, a)
+        return (res)
+    end
+
+    func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        return (a)
+    end
+
+    func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
+        let (res) = is_not_zero(a.e0.d0 + a.e0.d1 + a.e0.d2 + a.e1.d0 + a.e1.d1 + a.e1.d2)
+        return (res)
+    end
+
+    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (
+            is_quad_nonresidue):
+        alloc_locals
+
+        let (c0 : Uint384) = fq.mul(a.e0, a.e0)
+        let (c1 : Uint384) = fq.mul(a.e1, a.e1)
+        let (c3 : Uint384) = fq.add(c0, c1)
+
+        let (is_quad_nonresidue : felt) = fq.is_quadratic_nonresidue(c3)
+
+        return (is_quad_nonresidue)
     end
 end

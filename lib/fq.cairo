@@ -1,6 +1,3 @@
-from lib.BigInt6 import (
-    BigInt6, BigInt12, BASE, nondet_bigint6, big_int_6_zero, big_int_6_one,
-    from_bigint6_to_bigint12, is_equal)
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic import field_arithmetic_lib
@@ -9,6 +6,7 @@ from lib.curve import get_modulus, get_r_squared
 from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.math_cmp import is_not_zero
 namespace fq:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             sum_mod : Uint384):
@@ -99,5 +97,16 @@ namespace fq:
         let (e0_mul_f : Uint384) = mul(e0, r_mul_2_exp_256)
         let (e1_final : Uint384) = add(e1, e0_mul_f)
         return (e1_final)
+    end
+
+    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : Uint384) -> (
+            is_quad_nonresidue : felt):
+        let (is_n_zero : felt) = is_not_zero(a.d0 + a.d1 + a.d2)
+
+        if is_n_zero == 0:
+            return (1)
+        else:
+            return (0)
+        end
     end
 end
