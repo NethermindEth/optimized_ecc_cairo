@@ -158,14 +158,10 @@ namespace fq2_lib:
         return (res)
     end
 
-    # TODO : Is there a more efficient algorithm
+    # TODO : Use an actual squaring algorithm
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
         let (res : FQ2) = mul(a, a)
         return (res)
-    end
-
-    func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
-        return (a)
     end
 
     func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
@@ -181,7 +177,7 @@ namespace fq2_lib:
         let (c1 : Uint384) = fq_lib.mul(a.e1, a.e1)
         let (c3 : Uint384) = fq_lib.add(c0, c1)
 
-        let (is_quad_nonresidue : felt) = fq_lib.is_quadratic_nonresidue(c3)
+        let (is_quad_nonresidue : felt) = fq_lib.is_square(c3)
 
         return (is_quad_nonresidue)
     end

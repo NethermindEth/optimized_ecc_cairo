@@ -38,6 +38,17 @@ def pack(z, num_bits_shift: int = 128) -> int:
 def packFQP(z):
     return tuple(pack(z_component) for z_component in z)
 
+def print_uint384(x):
+    parts = split(x)
+
+    print("Uint384(", "d0=", parts[0] , ", d1=", parts[1], ", d2= ", parts[2], ")", end='')
+
+def print_fq2(params):
+    print("FQ2(", "e0=", end='')
+    print_uint384(params[0])
+    print(", e1=", end='')
+    print_uint384(params[1])
+    print(")")
 
 T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
 IntOrUint384 = Union[int, T_Uint384]
