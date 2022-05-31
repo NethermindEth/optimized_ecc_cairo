@@ -1,5 +1,5 @@
 import pytest
-from utils import split, pack, field_modulus
+from utils import split, pack, field_modulus, field_modulus_sub1_div2
 from utils import (
     split,
     pack,
@@ -84,10 +84,44 @@ async def test_fq_is_square(fq_factory, x):
 
     execution_info = await contract.is_square(split(x)).call()
 
+    
     result = execution_info.result[0]
-    python_result = pow(x, int((field_modulus - 1) / 2), field_modulus)
-    python_result = 1 if python_result >= 0 else 0
+    python_result = pow(x, field_modulus_sub1_div2, field_modulus)
+
+    print("findme", result, python_result)
+    # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
+    if (python_result - (-1)) % field_modulus == 0:
+        # In this case `x` is not a square
+        python_result = 0
+    else:
+        # Otherwise it is
+        python_result = 1
     assert result == python_result
+
+
+
+
+
+@pytest.mark.asyncio
+async def test_fq_is_square_specific(fq_factory):
+    x = 2    
+    contract = fq_factory
+
+    execution_info = await contract.is_square(split(x)).call()
+
+    result = execution_info.result[0]
+    python_result = pow(x, field_modulus_sub1_div2, field_modulus)
+    
+    print("findme", result, python_result)
+    # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
+    if (python_result - (-1)) % field_modulus == 0:
+        # In this case `x` is not a square
+        python_result = 0
+    else:
+        # Otherwise it is
+        python_result = 1
+    assert result == python_result
+
 
 
 # TODO: test for fq_lib.pow

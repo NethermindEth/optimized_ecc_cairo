@@ -56,6 +56,38 @@ namespace fq2_lib:
 
         return (FQ2(e0=first_term, e1=second_term))
     end
+    
+    # Find b such that b*a = 1 in FQ2
+    # First the inverse is computed in a hint, and then verified in Cairo
+    func get_inverse(a: FQ2) -> (inverse: FQ2):
+        alloc_locals
+        local a_inverse : Uint384
+        %{
+            def pack(z, num_bits_shift: int) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+            
+            e0 = pack(ids.a.e0)
+            eq = pack(ids.a.e1)
+            
+            if e0 != 0:
+                e0_inv = pow(e0, -1, field_modulus)
+                new_e0 = pow(e0 + (e1**2) * e0_inv, -1, field_modulus)
+                new_e1 = ( -b * pow(a**2 + b**2, -1, field_modulus) ) % field_modulus   
+            else:
+                new_e0 = 0
+                new_e1 = pow(-e1, -1, field_modulus)
+            
+            ids.a_inverse.e0 = new_e0
+            ids.a_inverse.e1 = new_e1
+        %}
+        
+        let (a_inverse_times_a: FQ2) = mul(a_inverse, a)
+        let (one: FQ2) = get_one()
+        let (is_one) = eq(a_inverse_times_a, one)
+        assert is_one = 1
+        return (a_inverse)
+    end
 
     # TODO: test
     func eq(x : FQ2, y : FQ2) -> (bool : felt):
