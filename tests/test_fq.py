@@ -3,6 +3,7 @@ from utils import (
     split,
     pack,
     field_modulus,
+    field_modulus_sub1_div2
 )
 from math import sqrt
 from hypothesis import given, strategies as st, settings
@@ -119,26 +120,11 @@ async def test_fq_is_square(fq_factory, x):
     print(x)
     contract = fq_factory
 
-    execution_info = await contract.is_square(split(x)).call()
-
+    execution_info = await contract.is_square(split(x)).call()    
     result = execution_info.result[0]
-    python_result = pow(x, int((field_modulus - 1) / 2), field_modulus)
-    python_result = 1 if python_result >= 0 else 0
-    assert result == python_result
+    python_result = pow(x, field_modulus_sub1_div2, field_modulus)
 
-
-
-
-@pytest.mark.asyncio
-async def test_fq_is_square_specific(fq_factory):
-    x = 12345    
-    contract = fq_factory
-
-    execution_info = await contract.is_square(split(x)).call()
-
-    result = execution_info.result[0]
-    python_result = pow(x, int((field_modulus - 1) / 2), field_modulus)
-    
+    print("findme", result, python_result)
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square
@@ -148,5 +134,24 @@ async def test_fq_is_square_specific(fq_factory):
         python_result = 1
     assert result == python_result
 
+
+@pytest.mark.asyncio
+async def test_fq_is_square_specific(fq_factory):
+    x = 2    
+    contract = fq_factory
+
+    execution_info = await contract.is_square(split(x)).call()
+
+    result = execution_info.result[0]
+    python_result = pow(x, field_modulus_sub1_div2, field_modulus)
+
+    # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
+    if (python_result - (-1)) % field_modulus == 0:
+        # In this case `x` is not a square
+        python_result = 0
+    else:
+        # Otherwise it is
+        python_result = 1
+    assert result == python_result
 
 # TODO: test for fq_lib.pow
