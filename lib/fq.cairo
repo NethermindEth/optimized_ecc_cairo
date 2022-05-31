@@ -88,24 +88,10 @@ namespace fq_lib:
     # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
     func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
         alloc_locals
-        let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
-        if is_x_zero == 1:
-            return (1)
-        end
+        let (p : Uint384) = get_modulus()
         let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
-        let (res : Uint384) = pow(x, p_minus_one_div_2)
-        %{ 
-            limbs = [ids.res.d0, ids.res.d1, ids.res.d2]
-            r = sum(limb << (128 * i) for i, limb in enumerate(limbs))
-            print('findme2', r)
-        %}
-        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
-        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
-        if is_res_one == 1:
-            return (1)
-        else:
-            return (0)
-        end
+        let (res) = field_arithmetic_lib.is_square(x, p, p_minus_one_div_2)
+        return (res)
     end
 end
 

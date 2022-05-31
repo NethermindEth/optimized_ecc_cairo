@@ -146,4 +146,26 @@ namespace field_arithmetic_lib:
             return (res_mul)
         end
     end
+
+    # Checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
+    # `p_minus_one_div_2` is (p-1)/2. It is passed as an argument rather than computed, since for most applications
+    # p (and thus (p-1)/2) will be hardcoded and this library wrapped around with p fixed to the hardcoded value
+    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        x : Uint384, p : Uint384, p_minus_one_div_2 : Uint384
+    ) -> (bool : felt):
+        alloc_locals
+        let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
+        if is_x_zero == 1:
+            return (1)
+        end
+        # let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
+        let (res : Uint384) = pow(x, p_minus_one_div_2, p)
+        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
+        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
+        if is_res_one == 1:
+            return (1)
+        else:
+            return (0)
+        end
+    end
 end
