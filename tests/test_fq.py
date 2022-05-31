@@ -88,7 +88,6 @@ async def test_fq_is_square(fq_factory, x):
     result = execution_info.result[0]
     python_result = pow(x, field_modulus_sub1_div2, field_modulus)
 
-    print("findme", result, python_result)
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square
@@ -97,9 +96,6 @@ async def test_fq_is_square(fq_factory, x):
         # Otherwise it is
         python_result = 1
     assert result == python_result
-
-
-
 
 
 @pytest.mark.asyncio
@@ -112,7 +108,6 @@ async def test_fq_is_square_specific(fq_factory):
     result = execution_info.result[0]
     python_result = pow(x, field_modulus_sub1_div2, field_modulus)
     
-    print("findme", result, python_result)
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square

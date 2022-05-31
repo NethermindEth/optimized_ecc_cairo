@@ -26,7 +26,6 @@ namespace fq2_lib:
         alloc_locals
         let (e0 : Uint384) = fq_lib.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
-
         return (FQ2(e0=e0, e1=e1))
     end
 
