@@ -32,8 +32,7 @@ namespace fq2_lib:
     end
 
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
-        product : FQ2
-    ):
+            product : FQ2):
         alloc_locals
         let (e0 : Uint384) = fq_lib.scalar_mul(x, y.e0)
         let (e1 : Uint384) = fq_lib.scalar_mul(x, y.e1)
@@ -59,7 +58,7 @@ namespace fq2_lib:
     end
 
     # TODO: test
-    func eq(x : FQ2, y : FQ2) -> (bool : felt):
+    func eq{range_check_ptr}(x : FQ2, y : FQ2) -> (bool : felt):
         let (is_e0_eq) = uint384_lib.eq(x.e0, y.e0)
         if is_e0_eq == 0:
             return (0)
@@ -72,7 +71,7 @@ namespace fq2_lib:
     end
 
     # TODO: test
-    func is_zero{}(x : FQ2) -> (bool : felt):
+    func is_zero{range_check_ptr}(x : FQ2) -> (bool : felt):
         let (zero_fq2 : FQ2) = get_zero()
         let (is_x_zero) = eq(x, zero_fq2)
         return (is_x_zero)
@@ -91,7 +90,8 @@ namespace fq2_lib:
     end
 
     # TODO: test
-    func mul_three_terms(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = mul(x, y)
         let (res : FQ2) = mul(x_times_y, z)
         return (res)
@@ -99,10 +99,11 @@ namespace fq2_lib:
 
     # TODO: test
     # Computes x - y - z
-    func sub_three_terms(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func sub_three_terms{range_check_ptr}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = sub(x, y)
         let (res : FQ2) = sub(x_times_y, z)
         return (res)
+    end
 
     # TODO : Is there a more efficient algorithm
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
@@ -120,16 +121,19 @@ namespace fq2_lib:
     end
 
     func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (
-            is_quad_nonresidue):
+            is_quad_nonresidue : felt):
         alloc_locals
 
-        let (c0 : Uint384) = fq.mul(a.e0, a.e0)
-        let (c1 : Uint384) = fq.mul(a.e1, a.e1)
-        let (c3 : Uint384) = fq.add(c0, c1)
+        let (c0 : Uint384) = fq_lib.mul(a.e0, a.e0)
+        let (c1 : Uint384) = fq_lib.mul(a.e1, a.e1)
+        let (c3 : Uint384) = fq_lib.add(c0, c1)
 
-        let (is_quad_nonresidue : felt) = fq.is_quadratic_nonresidue(c3)
+        let (is_quad_nonresidue : felt) = fq_lib.is_quadratic_nonresidue(c3)
 
         return (is_quad_nonresidue)
+    end
 
+    func sqrt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        return (a)
     end
 end
