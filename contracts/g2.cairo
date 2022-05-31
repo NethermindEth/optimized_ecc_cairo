@@ -3,6 +3,7 @@
 
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from lib.g2 import G2Point, g2_lib
+from lib.fq2 import fq2
 
 @view
 func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : G2Point, y : G2Point) -> (
@@ -12,4 +13,14 @@ func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : G2Point, y : G2Poin
     let (res : G2Point) = g2_lib.add(x, y)
 
     return (res)
+end
+
+@view
+func swu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(e : fq2.FQ2, u : fq2.FQ2) -> (
+        x : fq2.FQ2, y : fq2.FQ2):
+    alloc_locals
+    let (x : fq2.FQ2, y : fq2.FQ2) = g2_lib.simplified_swu(e, u)
+
+    return (x, y)
+
 end

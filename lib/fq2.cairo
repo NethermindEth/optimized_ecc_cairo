@@ -1,4 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.math_cmp import is_not_zero
 from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
@@ -102,5 +103,33 @@ namespace fq2_lib:
         let (x_times_y : FQ2) = sub(x, y)
         let (res : FQ2) = sub(x_times_y, z)
         return (res)
+
+    # TODO : Is there a more efficient algorithm
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
+        let (res : FQ2) = mul(a, a)
+        return (res)
+    end
+
+    func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        return (a)
+    end
+
+    func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
+        let (res) = is_not_zero(a.e0.d0 + a.e0.d1 + a.e0.d2 + a.e1.d0 + a.e1.d1 + a.e1.d2)
+        return (res)
+    end
+
+    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (
+            is_quad_nonresidue):
+        alloc_locals
+
+        let (c0 : Uint384) = fq.mul(a.e0, a.e0)
+        let (c1 : Uint384) = fq.mul(a.e1, a.e1)
+        let (c3 : Uint384) = fq.add(c0, c1)
+
+        let (is_quad_nonresidue : felt) = fq.is_quadratic_nonresidue(c3)
+
+        return (is_quad_nonresidue)
+
     end
 end

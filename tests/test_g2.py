@@ -1,6 +1,7 @@
 import pytest
 
-from utils import G2Point
+
+from utils import G2Point, splitFQP, split
 
 @pytest.mark.asyncio
 async def test_g1_add_properties(g2_factory):
@@ -30,3 +31,15 @@ async def test_g1_add_properties(g2_factory):
     print( G2Point(res_1))
     print( G2Point(res_2))
     assert G2Point(res_1) == G2Point(res_2)
+
+@pytest.mark.asyncio
+async def test_simplified_swu(g2_factory):
+    contract = g2_factory
+
+    execution_info = await contract.swu(splitFQP([1, 1]), splitFQP([1, 1])).call()
+    res_x = execution_info.result.x
+    res_y = execution_info.result.y
+
+    assert res_x == res_y
+
+

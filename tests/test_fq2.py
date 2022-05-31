@@ -21,8 +21,6 @@ async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
     x = (x1, x2)
     y = (y1, y2)
     
-
-    
     contract = fq2_factory
     execution_info = await contract.mul(splitFQP(x), splitFQP(y)).call()
     cairo_result = packFQP(execution_info.result[0])
