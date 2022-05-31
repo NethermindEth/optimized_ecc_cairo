@@ -131,9 +131,10 @@ async def test_fq2_sub(fq2_factory, x1, x2, y1, y2):
 @pytest.mark.asyncio
 async def test_fq2_get_inverse(fq2_factory, x0, x1):
     contract = fq2_factory
-    execution_info = await contract.get_inverse((split(x0), split(x1))).call()
+    execution_info = await contract.inv((split(x0), split(x1))).call()
 
-    x_inv_fq2 = packFQP(execution_info.result[0])
+    x_inv = packFQP(execution_info.result[0])
+    x_inv_fq2 = FQ2(x_inv)
     x_fq2 = FQ2((x0, x1))
     
     assert x_fq2 * x_inv_fq2 ==  FQ2.one()
