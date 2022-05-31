@@ -7,8 +7,8 @@ from utils import G1Point
 async def test_g1_add_properties(g1_factory):
     contract = g1_factory
 
-    a = G1Point((1,1,1))
-    b = G1Point((2,2,1))
+    a = G1Point((1,0,1))
+    b = G1Point((2,1,1))
     zero = G1Point((0,0,0))
     # a + 0
     execution_info = await contract.add(a.asTuple(), zero.asTuple()).call()

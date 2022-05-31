@@ -2,21 +2,25 @@ from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic import field_arithmetic_lib
 from lib.multi_precision import multi_precision
-from lib.curve import get_modulus, get_r_squared
+from lib.curve import get_modulus, get_r_squared, get_p_minus_one_div_2
 from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero
-namespace fq:
+
+namespace fq_lib:
+
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-            sum_mod : Uint384):
+        sum_mod : Uint384
+    ):
         let (q : Uint384) = get_modulus()
         let (sum : Uint384) = field_arithmetic_lib.add(x, y, q)
         return (sum)
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-            difference : Uint384):
+        difference : Uint384
+    ):
         alloc_locals
         let (local q : Uint384) = get_modulus()
         local range_check_ptr = range_check_ptr
@@ -31,7 +35,8 @@ namespace fq:
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-            product : Uint384):
+        product : Uint384
+    ):
         let (q : Uint384) = get_modulus()
         let (res : Uint384) = field_arithmetic_lib.mul(x, y, q)
         return (res)
@@ -63,6 +68,33 @@ namespace fq:
         return (res)
     end
 
+    func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent : Uint384) -> (
+        res : Uint384
+    ):
+        alloc_locals
+        let (q : Uint384) = get_modulus()
+        let (res : Uint384) = field_arithmetic_lib.pow(x, exponent, q)
+        return (res)
+    end
+
+    # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
+    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
+        alloc_locals
+        let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
+        if is_x_zero == 1:
+            return (1)
+        end
+        let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
+        let (res : Uint384) = pow(x, p_minus_one_div_2)
+        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
+        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
+        if is_res_one == 1:
+            return (1)
+        else:
+            return (0)
+        end
+    end
+    
     func from_256_bits{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint256) -> (
             res : Uint384):
         alloc_locals
@@ -71,7 +103,7 @@ namespace fq:
 
         return (res)
     end
-
+    
     func toMont{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint384) -> (res : Uint384):
         alloc_locals
 
@@ -81,8 +113,8 @@ namespace fq:
 
         return (res)
     end
-
-    func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+    
+   func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             a0 : Uint256, a1 : Uint256) -> (res : Uint384):
         alloc_locals
 
@@ -110,3 +142,4 @@ namespace fq:
         end
     end
 end
+
