@@ -106,6 +106,8 @@ def three_isogeny_constants_g2():
 
     secret_number = pack([int('760900000002fffd', 16), int('ebf4000bc40c0002', 16), int('5f48985753c758ba', 16), int('77ce585370525745', 16), int('5c071a97a256ec6d', 16), int('15f65ec3fa80e493', 16)], 64)
     
+    temp = pack([int('47f671c71ce05e62', 16), int('06dd57071206393e', 16), int('7c80cd2af3fd71a2', 16), int('048103ea9e6cd062',16), int('c54516acc8d037f6',16), int('13808f550920ea41',16)], 64)
+    
     print_isogyny_params(
         [x_num_1, x_num_1_i],
         [0, x_num_2_i],
