@@ -1,6 +1,7 @@
 import pytest
 
-from utils import G2Point, splitFQP
+from utils import G2Point, splitFQP, pack
+
 
 @pytest.mark.asyncio
 async def test_simplified_swu(g2_factory):
@@ -8,7 +9,6 @@ async def test_simplified_swu(g2_factory):
 
     u = (3167513664919274145284120531783832167109412382891894149785243170285502267171979051519659283907216630953242533668083, 937777375012248364046258719955852202763745212036378667068270601128566462923809130180553313818680631629584660435720)
     split_u = splitFQP(u)
-    print(split_u)
     execution_info = await contract.swu(split_u).call()
     res_x = execution_info.result.x
     res_y = execution_info.result.y
@@ -17,9 +17,11 @@ async def test_simplified_swu(g2_factory):
 
     y2 = (1383282644364609129277359791348395049910790469702063624415180184742517341199180212944747239958125534558515354701338, 1540394283934845078656854127456278548048151841836384388403519137407486470551958789391043830952784400250293246580758)
     
-    
-    assert res_x == res_y
+    assert pack(res_x.e0) == x[0]
+    assert pack(res_x.e1) == x[1]
 
+    assert pack(res_y.e0) == y2[0]
+    assert pack(res_y.e1) == y2[1]
 
 @pytest.mark.asyncio
 async def test_g1_add_properties(g2_factory):
@@ -49,4 +51,7 @@ async def test_g1_add_properties(g2_factory):
     print( G2Point(res_1))
     print( G2Point(res_2))
     assert G2Point(res_1) == G2Point(res_2)
+
+
+
 

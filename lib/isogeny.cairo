@@ -1,5 +1,5 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.fq2 import FQ2, fq2
+from lib.fq2 import FQ2, fq2_lib
 from lib.uint384 import Uint384
 
 struct ParamsThreeIsogenyG2:
@@ -43,7 +43,7 @@ func get_params_three_isogeny_g2() -> (params : ParamsThreeIsogenyG2):
         ))
 end
 
-func isogenyMapG2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
+func isogeny_map_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
         x_res : FQ2, y_res : FQ2):
     let (params : ParamsThreeIsogenyG2) = get_params_three_isogeny_g2()
 
@@ -52,43 +52,43 @@ func isogenyMapG2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : F
     let y_num : FQ2 = params.y_num_4
     let y_den : FQ2 = params.y_den_4
 
-    let x_num = fq2.mul(x_num, x)
-    let x_den = fq2.mul(x_den, x)
-    let y_num = fq2.mul(y_num, x)
-    let y_den = fq2.mul(y_den, x)
+    let x_num = fq2_lib.mul(x_num, x)
+    let x_den = fq2_lib.mul(x_den, x)
+    let y_num = fq2_lib.mul(y_num, x)
+    let y_den = fq2_lib.mul(y_den, x)
 
-    let x_num = fq2.add(x_num, params.x_num_3)
-    let x_den = fq2.add(x_den, params.x_den_3)
-    let y_num = fq2.add(y_num, params.y_num_3)
-    let y_den = fq2.add(y_den, params.y_den_3)
+    let x_num = fq2_lib.add(x_num, params.x_num_3)
+    let x_den = fq2_lib.add(x_den, params.x_den_3)
+    let y_num = fq2_lib.add(y_num, params.y_num_3)
+    let y_den = fq2_lib.add(y_den, params.y_den_3)
 
-    let x_num = fq2.mul(x_num, x)
-    let x_den = fq2.mul(x_den, x)
-    let y_num = fq2.mul(y_num, x)
-    let y_den = fq2.mul(y_den, x)
+    let x_num = fq2_lib.mul(x_num, x)
+    let x_den = fq2_lib.mul(x_den, x)
+    let y_num = fq2_lib.mul(y_num, x)
+    let y_den = fq2_lib.mul(y_den, x)
 
-    let x_num = fq2.add(x_num, params.x_num_2)
-    let x_den = fq2.add(x_den, params.x_den_2)
-    let y_num = fq2.add(y_num, params.y_num_2)
-    let y_den = fq2.add(y_den, params.y_den_2)
+    let x_num = fq2_lib.add(x_num, params.x_num_2)
+    let x_den = fq2_lib.add(x_den, params.x_den_2)
+    let y_num = fq2_lib.add(y_num, params.y_num_2)
+    let y_den = fq2_lib.add(y_den, params.y_den_2)
 
-    let x_num = fq2.mul(x_num, x)
-    let x_den = fq2.mul(x_den, x)
-    let y_num = fq2.mul(y_num, x)
-    let y_den = fq2.mul(y_den, x)
+    let x_num = fq2_lib.mul(x_num, x)
+    let x_den = fq2_lib.mul(x_den, x)
+    let y_num = fq2_lib.mul(y_num, x)
+    let y_den = fq2_lib.mul(y_den, x)
 
-    let x_num = fq2.add(x_num, params.x_num_1)
-    let x_den = fq2.add(x_den, params.x_den_1)
-    let y_num = fq2.add(y_num, params.y_num_1)
-    let y_den = fq2.add(y_den, params.y_den_1)
+    let x_num = fq2_lib.add(x_num, params.x_num_1)
+    let x_den = fq2_lib.add(x_den, params.x_den_1)
+    let y_num = fq2_lib.add(y_num, params.y_num_1)
+    let y_den = fq2_lib.add(y_den, params.y_den_1)
 
-    let x_den = fq2.inv(x_den)
-    let y_den = fq2.inv(y_den)
+    let x_den = fq2_lib.inv(x_den)
+    let y_den = fq2_lib.inv(y_den)
 
-    let (x_num : FQ2) = fq2.mul(x_num, x_den)
-    let (y_num : FQ2) = fq2.mul(y_num, y_den)
+    let (x_num : FQ2) = fq2_lib.mul(x_num, x_den)
+    let (y_num : FQ2) = fq2_lib.mul(y_num, y_den)
 
-    let (y_num : FQ2) = fq2.mul(y_num, y)
+    let (y_num : FQ2) = fq2_lib.mul(y_num, y)
 
     return (x_num, y_num)
 end

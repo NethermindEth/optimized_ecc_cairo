@@ -26,15 +26,36 @@ end
 func simplified_swu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2) -> (x : FQ2, y : FQ2):
     alloc_locals
 
+    %{
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (z.d0, z.d1, z.d2)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+        print(pack(ids.u.e0))
+        print(pack(ids.u.e1))
+    %}
+
     let (params : ParamsSWU) = get_swu_g2_params()
     # should use squaring algorithm
     let (u_squared : FQ2) = fq2_lib.square(u)
+    %{
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (z.d0, z.d1, z.d2)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+        print(pack(ids.u_squared.e0))
+        print(pack(ids.u_squared.e1))
+    %}
     let (tv1 : FQ2) = fq2_lib.mul(u_squared, params.z)
     let (tv2 : FQ2) = fq2_lib.square(tv1)
     let (x1 : FQ2) = fq2_lib.add(tv1, tv2)
+
     let (x1 : FQ2) = fq2_lib.inv(x1)
     let (x1_is_not_zero : felt) = fq2_lib.check_is_not_zero(x1)
 
+    let (one : FQ2) = fq2_lib.one()
+
+    let (x1 : FQ2) = fq2_lib.add(x1, one)
     if x1_is_not_zero == 0:
         tempvar x1 : FQ2 = params.z_inv
     else:

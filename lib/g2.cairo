@@ -1,7 +1,12 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.uint256 import Uint256
 from lib.uint384 import Uint384
 from lib.fq import fq_lib
 from lib.fq2 import FQ2, fq2_lib
+from lib.hash_to_field import expand_msg_sha_xmd
+from lib.swu import simplified_swu
+from lib.curve import get_r_mod_p
+from lib.isogeny import isogeny_map_g2
 # Jacobian coordinate representation
 # To retrive normal cordinates perform x = x / z ^ 2 and y = y / z ^ 3
 struct G2Point:
@@ -20,12 +25,12 @@ namespace g2_lib:
     # Addition optimized for the curve y**2 = x**3 + 4 using Jacobian coordinate representation
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
             res : G2Point):
-        let (is_p1_z_coord_zero) = fq2_lib.is_zero(p1.z)
-        if is_z_coord_zero == 1:
+        let (is_z_p1_coord_zero) = fq2_lib.is_zero(p1.z)
+        if is_z_p1_coord_zero == 1:
             return (p2)
         end
         let (is_p2_z_coord_zero) = fq2_lib.is_zero(p2.z)
-        if is_z_coord_zero == 1:
+        if is_p2_z_coord_zero == 1:
             return (p1)
         end
 
@@ -104,4 +109,28 @@ namespace g2_lib:
         return (G2Point(new_x, new_y, new_z))
     end
 
+    func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint256) -> (
+            point_on_curve : G2Point):
+        let (one : Uint256, two : Uint256, three : Uint256, four : Uint256, _, _, _,
+            _) = expand_msg_sha_xmd(hash)
+
+        let (u0 : FQ2) = FQ2(one, two)
+        let (u1 : FQ2) = FQ2(three, four)
+
+        let (x0 : FQ2, y0 : FQ2) = simplified_swu(u0)
+        let (x1 : FQ2, y1 : FQ2) = simplified_swu(u1)
+
+        let (z : Uint384) = fq2_lib.one()
+
+        let p0 : G2Point = G2Point(x=x0, y=y0, z=z)
+        let p1 : G2Point = G2Point(x=x0, y=y0, z=z)
+
+        let (p0 : G2Point) = add(p0, p1)
+        # TODO : affine
+
+        let (p0 : G2Point) = isogeny_map_g2(p0.x, p0.y)
+
+        # TODO : clear cofactor
+        return (p0)
+    end
 end

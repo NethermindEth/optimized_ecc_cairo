@@ -9,18 +9,15 @@ from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero
 
 namespace fq_lib:
-
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-        sum_mod : Uint384
-    ):
+            sum_mod : Uint384):
         let (q : Uint384) = get_modulus()
         let (sum : Uint384) = field_arithmetic_lib.add(x, y, q)
         return (sum)
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-        difference : Uint384
-    ):
+            difference : Uint384):
         alloc_locals
         let (local q : Uint384) = get_modulus()
         local range_check_ptr = range_check_ptr
@@ -35,8 +32,7 @@ namespace fq_lib:
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
-        product : Uint384
-    ):
+            product : Uint384):
         let (q : Uint384) = get_modulus()
         let (res : Uint384) = field_arithmetic_lib.mul(x, y, q)
         return (res)
@@ -69,11 +65,11 @@ namespace fq_lib:
     end
 
     func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent : Uint384) -> (
-        res : Uint384
-    ):
+            res : Uint384):
         alloc_locals
         let (q : Uint384) = get_modulus()
         let (res : Uint384) = field_arithmetic_lib.pow(x, exponent, q)
+        %{ print("done") %}
         return (res)
     end
 
@@ -86,7 +82,7 @@ namespace fq_lib:
         end
         let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
         let (res : Uint384) = pow(x, p_minus_one_div_2)
-        %{ 
+        %{
             limbs = [ids.res.d0, ids.res.d1, ids.res.d2]
             r = sum(limb << (128 * i) for i, limb in enumerate(limbs))
             print('findme2', r)
@@ -99,7 +95,7 @@ namespace fq_lib:
             return (0)
         end
     end
-    
+
     func from_256_bits{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint256) -> (
             res : Uint384):
         alloc_locals
@@ -108,7 +104,7 @@ namespace fq_lib:
 
         return (res)
     end
-    
+
     func toMont{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint384) -> (res : Uint384):
         alloc_locals
 
@@ -118,8 +114,8 @@ namespace fq_lib:
 
         return (res)
     end
-    
-   func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+
+    func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             a0 : Uint256, a1 : Uint256) -> (res : Uint384):
         alloc_locals
 
@@ -146,5 +142,20 @@ namespace fq_lib:
             return (0)
         end
     end
-end
 
+    # @dev one is r mod p
+    func one() -> (res : Uint384):
+        return (
+            res=Uint384(
+            d0=313635500375121084810881640338032885757,
+            d1=159249536114007638540741953206796900538,
+            d2=29193015012204308844271843190429379693))
+    end
+
+    func zero() -> (res : Uint384):
+        return (res=Uint384(
+            d0=0,
+            d1=0,
+            d2=0))
+    end
+end

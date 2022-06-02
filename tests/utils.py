@@ -95,9 +95,15 @@ BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
 TupleOrG1Point = Union[tuple, T_G1Point]
 class G1Point: 
     def __init__(self, values: tuple): 
-        self.x = Uint384(values[0])
-        self.y = Uint384(values[1])
-        self.z = Uint384(values[2])
+        if isinstance(values, int):
+            parts = split(values)
+            self.d0 = parts[0]
+            self.d1 = parts[1]
+            self.d2 = parts[2]
+        elif isinstance(values, tuple):
+            self.d0 = values[0]
+            self.d1 = values[1]
+            self.d2 = values[2]
 
     def __eq__(self, other : TupleOrG1Point) -> bool:
         if isinstance(other, tuple):
@@ -125,6 +131,7 @@ BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
 TupleOrG2Point = Union[tuple, T_G2Point]
 class G2Point: 
     def __init__(self, values: tuple): 
+        print(values)
         self.x = G1Point(values[0])
         self.y = G1Point(values[1])
         self.z = G1Point(values[2])

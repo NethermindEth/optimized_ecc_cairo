@@ -4,6 +4,7 @@ import os
 import pytest
 from starkware.starknet.testing.starknet import Starknet
 from starkware.starknet.compiler.compile import compile_starknet_files
+from starkware.starknet.definitions.general_config import build_general_config, default_general_config
 
 one_bigint6 = (1, 0, 0, 0, 0, 0)
 
@@ -44,7 +45,11 @@ def event_loop():
 
 @pytest.fixture(scope="module")
 async def starknet_factory():
-    starknet = await Starknet.empty()
+    MAX_STEPS = 10 ** 60
+    default_config = default_general_config
+    default_config['invoke_tx_max_n_steps'] = MAX_STEPS
+    config = build_general_config(default_config)
+    starknet = await Starknet.empty(config)
     return starknet
 
 

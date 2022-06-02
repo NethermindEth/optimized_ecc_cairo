@@ -158,10 +158,17 @@ namespace fq2_lib:
         return (res)
     end
 
-    # TODO : Use an actual squaring algorithm
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
-        let (res : FQ2) = mul(a, a)
-        return (res)
+        alloc_locals
+
+        let (t_0 : Uint384) = fq_lib.add(a.e0, a.e1)
+        let (t_1 : Uint384) = fq_lib.sub(a.e0, a.e1)
+        let (t_2 : Uint384) = fq_lib.scalar_mul(2, a.e0)
+
+        let (c_0 : Uint384) = fq_lib.mul(t_0, t_1)
+        let (c_1 : Uint384) = fq_lib.mul(t_2, a.e1)
+
+        return (product=FQ2(e0=c_0, e1=c_1))
     end
 
     func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
@@ -184,5 +191,17 @@ namespace fq2_lib:
 
     func sqrt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
         return (a)
+    end
+
+    func one{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : FQ2):
+        return (
+            res=FQ2(e0=Uint384(
+                d0=313635500375121084810881640338032885757,
+                d1=159249536114007638540741953206796900538,
+                d2=29193015012204308844271843190429379693),
+            e1=Uint384(
+                d0=0,
+                d1=0,
+                d2=0)))
     end
 end
