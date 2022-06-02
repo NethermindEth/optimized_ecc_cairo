@@ -58,9 +58,11 @@ namespace fq_lib:
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : Uint384) -> (
         product : Uint384
     ):
-        # TODO: this assertion fails but not sure why
+        # TODO: I want to check that scalar is at most 2**128
+        # But I get an error if I do, even fi the scalar is less than 2**128. I think [range_check_ptr] is already filled?
+       
         # assert [range_check_ptr] = scalar
-
+        
         let packed : Uint384 = Uint384(d0=scalar, d1=0, d2=0)
         let (reduced : Uint384) = mul(packed, x)
 

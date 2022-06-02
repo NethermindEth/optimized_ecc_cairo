@@ -28,6 +28,17 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint38
 end
 
 @view
+func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}( scalar, x : Uint384 ) -> (
+        res : Uint384):
+    alloc_locals
+
+    let (res : Uint384) = fq_lib.scalar_mul(scalar, x)
+
+    return (res)
+end
+
+
+@view
 func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
         res : Uint384):
     alloc_locals

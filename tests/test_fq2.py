@@ -138,3 +138,40 @@ async def test_fq2_get_inverse(fq2_factory, x0, x1):
     x_fq2 = FQ2((x0, x1))
     
     assert x_fq2 * x_inv_fq2 ==  FQ2.one()
+
+@given(
+    x0=st.integers(min_value=1, max_value=field_modulus - 1),
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+    y0=st.integers(min_value=1, max_value=field_modulus - 1),
+    y1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_eq(fq2_factory, x0, x1, y0, y1):
+    contract = fq2_factory
+    execution_info = await contract.eq((split(x0), split(x1)), (split(y0), split(y1)), ).call()
+
+    res = execution_info.result[0]
+    x_fq2 = FQ2((x0, x1))
+    y_fq2 = FQ2((y0, y1))
+    python_res = int(x_fq2 == y_fq2)
+    assert res == python_res
+    
+
+
+@given(
+    x0=st.integers(min_value=1, max_value=field_modulus - 1),
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_is_zero(fq2_factory, x0, x1):
+    contract = fq2_factory
+    execution_info = await contract.is_zero((split(x0), split(x1))).call()
+
+    res = execution_info.result[0]
+    x_fq2 = FQ2((x0, x1))
+    zero_fq2 = FQ2.zero()
+    python_res = int(x_fq2 == zero_fq2)
+    assert res == python_res
+    

@@ -73,6 +73,25 @@ async def test_fq_sub(fq_factory, x, y):
     assert result == (x - y) % field_modulus
 
 
+
+
+@given(
+    x=st.integers(min_value=1, max_value=(field_modulus)),
+    scalar=st.integers(min_value=0, max_value=2**128-1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_scalar_mul(fq_factory, scalar, x ):
+    contract = fq_factory
+
+    execution_info = await contract.scalar_mul(scalar, split(x)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (scalar*x) % field_modulus
+
+
+
 @given(
     x=st.integers(min_value=1, max_value=(field_modulus)),
 )

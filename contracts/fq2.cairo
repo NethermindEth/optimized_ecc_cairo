@@ -55,3 +55,28 @@ func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
 
     return (res)
 end
+
+
+
+@view
+func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
+        res : felt):
+    alloc_locals
+
+    let (res) = fq2_lib.eq(x, y)
+
+    return (res)
+end
+
+
+
+@view
+func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
+        bool : felt):
+    alloc_locals
+
+    let (res) = fq2_lib.is_zero(x)
+
+    return (res)
+end
+
