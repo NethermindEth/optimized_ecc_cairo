@@ -131,7 +131,6 @@ BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
 TupleOrG2Point = Union[tuple, T_G2Point]
 class G2Point: 
     def __init__(self, values: tuple): 
-        print(values)
         self.x = G1Point(values[0])
         self.y = G1Point(values[1])
         self.z = G1Point(values[2])
