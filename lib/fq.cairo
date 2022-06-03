@@ -1,10 +1,11 @@
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic import field_arithmetic_lib
-from lib.curve import get_modulus
+from lib.curve import get_modulus, get_r_squared, get_p_minus_one_div_2
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.uint256 import Uint256
 
-namespace fq:
+namespace fq_lib:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
             sum_mod : Uint384):
         let (q : Uint384) = get_modulus()
@@ -58,5 +59,72 @@ namespace fq:
         let one = Uint384(1, 0, 0)
         let (res : Uint384) = field_arithmetic_lib.div(one, a)
         return (res)
+    end
+
+    func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent : Uint384) -> (
+            res : Uint384):
+        alloc_locals
+        let (q : Uint384) = get_modulus()
+        let (res : Uint384) = field_arithmetic_lib.pow(x, exponent, q)
+        return (res)
+    end
+
+    # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
+    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
+        alloc_locals
+        let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
+        if is_x_zero == 1:
+            return (1)
+        end
+        let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
+        let (res : Uint384) = pow(x, p_minus_one_div_2)
+        %{
+            limbs = [ids.res.d0, ids.res.d1, ids.res.d2]
+            r = sum(limb << (128 * i) for i, limb in enumerate(limbs))
+            print('findme2', r)
+        %}
+        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
+        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
+        if is_res_one == 1:
+            return (1)
+        else:
+            return (0)
+        end
+    end
+
+    func from_256_bits{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint256) -> (
+            res : Uint384):
+        alloc_locals
+
+        let (res : Uint384) = toMont(Uint384(d0=input.low, d1=input.high, d2=0))
+
+        return (res)
+    end
+
+    func toMont{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint384) -> (res : Uint384):
+        alloc_locals
+
+        let (r_squared : Uint384) = get_r_squared()
+
+        let (res : Uint384) = mul(input, r_squared)
+
+        return (res)
+    end
+
+    func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            a0 : Uint256, a1 : Uint256) -> (res : Uint384):
+        alloc_locals
+
+        let (e0 : Uint384) = from_256_bits(a0)
+        let (e1 : Uint384) = from_256_bits(a1)
+
+        let r_mul_2_exp_256 = Uint384(
+            d0=83443990817942453676606800841426240015,
+            d1=179976616674212183434706501874187463630,
+            d2=20718090071492759477555588592749303856)
+
+        let (e0_mul_f : Uint384) = mul(e0, r_mul_2_exp_256)
+        let (e1_final : Uint384) = add(e1, e0_mul_f)
+        return (e1_final)
     end
 end

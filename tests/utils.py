@@ -8,7 +8,7 @@ max_base_bigint12_sum =( 2 ** 768 ) - 1
 base = 2 ** 64
 
 field_modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-
+field_modulus_sub1_div2 = 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279893
 max_felt = 2**241
 max_limb = 2**128 - 1
 
@@ -61,14 +61,14 @@ class Uint384:
                 .format(type(val))
             )
 
-    def __str__(self):
+    def __repr__(self):
         return f'Uint384 value is {pack(self)})'
-
+    
     def __eq__(self, other:  IntOrUint384 ) -> bool:
         if isinstance(other, int):
-            return pack(self) == int
+            return pack(self.asTuple()) == int
         elif isinstance(other, Uint384):
-            return pack(self) == pack(other)
+            return pack(self.asTuple()) == pack(other.asTuple())
         else:
             raise TypeError(
                 "Expected an int or Uint384, but got object of type {}"
@@ -87,6 +87,36 @@ class G1Point:
         self.x = Uint384(values[0])
         self.y = Uint384(values[1])
         self.z = Uint384(values[2])
+
+    def __eq__(self, other : TupleOrG1Point) -> bool:
+        if isinstance(other, tuple):
+            return self.x == Uint384(other[0]) &  self.y == Uint384(other[1]) & self.z == Uint384(other[2])
+        elif isinstance(other, tuple):
+            return self.x == other[0] & self.y == other[1] & self.z == other[2]
+        elif isinstance(other, G1Point):
+            return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
+        else:
+            raise TypeError(
+                "Expected a tuple or G1Point, but got object of type {}"
+                .format(type(other))
+            )
+
+    def asTuple(self) -> tuple:
+        return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
+
+    def __str__(self):
+        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'
+    
+
+T_G2Point = TypeVar('T_G2Point', bound="G2Point")
+IntTuple = (int,int,int)
+BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
+TupleOrG2Point = Union[tuple, T_G2Point]
+class G2Point: 
+    def __init__(self, values: tuple): 
+        self.x = G1Point(values[0])
+        self.y = G1Point(values[1])
+        self.z = G1Point(values[2])
 
     def __eq__(self, other : TupleOrG1Point) -> bool:
         if isinstance(other, tuple):

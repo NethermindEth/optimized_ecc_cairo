@@ -120,10 +120,10 @@ namespace field_arithmetic_lib:
 
         let (is_exp_one) = uint384_lib.eq(exp, Uint384(1, 0, 0))
         if is_exp_one == 1:
-            # If exp = 1, it is possible that `a` is not reduced mod p, 
+            # If exp = 1, it is possible that `a` is not reduced mod p,
             # so we check and reduce if necessary
             let (is_a_lt_p) = uint384_lib.lt(a, p)
-            if is_a_lt_p == 1:            
+            if is_a_lt_p == 1:
                 return (a)
             else:
                 let (quotient, remainder) = uint384_lib.unsigned_div_rem(a, p)

@@ -6,10 +6,23 @@ const P0 = 40769914829639538012874174947278170795
 const P1 = 133542214618860690590306275168919549476
 const P2 = 34565483545414906068789196026815425751
 
+# (p-1)/2
+const p_minus_one_div_2 = 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279893
+
+const P0_p_minus_one_div_2 = 20384957414819769006437087473639085397
+const P1_p_minus_one_div_2 = 236912290769899577026840441300343880466
+const P2_p_minus_one_div_2 = 17282741772707453034394598013407712875
+
+
 # @dev modify the returned value of this function to adjust the modulus
 # @dev modulus must be less than 2 ** (128 * 3)
 func get_modulus{range_check_ptr}() -> (mod : Uint384):
     return (mod=Uint384(d0=P0, d1=P1, d2=P2))
+end
+
+
+func get_p_minus_one_div_2()-> (res :Uint384):
+    return (res=Uint384(d0=P0_p_minus_one_div_2, d1=P1_p_minus_one_div_2, d2=P2_p_minus_one_div_2))
 end
 
 # Modulus coefficients for fq2
@@ -29,3 +42,11 @@ const fq12_c8 = 0
 const fq12_c9 = 0
 const fq12_c10 = 0
 const fq12_c11 = 0
+
+func get_r_squared() -> (r_squared : Uint384):
+    return (
+        r_squared=Uint384(
+        d0=13909649096278139578749890098095200070,
+        d1=138133445170552300919073500999554807509,
+        d2=23389023624093491168052924610514621741))
+end
