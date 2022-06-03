@@ -1,12 +1,8 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq
-from lib.multi_precision import multi_precision as mp
-from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
 from lib.curve import fq2_c0, fq2_c1, get_modulus
-
 
 struct FQ12:
     member e0 : Uint384
@@ -26,11 +22,8 @@ end
 # This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 
 namespace fq12:
-    
-
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-        sum_mod : FQ12
-    ):
+            sum_mod : FQ12):
         # TODO: check why alloc_locals seems to be needed here
         alloc_locals
         let (e0 : Uint384) = fq.add(x.e0, y.e0)
@@ -45,13 +38,12 @@ namespace fq12:
         let (e9 : Uint384) = fq.add(x.e9, y.e9)
         let (e10 : Uint384) = fq.add(x.e10, y.e10)
         let (e11 : Uint384) = fq.add(x.e11, y.e11)
-        let res  = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
-        return (res)    
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
+        return (res)
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-        sum_mod : FQ12
-    ):
+            sum_mod : FQ12):
         alloc_locals
         let (e0 : Uint384) = fq.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq.sub(x.e1, y.e1)
@@ -65,13 +57,12 @@ namespace fq12:
         let (e9 : Uint384) = fq.sub(x.e9, y.e9)
         let (e10 : Uint384) = fq.sub(x.e10, y.e10)
         let (e11 : Uint384) = fq.sub(x.e11, y.e11)
-        let res  = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
         return (res)
     end
 
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ12) -> (
-        product : FQ12
-    ):
+            product : FQ12):
         alloc_locals
         let (e0 : Uint384) = fq.scalar_mul(x, y.e0)
         let (e1 : Uint384) = fq.scalar_mul(x, y.e1)
@@ -85,15 +76,14 @@ namespace fq12:
         let (e9 : Uint384) = fq.scalar_mul(x, y.e9)
         let (e10 : Uint384) = fq.scalar_mul(x, y.e10)
         let (e11 : Uint384) = fq.scalar_mul(x, y.e11)
-        let res  = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11)
         return (res)
     end
-    
+
     # TODO: would it be better to compute multiplication using a tower of small extensions?
     # The modulus polynomial coeffs are : 2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12, b : FQ12) -> (
-        product : FQ12
-    ):
+            product : FQ12):
         alloc_locals
         # d0
         let (d0 : Uint384) = fq.mul(a.e0, b.e0)
@@ -425,8 +415,8 @@ namespace fq12:
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(
-    coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384
-) -> (new_first_coef : Uint384, new_second_coef : Uint384):
+        coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384) -> (
+        new_first_coef : Uint384, new_second_coef : Uint384):
     # TODO: some way to avoid using local variables? (to improve efficiency)
     alloc_locals
     let (local twice_coeff_to_reduce : Uint384) = fq.scalar_mul(2, coeff_to_reduce)

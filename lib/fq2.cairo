@@ -1,10 +1,7 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq
-from lib.multi_precision import multi_precision as mp
-from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
 from lib.curve import fq2_c0, fq2_c1, get_modulus
 
 namespace fq2:
@@ -46,13 +43,13 @@ namespace fq2:
         let (b_1_0 : Uint384) = fq.mul(a.e1, b.e0)
         let (second_term : Uint384) = fq.add(b_0_1, b_1_0)
         let (third_term : Uint384) = fq.mul(a.e1, b.e1)
-        
+
         # Using the irreducible polynomial x**2 + 1 as modulus, we get that
         # x**2 = -1, so the term `a.e1 * b.e1 * x**2` becomes
         # `- a.e1 * b.e1` (always reducing mod p). This way the first term of
         # the multiplicaiton is `a.e0 * b.e0 - a.e1 * b.e1`
         let (first_term) = fq.sub(first_term, third_term)
-        
+
         return (FQ2(e0=first_term, e1=second_term))
     end
 end

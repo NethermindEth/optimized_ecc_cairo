@@ -2,7 +2,6 @@
 %builtins range_check bitwise
 
 from lib.fq2 import fq2
-from lib.BigInt6 import BigInt6
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 @view
