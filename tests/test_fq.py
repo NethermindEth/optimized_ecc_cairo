@@ -3,8 +3,6 @@ from utils import split, pack, field_modulus
 from utils import (
     split,
     pack,
-    pack12,
-    max_base_bigint12_sum,
     field_modulus,
 )
 from math import sqrt
