@@ -152,19 +152,11 @@ namespace g2_lib:
             return (res)
         end
     end
-
+    
+    # TODO: Not tested
     func get_zero() -> (res : G2Point):
         let (one: FQ2) = fq2_lib.get_one()
         let (zero: FQ2) = fq2_lib.get_zero()
         return (G2Point(x=one, y=one, z=zero))
     end
 end
-
-# if n == 0:
-#     return (pt[0].one(), pt[0].one(), pt[0].zero())
-# elif n == 1:
-#     return pt
-# elif not n % 2:
-#     return multiply(double(pt), n // 2)
-# else:
-#     return add(multiply(double(pt), int(n // 2)), pt)

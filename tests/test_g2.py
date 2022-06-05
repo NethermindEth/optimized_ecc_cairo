@@ -2,35 +2,65 @@ from re import A
 from matplotlib.cm import register_cmap
 import pytest
 from hypothesis import given, strategies as st, settings
-from utils import create_G2Point_from_execution_result, field_modulus, split, g2_add, get_g2_point_from_seed
+from sympy import Segment2D
+from utils import (
+    create_G2Point_from_execution_result,
+    field_modulus,
+    split,
+    g2_add,
+    get_g2_point_from_seed,
+    g2_scalar_mul,
+)
 
 
 
 
 @given(
-    a_seed=st.integers(min_value=1, max_value=field_modulus-1),
-    b_seed=st.integers(min_value=1, max_value=field_modulus-1),
+    a_seed=st.integers(min_value=1, max_value=field_modulus - 1),
+    b_seed=st.integers(min_value=1, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_g2_eq(g2_factory, a_seed, b_seed):
+    contract = g2_factory
+
+    a = get_g2_point_from_seed(a_seed)
+    b = get_g2_point_from_seed(b_seed)
+
+    execution_info = await contract.eq(a.asTuple(), b.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+
+    python_result = a == b
+    assert cairo_result == python_result
+
+
+@given(
+    a_seed=st.integers(min_value=1, max_value=field_modulus - 1),
+    b_seed=st.integers(min_value=1, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
 async def test_g2_add_properties(g2_factory, a_seed, b_seed):
     contract = g2_factory
-    
+
     print(a_seed, b_seed)
-    
+
     a = get_g2_point_from_seed(a_seed)
     b = get_g2_point_from_seed(b_seed)
     zero = get_g2_point_from_seed(0)
 
     # a + 0
-    execution_info = await contract.add(tuple(a.asTuple()), tuple(zero.asTuple())).call()
+    execution_info = await contract.add(
+        tuple(a.asTuple()), tuple(zero.asTuple())
+    ).call()
     res = execution_info.result[0]
-    assert a ==  create_G2Point_from_execution_result(res)
+    assert a == create_G2Point_from_execution_result(res)
 
     # 0 + b
     execution_info = await contract.add(zero.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
-    assert b ==  create_G2Point_from_execution_result(res)
+    assert b == create_G2Point_from_execution_result(res)
 
     # a + b = b + a
     execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
@@ -44,28 +74,24 @@ async def test_g2_add_properties(g2_factory, a_seed, b_seed):
     ) == create_G2Point_from_execution_result(res_2)
 
 
-
 @given(
-    a_seed=st.integers(min_value=1, max_value=field_modulus-1),
-    b_seed=st.integers(min_value=1, max_value=field_modulus-1),
+    a_seed=st.integers(min_value=1, max_value=field_modulus - 1),
+    b_seed=st.integers(min_value=1, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_g2_add(g2_factory,  a_seed, b_seed):
+async def test_g2_add(g2_factory, a_seed, b_seed):
     contract = g2_factory
-        
+
     a = get_g2_point_from_seed(a_seed)
     b = get_g2_point_from_seed(b_seed)
 
     execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
-    cairo_result = create_G2Point_from_execution_result(
-        res
-    ) 
-    
+    cairo_result = create_G2Point_from_execution_result(res)
+
     python_result = g2_add(a, b)
     assert cairo_result == python_result
-
 
 
 @pytest.mark.asyncio
@@ -77,33 +103,27 @@ async def test_g2_add_specific(g2_factory):
 
     execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
-    cairo_result = create_G2Point_from_execution_result(
-        res
-    ) 
-    
+    cairo_result = create_G2Point_from_execution_result(res)
+
     python_result = g2_add(a, b)
     assert cairo_result == python_result
 
 
 
-
 @given(
-    a_seed=st.integers(min_value=1, max_value=field_modulus-1),
-    b_seed=st.integers(min_value=1, max_value=field_modulus-1),
+    scalar=st.integers(min_value=1, max_value=field_modulus - 1),
+    Segment2D=st.integers(min_value=1, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_g2_scalar_mul(g2_factory,  a_seed, b_seed):
+async def test_g2_scalar_mul(g2_factory, scalar, seed):
     contract = g2_factory
-        
-    a = get_g2_point_from_seed(a_seed)
-    b = get_g2_point_from_seed(b_seed)
 
-    execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
+    a = get_g2_point_from_seed(seed)
+
+    execution_info = await contract.scalar_mul(scalar, a.asTuple()).call()
     res = execution_info.result[0]
-    cairo_result = create_G2Point_from_execution_result(
-        res
-    ) 
-    
-    python_result = g2_add(a, b)
+    cairo_result = create_G2Point_from_execution_result(res)
+
+    python_result = g2_scalar_mul(scalar, a)
     assert cairo_result == python_result

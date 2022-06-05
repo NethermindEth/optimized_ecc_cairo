@@ -252,3 +252,13 @@ def g2_add(p1: Optimized_Point3D_Modified,
 
 
 
+# Elliptic curve point multiplication
+def g2_scalar_mul(scalar, pt: Optimized_Point3D_Modified, n: int) -> Optimized_Point3D_Modified:
+    if n == 0:
+        return (FQ2.one(), FQ2.one(), FQ2.zero())
+    elif n == 1:
+        return pt
+    elif not n % 2:
+        return g2_scalar_mul(g2_double(pt), n // 2)
+    else:
+        return g2_add(g2_scalar_mul(g2_double(pt), int(n // 2)), pt)
