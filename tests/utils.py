@@ -1,60 +1,74 @@
 from typing import List, Tuple, Union, TypeVar
+from py_ecc.fields import optimized_bls12_381_FQ2 as FQ2
+one_bigint6 = (1, 0, 0, 0, 0, 0)
 
-one_bigint6 = ( 1, 0, 0, 0, 0, 0 )
-
-max_base_bigint6 = (2 ** 64 - 1, 0, 0, 0, 0, 0)
-max_base_bigint6_sum =( 2 ** 384 ) - 1
-max_base_bigint12_sum =( 2 ** 768 ) - 1
-base = 2 ** 64
+max_base_bigint6 = (2**64 - 1, 0, 0, 0, 0, 0)
+max_base_bigint6_sum = (2**384) - 1
+max_base_bigint12_sum = (2**768) - 1
+base = 2**64
 
 field_modulus = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
 field_modulus_sub1_div2 = 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279893
 max_felt = 2**241
 max_limb = 2**128 - 1
 
+
 def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
     a = []
     for _ in range(length):
-        a.append( num & ((1 << num_bits_shift) - 1) )
-        num = num >> num_bits_shift 
+        a.append(num & ((1 << num_bits_shift) - 1))
+        num = num >> num_bits_shift
     return tuple(a)
+
 
 def splitFQP(z):
     return tuple(split(z_component) for z_component in z)
 
-# Not checking for num = 0 
-def unsafe_split(num: int, length:int=6) -> List[int]:
-    BASE = 2 ** 64
+
+# Not checking for num = 0
+def unsafe_split(num: int, length: int = 6) -> List[int]:
+    BASE = 2**64
     a = []
     for _ in range(length):
         num, residue = divmod(num, BASE)
         a.append(residue)
-    return tuple(a),num
+    return tuple(a), num
+
 
 def pack(z, num_bits_shift: int = 128) -> int:
     limbs = (limb for limb in z)
     return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
+
 def packFQP(z):
     return tuple(pack(z_component) for z_component in z)
+
 
 # TODO: Not used?
 def pack12(z):
     limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5, z.d6, z.d7, z.d8, z.d9, z.d10, z.d11
     return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
 
+
 # TODO: Not used?
 def packEnum(z):
-    return z[0] + z[1] * 2 ** 64  + z[2]   * 2 ** (64 * 2 ) + z[3]  * 2 ** (64 * 3)  + z[4] * 2 ** (64 * 4) + z[5]  * 2 ** (64 * 5)
+    return (
+        z[0]
+        + z[1] * 2**64
+        + z[2] * 2 ** (64 * 2)
+        + z[3] * 2 ** (64 * 3)
+        + z[4] * 2 ** (64 * 4)
+        + z[5] * 2 ** (64 * 5)
+    )
 
 
-
-
-T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
+T_Uint384 = TypeVar("T_Uint384", bound="Uint384")
 IntOrUint384 = Union[int, T_Uint384]
 IntOrTuple = Union[int, tuple]
+
+
 class Uint384:
-    def __init__(self, val : IntOrTuple):
+    def __init__(self, val: IntOrTuple):
 
         if isinstance(val, int):
             parts = split(val)
@@ -68,82 +82,172 @@ class Uint384:
 
         else:
             raise TypeError(
-                "Expected an int or tuple, but got object of type {}"
-                .format(type(val))
+                "Expected an int or tuple, but got object of type {}".format(type(val))
             )
 
     def __repr__(self):
-        return f'Uint384 value is {pack(self)})'
-    
-    def __eq__(self, other:  IntOrUint384 ) -> bool:
+        return f"Uint384 value is {self.d0, self.d1, self.d2}"
+
+    def __eq__(self, other: IntOrUint384) -> bool:
         if isinstance(other, int):
             return pack(self.asTuple()) == int
         elif isinstance(other, Uint384):
             return pack(self.asTuple()) == pack(other.asTuple())
         else:
             raise TypeError(
-                "Expected an int or Uint384, but got object of type {}"
-                .format(type(other))
+                "Expected an int or Uint384, but got object of type {}".format(
+                    type(other)
+                )
             )
 
     def asTuple(self) -> tuple:
         return (self.d0, self.d1, self.d2)
 
-T_G1Point = TypeVar('T_G1Point', bound="G1Point")
-IntTuple = (int,int,int)
+
+T_G1Point = TypeVar("T_G1Point", bound="G1Point")
+IntTuple = (int, int, int)
 BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
 TupleOrG1Point = Union[tuple, T_G1Point]
-class G1Point: 
-    def __init__(self, values: tuple): 
+
+
+class G1Point:
+    def __init__(self, values: tuple):
         self.x = Uint384(values[0])
         self.y = Uint384(values[1])
         self.z = Uint384(values[2])
 
-    def __eq__(self, other : TupleOrG1Point) -> bool:
+    def __eq__(self, other: TupleOrG1Point) -> bool:
         if isinstance(other, tuple):
-            return self.x == Uint384(other[0]) &  self.y == Uint384(other[1]) & self.z == Uint384(other[2])
+            return (
+                self.x
+                == Uint384(other[0]) & self.y
+                == Uint384(other[1]) & self.z
+                == Uint384(other[2])
+            )
         elif isinstance(other, tuple):
             return self.x == other[0] & self.y == other[1] & self.z == other[2]
         elif isinstance(other, G1Point):
             return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
         else:
             raise TypeError(
-                "Expected a tuple or G1Point, but got object of type {}"
-                .format(type(other))
+                "Expected a tuple or G1Point, but got object of type {}".format(
+                    type(other)
+                )
             )
 
     def asTuple(self) -> tuple:
         return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
 
     def __str__(self):
-        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'
+        return f"G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})"
+
+
+# TODO: Add typing support similarly as in other classes
+class FQ2Element:
+    def __init__(self, e0: Uint384, e1:Uint384):
+        self.e0 = e0
+        self.e1 = e1
     
+    def __eq__(self, other):
+        return (self.e0 == other.e0) & (self.e1 == other.e1)
+    
+    def __repr__(self):
+        return f"FQ2 element: {self.e0}, {self.e1}"
+    
+    def asTuple(self):
+        return (self.e0.asTuple(), self.e1.asTuple())
 
-T_G2Point = TypeVar('T_G2Point', bound="G2Point")
-IntTuple = (int,int,int)
-BigInt6Tuple = (T_Uint384, T_Uint384, T_Uint384)
+T_G2Point = TypeVar("T_G2Point", bound="G2Point")
 TupleOrG2Point = Union[tuple, T_G2Point]
-class G2Point: 
-    def __init__(self, values: tuple): 
-        self.x = G1Point(values[0])
-        self.y = G1Point(values[1])
-        self.z = G1Point(values[2])
 
-    def __eq__(self, other : TupleOrG1Point) -> bool:
-        if isinstance(other, tuple):
-            return self.x == Uint384(other[0]) &  self.y == Uint384(other[1]) & self.z == Uint384(other[2])
-        elif isinstance(other, tuple):
-            return self.x == other[0] & self.y == other[1] & self.z == other[2]
-        elif isinstance(other, G1Point):
-            return (self.x == other.x) & (self.y == other.y) & (self.z == other.z)
-        else:
-            raise TypeError(
-                "Expected a tuple or G1Point, but got object of type {}"
-                .format(type(other))
+
+# This is a modification of Optimized_Point3D from the `py_ecc` library.
+# For some reason I was getting typing errors with it so I wrote a minimal modified implementation
+class Optimized_Point3D_Modified(object):
+    def __init__(self, x: FQ2, y: FQ2, z: FQ2):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __eq__(self, other):
+        return self.x * self.z == other.x * other.z
+    
+    def asTuple(self):
+        return (
+            tuple([split(coef)  for coef in self.x.coeffs]), 
+            tuple([split(coef)  for coef in self.y.coeffs]), 
+            tuple([split(coef)  for coef in self.z.coeffs]), 
             )
 
-    def asTuple(self) -> tuple:
-        return (self.x.asTuple(), self.y.asTuple(), self.z.asTuple())
 
-    def __str__(self):
-        return f'G1Point coordinates are {pack(self.x.asTuple())}, {pack(self.y.asTuple())}, {pack(self.z.asTuple())})'
+# Given an initial integer seed, creates a G2 point by taking the powers of the seed
+# Used in testing: to reduce the number of variables to be explored by `hypothesis`
+def get_g2_point_from_seed(seed):
+    components = [pow(seed, exp) for exp in range(6)]
+    return Optimized_Point3D_Modified(
+        FQ2((components[0], components[1])),
+        FQ2((components[2], components[3])),
+        FQ2((components[4], components[5])),
+    )
+
+# Given a G2Point resulting from a call to a StarkNet contract,
+# it created the corresponding `Optimized_Point3D_Modified` version
+# of the point
+def create_G2Point_from_execution_result(result): 
+    return Optimized_Point3D_Modified(
+        FQ2((pack(result[0][0]), pack(result[0][1]))),
+        FQ2((pack(result[1][0]), pack(result[1][1]))),
+        FQ2((pack(result[2][0]), pack(result[2][1]))),
+    )
+
+        
+# ----------------------------------------------------------------
+#
+# Almost copy-paste functions from py_ecc.optimized_curve
+# Modified to use `Optimized_Point3D_Modified` instead of `Optimized_Point3D`
+#
+#
+# ----------------------------------------------------------------
+def g2_double(pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
+    x, y, z = pt
+    W = 3 * x * x
+    S = y * z
+    B = x * y * S
+    H = W * W - 8 * B
+    S_squared = S * S
+    newx = 2 * H * S
+    newy = W * (4 * B - H) - 8 * y * y * S_squared
+    newz = 8 * S * S_squared
+    return (newx, newy, newz)
+
+
+# Elliptic curve addition
+def g2_add(p1: Optimized_Point3D_Modified,
+        p2: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
+    one, zero = p1[0].one(), p1[0].zero()
+    if p1[2] == zero or p2[2] == zero:
+        return p1 if p2[2] == zero else p2
+    x1, y1, z1 = p1
+    x2, y2, z2 = p2
+    U1 = y2 * z1
+    U2 = y1 * z2
+    V1 = x2 * z1
+    V2 = x1 * z2
+    if V1 == V2 and U1 == U2:
+        return g2_double(p1)
+    elif V1 == V2:
+        return (one, one, zero)
+    U = U1 - U2
+    V = V1 - V2
+    V_squared = V * V
+    V_squared_times_V2 = V_squared * V2
+    V_cubed = V * V_squared
+    W = z1 * z2
+    A = U * U * W - V_cubed - 2 * V_squared_times_V2
+    newx = V * A
+    newy = U * (V_squared_times_V2 - A) - V_cubed * U2
+    newz = V_cubed * W
+    return Optimized_Point3D_Modified(newx, newy, newz)
+
+
+

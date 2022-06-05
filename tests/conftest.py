@@ -30,7 +30,7 @@ def pack(z):
 
 FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
 G1_CONTRACT = os.path.join("contracts", "g1.cairo")
-G1_CONTRACT = os.path.join("contracts", "g2.cairo")
+G2_CONTRACT = os.path.join("contracts", "g2.cairo")
 FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")
 FQ12_CONTRACT = os.path.join("contracts", "fq12.cairo")
 BARRET_ALGORITHM_CONTRACT = os.path.join("contracts", "barret_algorithm.cairo")
