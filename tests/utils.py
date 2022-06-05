@@ -209,7 +209,7 @@ def create_G2Point_from_execution_result(result):
 #
 # ----------------------------------------------------------------
 def g2_double(pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
-    x, y, z = pt
+    x, y, z = pt.x, pt.y, pt.z
     W = 3 * x * x
     S = y * z
     B = x * y * S
@@ -226,10 +226,10 @@ def g2_add(p1: Optimized_Point3D_Modified,
         p2: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:    
     zero = FQ2.zero()
     one = FQ2.one()
-    if p1[2] == zero or p2[2] == zero:
-        return p1 if p2[2] == zero else p2
-    x1, y1, z1 = p1
-    x2, y2, z2 = p2
+    if p1.z == zero or p2.z == zero:
+        return p1 if p2.z == zero else p2
+    x1, y1, z1 = p1.x, p1.y, p1.z
+    x2, y2, z2 = p2.x, p2.y, p2.z
     U1 = y2 * z1
     U2 = y1 * z2
     V1 = x2 * z1
