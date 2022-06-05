@@ -223,8 +223,9 @@ def g2_double(pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
 
 # Elliptic curve addition
 def g2_add(p1: Optimized_Point3D_Modified,
-        p2: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
-    one, zero = p1[0].one(), p1[0].zero()
+        p2: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:    
+    zero = FQ2.zero()
+    one = FQ2.one()
     if p1[2] == zero or p2[2] == zero:
         return p1 if p2[2] == zero else p2
     x1, y1, z1 = p1

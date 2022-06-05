@@ -51,7 +51,7 @@ async def test_g2_add_properties(g2_factory, a_seed, b_seed):
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_g2_add(g2_factory,  a_seed, b_seed):
+async def test_g2_add_(g2_factory,  a_seed, b_seed):
     contract = g2_factory
         
     a = get_g2_point_from_seed(a_seed)

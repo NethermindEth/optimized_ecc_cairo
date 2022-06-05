@@ -17,7 +17,9 @@ namespace g2_lib:
         return (is_z_coord_zero)
     end
 
-    # Following TODO: add link
+    # Following `py_ecc` for these functions.
+    # TODO: For G1 we used a different (but equivalent) version of addition. Should we uniformize?
+    
     # Addition optimized for the curve y**2 = x**3 + 4 using Jacobian coordinate representation
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
         res : G2Point
