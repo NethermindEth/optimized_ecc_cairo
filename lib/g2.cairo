@@ -24,14 +24,15 @@ namespace g2_lib:
     func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
         bool : felt
     ):
-        let (p1_x_times_z) = fq2_lib.mul(p1.x, p1.z)
-        let (p2_x_times_z) = fq2_lib.mul(p2.x, p2.z)
+        alloc_locals
+        let (local p1_x_times_z: FQ2) = fq2_lib.mul(p1.x, p1.z)
+        let (p2_x_times_z: FQ2) = fq2_lib.mul(p2.x, p2.z)
         let (is_x_coord_eq) = fq2_lib.eq(p1_x_times_z, p2_x_times_z)
         if is_x_coord_eq == 0:
             return (0)
         end
-        let (p1_y_times_z) = fq2_lib.mul(p1.y, p1.z)
-        let (p2_y_times_z) = fq2_lib.mul(p2.y, p2.z)
+        let (p1_y_times_z: FQ2) = fq2_lib.mul(p1.y, p1.z)
+        let (p2_y_times_z: FQ2) = fq2_lib.mul(p2.y, p2.z)
         let (is_y_coord_eq) = fq2_lib.eq(p1_y_times_z, p2_y_times_z)
         if is_y_coord_eq == 0:
             return (0)
@@ -136,25 +137,26 @@ namespace g2_lib:
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, point : G2Point) -> (
         res : G2Point
     ):
+        alloc_locals
         if scalar == 0:
             return get_zero()
         end
         if scalar == 1:
             return (point)
         end
-        let (double_point) = double(point)
-        let (quotient, remainder) = unsigned_div_rem(scalar)
-        let (quotient_mul_double_point) = scalar_mul(quotient, double_point)
+        let (double_point: G2Point) = double(point)
+        let (local quotient, local remainder) = unsigned_div_rem(scalar, 2)
+        let (quotient_mul_double_point: G2Point) = scalar_mul(quotient, double_point)
         if remainder == 0:
             return (quotient_mul_double_point)
         else:
-            let (res) = add(point, quotient_mul_double_point)
+            let (res: G2Point) = add(point, quotient_mul_double_point)
             return (res)
         end
     end
     
     # TODO: Not tested
-    func get_zero() -> (res : G2Point):
+    func get_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : G2Point):
         let (one: FQ2) = fq2_lib.get_one()
         let (zero: FQ2) = fq2_lib.get_zero()
         return (G2Point(x=one, y=one, z=zero))
