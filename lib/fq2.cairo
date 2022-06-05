@@ -1,10 +1,7 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq_lib
-from lib.multi_precision import multi_precision as mp
-from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
 from lib.curve import fq2_c0, fq2_c1, get_modulus
 
 struct FQ2:
@@ -31,8 +28,7 @@ namespace fq2_lib:
     end
 
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
-        product : FQ2
-    ):
+            product : FQ2):
         alloc_locals
         let (e0 : Uint384) = fq_lib.scalar_mul(x, y.e0)
         let (e1 : Uint384) = fq_lib.scalar_mul(x, y.e1)
@@ -56,16 +52,16 @@ namespace fq2_lib:
 
         return (FQ2(e0=first_term, e1=second_term))
     end
-    
+
     # Find b such that b*a = 1 in FQ2
     # First the inverse is computed in a hint, and then verified in Cairo
     # The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     # multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     # d0 and d1
-    func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a: FQ2) -> (inverse: FQ2):
+    func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (inverse : FQ2):
         alloc_locals
         local a_inverse : FQ2
-        let (field_modulus: Uint384) = get_modulus()
+        let (field_modulus : Uint384) = get_modulus()
         %{
             def split(num: int, num_bits_shift : int = 128, length: int = 3):
                 a = []
@@ -77,11 +73,11 @@ namespace fq2_lib:
             def pack(z, num_bits_shift: int = 128) -> int:
                 limbs = (z.d0, z.d1, z.d2)
                 return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-            
+
             e0 = pack(ids.a.e0)
             e1 = pack(ids.a.e1)
             field_modulus = pack(ids.field_modulus)
-            
+
             if e0 != 0:
                 e0_inv = pow(e0, -1, field_modulus)
                 new_e0 = pow(e0 + (e1**2) * e0_inv, -1, field_modulus)
@@ -89,21 +85,21 @@ namespace fq2_lib:
             else:
                 new_e0 = 0
                 new_e1 = pow(-e1, -1, field_modulus)
-            
+
             new_e0_split = split(new_e0)
             new_e1_split = split(new_e1)
-            
+
             ids.a_inverse.e0.d0 = new_e0_split[0]
             ids.a_inverse.e0.d1 = new_e0_split[1]
             ids.a_inverse.e0.d2 = new_e0_split[2]
-            
+
             ids.a_inverse.e1.d0 = new_e1_split[0]
             ids.a_inverse.e1.d1 = new_e1_split[1]
             ids.a_inverse.e1.d2 = new_e1_split[2]
         %}
-        
-        let (a_inverse_times_a: FQ2) = mul(a_inverse, a)
-        let (one: FQ2) = get_one()
+
+        let (a_inverse_times_a : FQ2) = mul(a_inverse, a)
+        let (one : FQ2) = get_one()
         let (is_one) = eq(a_inverse_times_a, one)
         assert is_one = 1
         return (a_inverse)
@@ -142,7 +138,8 @@ namespace fq2_lib:
     end
 
     # TODO: test
-    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = mul(x, y)
         let (res : FQ2) = mul(x_times_y, z)
         return (res)
@@ -150,7 +147,8 @@ namespace fq2_lib:
 
     # TODO: test
     # Computes x - y - z
-    func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = sub(x, y)
         let (res : FQ2) = sub(x_times_y, z)
         return (res)

@@ -2,7 +2,6 @@
 %builtins range_check bitwise
 
 from lib.fq import fq_lib
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
@@ -47,14 +46,14 @@ func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (res
 end
 
 @view
-func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent: Uint384) -> (res : Uint384):
+func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent : Uint384) -> (
+        res : Uint384):
     alloc_locals
 
-    let (res : Uint384) = fq_lib.pow(x,exponent)
+    let (res : Uint384) = fq_lib.pow(x, exponent)
 
     return (res)
 end
-
 
 @view
 func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
@@ -65,11 +64,12 @@ func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (
     return (bool)
 end
 
+@view
 func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint256, y : Uint256) -> (
         res : Uint384):
     alloc_locals
 
-    let (res : Uint384) = fq.from_64_bytes(x, y)
+    let (res : Uint384) = fq_lib.from_64_bytes(x, y)
 
     return (res)
 end
