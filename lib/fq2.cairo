@@ -1,11 +1,8 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.math_cmp import is_not_zero
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq_lib
-from lib.multi_precision import multi_precision as mp
-from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
 from lib.curve import fq2_c0, fq2_c1, get_modulus
 
 struct FQ2:

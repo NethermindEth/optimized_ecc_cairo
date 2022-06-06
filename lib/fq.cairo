@@ -1,9 +1,7 @@
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic import field_arithmetic_lib
-from lib.multi_precision import multi_precision
 from lib.curve import get_modulus, get_r_squared, get_p_minus_one_div_2
-from lib.barret_algorithm import barret_reduction
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero
