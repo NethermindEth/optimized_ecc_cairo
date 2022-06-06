@@ -28,8 +28,7 @@ async def test_g2_eq(g2_factory, a_seed, b_seed):
     b = get_g2_point_from_seed(b_seed)
 
     execution_info = await contract.eq(a.asTuple(), b.asTuple()).call()
-    res = execution_info.result[0]
-    cairo_result = create_G2Point_from_execution_result(res)
+    cairo_result = execution_info.result[0]
 
     python_result = a == b
     assert cairo_result == python_result
@@ -111,14 +110,16 @@ async def test_g2_add_specific(g2_factory):
 
 
 @given(
-    scalar=st.integers(min_value=1, max_value=field_modulus - 1),
-    Segment2D=st.integers(min_value=1, max_value=field_modulus - 1),
+    scalar=st.integers(min_value=1, max_value=2**250),
+    seed=st.integers(min_value=1, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
 async def test_g2_scalar_mul(g2_factory, scalar, seed):
     contract = g2_factory
-
+    
+    print(scalar, seed)
+    
     a = get_g2_point_from_seed(seed)
 
     execution_info = await contract.scalar_mul(scalar, a.asTuple()).call()
@@ -126,4 +127,28 @@ async def test_g2_scalar_mul(g2_factory, scalar, seed):
     cairo_result = create_G2Point_from_execution_result(res)
 
     python_result = g2_scalar_mul(scalar, a)
+    assert cairo_result == python_result
+
+
+@pytest.mark.asyncio
+async def test_g2_scalar_mul_specific(g2_factory):
+    contract = g2_factory
+    
+    scalar = 8
+    seed = 1
+    
+    print(scalar, seed)
+    
+    a = get_g2_point_from_seed(seed)
+    
+    print("findme0", a)
+    print("findme1", a.asTuple())
+    
+    execution_info = await contract.scalar_mul(scalar, a.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+
+    python_result = g2_scalar_mul(scalar, a)
+    print("cairo_result", cairo_result)
+    print("python_result", python_result)
     assert cairo_result == python_result

@@ -132,11 +132,13 @@ namespace g2_lib:
 
         return (G2Point(new_x, new_y, new_z))
     end
-
+    
+    # TODO: Do we need scalar mult by Uint384 here? Not just felt?
     # Computes scalar * point, which means point added with itself `scalar` times
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, point : G2Point) -> (
         res : G2Point
     ):
+        %{print("findme", ids.scalar)%}
         alloc_locals
         if scalar == 0:
             return get_zero()
@@ -160,5 +162,29 @@ namespace g2_lib:
         let (one: FQ2) = fq2_lib.get_one()
         let (zero: FQ2) = fq2_lib.get_zero()
         return (G2Point(x=one, y=one, z=zero))
+    end
+    
+    # Check that a point is on the curve defined by y**2 = x**3 + 4
+    # TODO: check that this is the correct equation
+    func is_on_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point: G2Point, b) -> (bool : felt):
+        let (is_point_at_infinity) = is_point_at_infinity(point)
+        if is_point_at_infinity == 1:
+            return (1)
+        end
+        let x = point.x
+        let y = point.y
+        let z = point.z
+        let (x_square) = fq2_lib.mul(x,x)
+        let (y_square) = fq2_lib.mul(y,y)
+        let (z_square) = fq2_lib.mul(z,z)
+        let (x_cubed) = fq2_lib.mul(x, x_cubed)
+        let (z_cubed) = fq2_lib.mul(z, z_cubed)
+        let (y_square_times_z) = fq2_lib.mul(y_square, z)
+        let (y_square_times_z) = fq2_lib.mul(y_square, z)
+        let (x_cubed_times_z) = fq2_lib.mul(x_cubed, z)
+        let (four_times_z) = fq2_lib.scalar_mul(4,z)
+        let (res) = fq2_lib.sub_three_terms(y_square_times_z, x_cubed_times_z, four_times_z)
+        let (is_res_zero) = fq2_lib.is_zero(res)
+        return (is_res_zero)
     end
 end

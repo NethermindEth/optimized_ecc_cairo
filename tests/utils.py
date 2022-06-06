@@ -178,7 +178,9 @@ class Optimized_Point3D_Modified(object):
             tuple([split(coef)  for coef in self.y.coeffs]), 
             tuple([split(coef)  for coef in self.z.coeffs]), 
             )
-
+    
+    def __repr__(self):
+        return f"({self.x}, {self.y}, {self.z})"
 
 # Given an initial integer seed, creates a G2 point by taking the powers of the seed
 # Used in testing: to reduce the number of variables to be explored by `hypothesis`
@@ -218,7 +220,7 @@ def g2_double(pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
     newx = 2 * H * S
     newy = W * (4 * B - H) - 8 * y * y * S_squared
     newz = 8 * S * S_squared
-    return (newx, newy, newz)
+    return Optimized_Point3D_Modified(newx, newy, newz)
 
 
 # Elliptic curve addition
@@ -237,7 +239,7 @@ def g2_add(p1: Optimized_Point3D_Modified,
     if V1 == V2 and U1 == U2:
         return g2_double(p1)
     elif V1 == V2:
-        return (one, one, zero)
+        return Optimized_Point3D_Modified(one, one, zero)
     U = U1 - U2
     V = V1 - V2
     V_squared = V * V
@@ -253,12 +255,13 @@ def g2_add(p1: Optimized_Point3D_Modified,
 
 
 # Elliptic curve point multiplication
-def g2_scalar_mul(scalar, pt: Optimized_Point3D_Modified, n: int) -> Optimized_Point3D_Modified:
-    if n == 0:
-        return (FQ2.one(), FQ2.one(), FQ2.zero())
-    elif n == 1:
+def g2_scalar_mul(scalar, pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
+    if scalar == 0:
+        return Optimized_Point3D_Modified(FQ2.one(), FQ2.one(), FQ2.zero())
+    elif scalar == 1:
         return pt
-    elif not n % 2:
-        return g2_scalar_mul(g2_double(pt), n // 2)
+    elif not scalar % 2:
+        return g2_scalar_mul(scalar // 2, g2_double(pt))
     else:
-        return g2_add(g2_scalar_mul(g2_double(pt), int(n // 2)), pt)
+        return g2_add(g2_scalar_mul( int(scalar // 2), g2_double(pt)), pt)
+    
