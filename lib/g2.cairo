@@ -139,7 +139,6 @@ namespace g2_lib:
         res : G2Point
     ):
         %{print("findme", ids.scalar)%}
-        alloc_locals
         if scalar == 0:
             return get_zero()
         end
@@ -147,15 +146,18 @@ namespace g2_lib:
             return (point)
         end
         let (double_point: G2Point) = double(point)
-        let (local quotient, local remainder) = unsigned_div_rem(scalar, 2)
-        let (quotient_mul_double_point: G2Point) = scalar_mul(quotient, double_point)
+        let (quotient, remainder) = unsigned_div_rem(scalar, 2)
         if remainder == 0:
+            let (quotient_mul_double_point: G2Point) = scalar_mul(quotient, double_point)
             return (quotient_mul_double_point)
         else:
+            # Repeating code to avoid using local variables
+            let (quotient_mul_double_point: G2Point) = scalar_mul(quotient, double_point)
             let (res: G2Point) = add(point, quotient_mul_double_point)
             return (res)
         end
     end
+    
     
     # TODO: Not tested
     func get_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : G2Point):

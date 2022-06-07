@@ -264,4 +264,10 @@ def g2_scalar_mul(scalar, pt: Optimized_Point3D_Modified) -> Optimized_Point3D_M
         return g2_scalar_mul(scalar // 2, g2_double(pt))
     else:
         return g2_add(g2_scalar_mul( int(scalar // 2), g2_double(pt)), pt)
-    
+
+def get_g2_infinity_point():
+    return Optimized_Point3D_Modified(
+        FQ2.one(),
+        FQ2.one(),
+        FQ2.zero(),
+    )

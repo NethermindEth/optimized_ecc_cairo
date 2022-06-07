@@ -10,6 +10,7 @@ from utils import (
     g2_add,
     get_g2_point_from_seed,
     g2_scalar_mul,
+    get_g2_infinity_point
 )
 
 
@@ -47,17 +48,17 @@ async def test_g2_add_properties(g2_factory, a_seed, b_seed):
 
     a = get_g2_point_from_seed(a_seed)
     b = get_g2_point_from_seed(b_seed)
-    zero = get_g2_point_from_seed(0)
+    infinity = get_g2_infinity_point()
 
     # a + 0
     execution_info = await contract.add(
-        tuple(a.asTuple()), tuple(zero.asTuple())
+        tuple(a.asTuple()), tuple(infinity.asTuple())
     ).call()
     res = execution_info.result[0]
     assert a == create_G2Point_from_execution_result(res)
 
     # 0 + b
-    execution_info = await contract.add(zero.asTuple(), b.asTuple()).call()
+    execution_info = await contract.add(infinity.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
     assert b == create_G2Point_from_execution_result(res)
 
@@ -134,7 +135,7 @@ async def test_g2_scalar_mul(g2_factory, scalar, seed):
 async def test_g2_scalar_mul_specific(g2_factory):
     contract = g2_factory
     
-    scalar = 8
+    scalar = 3
     seed = 1
     
     print(scalar, seed)
