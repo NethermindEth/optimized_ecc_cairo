@@ -155,6 +155,15 @@ namespace fq2_lib:
         return (res)
     end
 
+    # TODO: test
+    # Computes x - y - z
+    func add_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+        let (x_times_y : FQ2) = add(x, y)
+        let (res : FQ2) = add(x_times_y, z)
+        return (res)
+    end
+
     func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
         alloc_locals
 
@@ -166,6 +175,37 @@ namespace fq2_lib:
         let (c_1 : Uint384) = fq_lib.mul(t_2, a.e1)
 
         return (product=FQ2(e0=c_0, e1=c_1))
+    end
+
+    func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2, exp : Uint768) -> (res : FQ2):
+        let o : FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0))
+        let (res : FQ2) = pow_inner(a, exp, o)
+        return (res)
+    end
+    func pow_inner{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            a : FQ2, exp : Uint768, o : FQ2) -> (res : FQ2):
+        alloc_locals
+
+        let (is_exp_zero : felt) = uint384_extension_lib.eq(
+            a=exp, b=Uint768(d0=0, d1=0, d2=0, d3=0, d4=0, d5=0))
+
+        if is_exp_zero == 1:
+            return (o)
+        end
+        let (new_exp : Uint768, _) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
+            a=exp, div=Uint384(d0=2, d1=0, d2=0))
+
+        let (a_sqr : FQ2) = mul(a, a)
+        let (and_one : Uint768) = uint384_extension_lib.and(
+            exp, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
+        if and_one.d0 == 1:
+            let (o_new : FQ2) = mul(a, o)
+            let (power : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+        else:
+            let (power : FQ2) = pow_inner(a_sqr, new_exp, o)
+        end
+
+        return (res=power)
     end
 
     func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
@@ -186,6 +226,7 @@ namespace fq2_lib:
         return (is_quad_nonresidue)
     end
 
+    # TODO : REMOVE
     func sqrt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
         return (a)
     end
@@ -193,12 +234,21 @@ namespace fq2_lib:
     func one{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : FQ2):
         return (
             res=FQ2(e0=Uint384(
-                d0=313635500375121084810881640338032885757,
-                d1=159249536114007638540741953206796900538,
-                d2=29193015012204308844271843190429379693),
+                d0=1,
+                d1=0,
+                d2=0),
             e1=Uint384(
                 d0=0,
                 d1=0,
                 d2=0)))
+    end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        alloc_locals
+
+        let (neg_e0 : Uint384) = uint384_lib.neg(a.e0)
+        let (neg_e1 : Uint384) = uint384_lib.neg(a.e1)
+
+        return (res=FQ2(e0=neg_e0, e1=neg_e1))
     end
 end

@@ -1,11 +1,29 @@
 import pytest
-from utils import split, packFQP, field_modulus, splitFQP
+from utils import split, packFQP, field_modulus, splitFQP, max_base_bigint12_sum
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 from py_ecc.fields import bls12_381_FQ2 as FQ2
 
 largest_factor = sqrt(2 ** (64 * 11))
 
+@given(
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+    exp=st.integers(min_value=0, max_value=(max_base_bigint12_sum))
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_pow(fq2_factory, x1, y1, exp):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.pow(splitFQP(x), split(exp, 128, 6)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ2(x)
+    python_result = x_fq2 ** exp
+
+    assert cairo_result == python_result.coeffs
 
 @given(
     x1=st.integers(min_value=1, max_value=(field_modulus)),

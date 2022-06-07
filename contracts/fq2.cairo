@@ -2,6 +2,8 @@
 %builtins range_check bitwise
 
 from lib.fq2 import fq2_lib, FQ2
+from lib.uint384 import Uint384
+from lib.uint384_extension import Uint768
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 @view
@@ -45,6 +47,15 @@ func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (res : FQ2)
     alloc_locals
 
     let (res : FQ2) = fq2_lib.inv(x)
+
+    return (res)
+end
+
+@view
+func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, exp : Uint768) -> (res : FQ2):
+    alloc_locals
+
+    let (res : FQ2) = fq2_lib.pow(x, exp)
 
     return (res)
 end
