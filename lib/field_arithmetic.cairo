@@ -210,7 +210,7 @@ namespace field_arithmetic_lib:
 
                     Solve the congruence of the form:
                         x^2 = a (mod p)
-                    And returns success, x. Note that p - x is also a root.
+                    And returns (success, x). Note that p - x is also a root.
 
                     success = 0, 1 depending on whether a solution was found or not
 
@@ -308,7 +308,6 @@ namespace field_arithmetic_lib:
             if x != 0:
                 assert success_x + success_gx ==1
 
-            
             # `None` means that no root was found, but we need to transform these into a felt no matter what
             if root_x == None:
                 root_x = 0
@@ -347,6 +346,7 @@ namespace field_arithmetic_lib:
 
         # Return the appropriate values
         if success_x == 0:
+            # No square roots were found
             # Note that Uint384(0, 0, 0) is not a square root here, but something needs to be returned
             return (0, Uint384(0, 0, 0))
         else:

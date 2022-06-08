@@ -157,6 +157,15 @@ async def test_fq_get_sqrt(fq_factory, x):
 
     assert python_success == success
 
+    # Sanity check
+    alternative_python_success = pow(x, (field_modulus-1) //2, field_modulus)
+    if ((alternative_python_success  +1) %field_modulus )==0:
+        # If the power is -1 mod p, then x is not a root, otherwise it is 1 if x!= 0 or 0 if x=0
+        alternative_python_success = 0
+    if x == 0:
+        # If x= 0 then x is a square
+        alternative_python_success = 1
+    assert ((alternative_python_success - success) % field_modulus) == 0
 
     # Check that the sqrt root is correct
     # Since there are two roots, we make two
