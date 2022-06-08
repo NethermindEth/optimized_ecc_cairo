@@ -61,10 +61,28 @@ func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, exp : Uint768)
 end
 
 @view
+func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (res : felt):
+    alloc_locals
+
+    let (res) = fq2_lib.eq(x, y)
+
+    return (res)
+end
+
+@view
 func sgn0{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (sign : felt):
     alloc_locals
 
     let (res : felt) = fq2_lib.sgn0(x)
+
+    return (res)
+end
+
+@view
+func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (bool : felt):
+    alloc_locals
+
+    let (res) = fq2_lib.is_zero(x)
 
     return (res)
 end

@@ -25,7 +25,6 @@ namespace fq2_lib:
         alloc_locals
         let (e0 : Uint384) = fq_lib.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
-
         return (FQ2(e0=e0, e1=e1))
     end
 
@@ -107,7 +106,6 @@ namespace fq2_lib:
         return (a_inverse)
     end
 
-    # TODO: test
     func eq{range_check_ptr}(x : FQ2, y : FQ2) -> (bool : felt):
         let (is_e0_eq) = uint384_lib.eq(x.e0, y.e0)
         if is_e0_eq == 0:
@@ -120,26 +118,25 @@ namespace fq2_lib:
         return (1)
     end
 
-    # TODO: test
     func is_zero{range_check_ptr}(x : FQ2) -> (bool : felt):
         let (zero_fq2 : FQ2) = get_zero()
         let (is_x_zero) = eq(x, zero_fq2)
         return (is_x_zero)
     end
 
-    # TODO: test
+    # Not tested
     func get_zero() -> (zero : FQ2):
         let zero_fq2 = FQ2(Uint384(0, 0, 0), Uint384(0, 0, 0))
         return (zero_fq2)
     end
 
-    # TODO: test
+    # Not tested
     func get_one() -> (one : FQ2):
         let one_fq1 = FQ2(Uint384(1, 0, 0), Uint384(0, 0, 0))
         return (one_fq1)
     end
 
-    # TODO: test
+    # Not tested
     func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = mul(x, y)
@@ -147,7 +144,7 @@ namespace fq2_lib:
         return (res)
     end
 
-    # TODO: test
+    # Not tested
     # Computes x - y - z
     func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):

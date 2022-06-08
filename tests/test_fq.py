@@ -111,6 +111,25 @@ async def test_fq_sub(fq_factory, x, y):
     assert result == (x - y) % field_modulus
 
 
+
+
+@given(
+    x=st.integers(min_value=1, max_value=(field_modulus)),
+    scalar=st.integers(min_value=0, max_value=2**128-1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_scalar_mul(fq_factory, scalar, x ):
+    contract = fq_factory
+
+    execution_info = await contract.scalar_mul(scalar, split(x)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (scalar*x) % field_modulus
+
+
+
 @given(
     x=st.integers(min_value=1, max_value=(field_modulus)),
 )
@@ -124,7 +143,6 @@ async def test_fq_is_square(fq_factory, x):
     result = execution_info.result[0]
     python_result = pow(x, field_modulus_sub1_div2, field_modulus)
 
-    print("findme", result, python_result)
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square
@@ -144,7 +162,11 @@ async def test_fq_is_square_specific(fq_factory):
 
     result = execution_info.result[0]
     python_result = pow(x, field_modulus_sub1_div2, field_modulus)
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 1951d082cc125fe8b7c5867fd9dc73dba760ac9d
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square
