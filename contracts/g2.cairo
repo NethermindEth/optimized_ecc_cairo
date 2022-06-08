@@ -31,3 +31,25 @@ func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, x : G2Po
 
     return (res)
 end
+
+@view
+func add_three{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : G2Point) -> (
+    res : G2Point
+):
+    alloc_locals
+    let (res0 : G2Point) = g2_lib.add(x, x)
+    let (res1 : G2Point) = g2_lib.add(res0, x)
+
+    return (res1)
+end
+
+
+@view
+func double{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : G2Point) -> (
+    res : G2Point
+):
+    alloc_locals
+    let (res : G2Point) = g2_lib.double(x)
+
+    return (res)
+end

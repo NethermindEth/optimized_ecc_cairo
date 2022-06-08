@@ -8,12 +8,12 @@ from utils import (
     field_modulus,
     split,
     g2_add,
+    g2_double,
     get_g2_point_from_seed,
     g2_scalar_mul,
-    get_g2_infinity_point
+    get_g2_infinity_point,
+    create_G2Point_from_tuple,
 )
-
-
 
 
 @given(
@@ -94,12 +94,50 @@ async def test_g2_add(g2_factory, a_seed, b_seed):
     assert cairo_result == python_result
 
 
+@given(
+    point_x_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_x_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_y_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_z_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    other_z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
 @pytest.mark.asyncio
-async def test_g2_add_specific(g2_factory):
+async def test_g2_add_long(
+    g2_factory,
+    point_x_e0,
+    point_x_e1,
+    point_y_e0,
+    point_y_e1,
+    point_z_e0,
+    point_z_e1,
+    other_x_e0,
+    other_x_e1,
+    other_y_e0,
+    other_y_e1,
+    other_z_e0,
+    other_z_e1,
+):
     contract = g2_factory
-    a_seed, b_seed = 9541646223264729170, 20991
-    a = get_g2_point_from_seed(a_seed)
-    b = get_g2_point_from_seed(b_seed)
+
+    a = create_G2Point_from_tuple(
+        [point_x_e0, point_x_e1, point_y_e0, point_y_e1, point_z_e0, point_z_e1]
+    )
+    b = create_G2Point_from_tuple(
+        [other_x_e0, other_x_e1, other_y_e0, other_y_e1, other_z_e0, other_z_e1]
+    )
+
+    if point_z_e0 == 0 and point_z_e1 == 0:
+        a = get_g2_infinity_point()
+    if other_z_e0 == 0 and other_z_e1 == 0:
+        b = get_g2_infinity_point()
 
     execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
@@ -107,6 +145,100 @@ async def test_g2_add_specific(g2_factory):
 
     python_result = g2_add(a, b)
     assert cairo_result == python_result
+    
+    
+
+@given(
+    point_x_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_g2_add_three_long(
+    g2_factory,
+    point_x_e0,
+    point_x_e1,
+    point_y_e0,
+    point_y_e1,
+    point_z_e0,
+    point_z_e1,
+):
+    contract = g2_factory
+
+    a = create_G2Point_from_tuple(
+        [point_x_e0, point_x_e1, point_y_e0, point_y_e1, point_z_e0, point_z_e1]
+    )
+    if point_z_e0 == 0 and point_z_e1 == 0:
+        a = get_g2_infinity_point()
+
+    execution_info = await contract.add_three(a.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+    
+    python_result = g2_add(a, g2_add(a,a))
+    assert cairo_result == python_result
+
+
+
+
+@given(
+    point_x_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e0=st.integers(min_value=0, max_value=field_modulus - 1),
+    point_z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_g2_double_long(
+    g2_factory,
+    point_x_e0,
+    point_x_e1,
+    point_y_e0,
+    point_y_e1,
+    point_z_e0,
+    point_z_e1,
+):
+    contract = g2_factory
+
+    a = create_G2Point_from_tuple(
+        [point_x_e0, point_x_e1, point_y_e0, point_y_e1, point_z_e0, point_z_e1]
+    )
+    if point_z_e0 == 0 and point_z_e1 == 0:
+        a = get_g2_infinity_point()
+
+    execution_info = await contract.double(a.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+    
+    python_result = g2_double(a)
+    assert cairo_result == python_result
+
+
+
+@pytest.mark.asyncio
+async def test_g2_add_specific(g2_factory):
+    contract = g2_factory
+    a_seed, b_seed = 3, 3
+    a = get_g2_point_from_seed(a_seed)
+    b = get_g2_point_from_seed(b_seed)
+
+    execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+    execution_info = await contract.add(a.asTuple(), cairo_result.asTuple()).call()
+    res = execution_info.result[0]
+    cairo_result = create_G2Point_from_execution_result(res)
+
+    python_result = g2_add(a, b)
+    python_result = g2_add(a, python_result)
+    assert cairo_result == python_result
+
 
 
 
@@ -118,9 +250,9 @@ async def test_g2_add_specific(g2_factory):
 @pytest.mark.asyncio
 async def test_g2_scalar_mul(g2_factory, scalar, seed):
     contract = g2_factory
-    
+
     print(scalar, seed)
-    
+
     a = get_g2_point_from_seed(seed)
 
     execution_info = await contract.scalar_mul(scalar, a.asTuple()).call()
@@ -134,22 +266,37 @@ async def test_g2_scalar_mul(g2_factory, scalar, seed):
 @pytest.mark.asyncio
 async def test_g2_scalar_mul_specific(g2_factory):
     contract = g2_factory
-    
+
     scalar = 3
-    seed = 1
-    
+    seed = 2
+
     print(scalar, seed)
-    
+
     a = get_g2_point_from_seed(seed)
-    
+
     print("findme0", a)
     print("findme1", a.asTuple())
-    
+
     execution_info = await contract.scalar_mul(scalar, a.asTuple()).call()
     res = execution_info.result[0]
     cairo_result = create_G2Point_from_execution_result(res)
 
+    execution_info = await contract.add(a.asTuple(), a.asTuple()).call()
+    cr2 = execution_info.result[0]
+    cr2 = create_G2Point_from_execution_result(cr2)
+    execution_info = await contract.add(a.asTuple(), cr2.asTuple()).call()
+    cr2 = execution_info.result[0]
+    cairo_result2 = create_G2Point_from_execution_result(cr2)
+
     python_result = g2_scalar_mul(scalar, a)
+
+    python_result2 = g2_add(a, g2_add(a, a))
     print("cairo_result", cairo_result)
+    print("cairo_result2", cairo_result2)
     print("python_result", python_result)
-    assert cairo_result == python_result
+    print("python_result2", python_result2)
+    assert cairo_result == cairo_result2
+    print("ff1")
+    assert python_result == python_result2
+    print("ff2")
+    assert cairo_result2 == python_result

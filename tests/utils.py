@@ -170,6 +170,8 @@ class Optimized_Point3D_Modified(object):
         self.z = z
 
     def __eq__(self, other):
+        print(self.x * self.z)
+        print(other.x * other.z)
         return self.x * self.z == other.x * other.z
     
     def asTuple(self):
@@ -202,7 +204,14 @@ def create_G2Point_from_execution_result(result):
         FQ2((pack(result[2][0]), pack(result[2][1]))),
     )
 
-        
+def create_G2Point_from_tuple(tuple_of_reduced_integers): 
+    t = tuple_of_reduced_integers
+    return Optimized_Point3D_Modified(
+        FQ2((t[0], t[1])),
+        FQ2((t[2], t[3])),
+        FQ2((t[4], t[5])),
+    )
+            
 # ----------------------------------------------------------------
 #
 # Almost copy-paste functions from py_ecc.optimized_curve

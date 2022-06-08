@@ -138,7 +138,13 @@ namespace g2_lib:
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, point : G2Point) -> (
         res : G2Point
     ):
-        %{print("findme", ids.scalar)%}
+        %{
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (limb for limb in z)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+        print("findme", ids.scalar, pack([ids.point.x.e0.d0,ids.point.x.e0.d1,ids.point.x.e0.d2]), pack([ids.point.x.e1.d0,ids.point.x.e1.d1,ids.point.x.e1.d2]), pack([ids.point.y.e0.d0,ids.point.y.e0.d1,ids.point.y.e0.d2]), pack([ids.point.y.e1.d0,ids.point.y.e1.d1,ids.point.y.e1.d2]), pack([ids.point.z.e0.d0,ids.point.z.e0.d1,ids.point.z.e0.d2]), pack([ids.point.z.e1.d0,ids.point.z.e1.d1,ids.point.z.e1.d2]))
+        %}
         if scalar == 0:
             return get_zero()
         end

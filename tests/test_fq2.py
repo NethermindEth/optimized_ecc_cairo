@@ -10,10 +10,10 @@ largest_factor = sqrt(2 ** (64 * 11))
 
 
 @given(
-    x1=st.integers(min_value=1, max_value=(field_modulus)),
-    x2=st.integers(min_value=1, max_value=(field_modulus)),
-    y1=st.integers(min_value=1, max_value=(field_modulus)),
-    y2=st.integers(min_value=1, max_value=(field_modulus)),
+    x1=st.integers(min_value=1, max_value=field_modulus-1),
+    x2=st.integers(min_value=0, max_value=field_modulus-1),
+    y1=st.integers(min_value=1, max_value=field_modulus-1),
+    y2=st.integers(min_value=0, max_value=field_modulus-1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
@@ -34,10 +34,10 @@ async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
 
 # checks that (1 + x) * y = y + x * y
 @given(
-    x1=st.integers(min_value=1, max_value=(field_modulus)),
-    x2=st.integers(min_value=1, max_value=(field_modulus)),
-    y1=st.integers(min_value=1, max_value=(field_modulus)),
-    y2=st.integers(min_value=1, max_value=(field_modulus)),
+    x1=st.integers(min_value=1, max_value=field_modulus-1),
+    x2=st.integers(min_value=0, max_value=field_modulus-1),
+    y1=st.integers(min_value=1, max_value=field_modulus-1),
+    y2=st.integers(min_value=0, max_value=field_modulus-1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
