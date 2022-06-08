@@ -40,6 +40,9 @@ def pack(z, num_bits_shift: int = 128) -> int:
 def packFQP(z):
     return tuple(pack(z_component) for z_component in z)
 
+def packPoint(z):
+    return tuple(packFQP(z_component) for z_component in z)
+
 def print_uint384(x):
     parts = split(x)
 

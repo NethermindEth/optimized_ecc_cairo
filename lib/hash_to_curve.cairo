@@ -9,6 +9,7 @@ from lib.uint384_extension import Uint768
 
 func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint256) -> (
         point_on_curve : G2Point):
+    alloc_locals
     let (one : Uint256, two : Uint256, three : Uint256, four : Uint256, _, _, _,
         _) = expand_msg_sha_xmd(hash)
 
@@ -24,11 +25,31 @@ func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint25
     let p1 : G2Point = G2Point(x=x1, y=y1, z=z1)
 
     let (p0 : G2Point) = g2_lib.add(p0, p1)
-    # TODO : affine
 
     let (p0 : G2Point) = multiply_clear_cofactor_g2(p0)
 
-    # TODO : clear cofactor
+    return (p0)
+end
+
+func expanded_hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        one : Uint256, two : Uint256, three : Uint256, four : Uint256) -> (
+        point_on_curve : G2Point):
+    alloc_locals
+    let (u0 : FQ2) = FQ2(one, two)
+    let (u1 : FQ2) = FQ2(three, four)
+
+    let (x0 : FQ2, y0 : FQ2, z0 : FQ2) = map_to_curve_g2(u0)
+    let (x1 : FQ2, y1 : FQ2, z1 : FQ2) = map_to_curve_g2(u1)
+
+    let (z : Uint384) = fq2_lib.one()
+
+    let p0 : G2Point = G2Point(x=x0, y=y0, z=z0)
+    let p1 : G2Point = G2Point(x=x1, y=y1, z=z1)
+
+    let (p0 : G2Point) = g2_lib.add(p0, p1)
+
+    let (p0 : G2Point) = multiply_clear_cofactor_g2(p0)
+
     return (p0)
 end
 
