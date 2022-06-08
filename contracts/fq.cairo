@@ -68,10 +68,21 @@ end
 
 
 @view
-func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
+func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
     alloc_locals
 
-    let (bool) = fq_lib.is_square(x)
+    let (bool) = fq_lib.is_square_non_optimized(x)
 
     return (bool)
+end
+
+
+
+@view
+func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (success : felt, res: Uint384):
+    alloc_locals
+
+    let (success, res: Uint384) = fq_lib.get_square_root(x)
+
+    return (success, res)
 end

@@ -88,12 +88,23 @@ namespace fq_lib:
     end
 
     # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
-    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
+    func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
         alloc_locals
         let (p : Uint384) = get_modulus()
         let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
-        let (res) = field_arithmetic_lib.is_square(x, p, p_minus_one_div_2)
+        let (res) = field_arithmetic_lib.is_square_non_optimized(x, p, p_minus_one_div_2)
         return (res)
+    end
+    
+    # Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
+    # WARNING: Expects x to satisy 0 <= x < p-1
+    func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (success : felt, res: Uint384):
+        alloc_locals
+        let (p : Uint384) = get_modulus()
+        # 2 happens to be a generator
+        let generator = Uint384(2,0,0)
+        let (success, res: Uint384) = field_arithmetic_lib.get_square_root(x, p, generator)
+        return (success, res)
     end
 end
 

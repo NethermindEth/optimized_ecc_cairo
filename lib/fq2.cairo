@@ -119,6 +119,11 @@ namespace fq2_lib:
         end
         return (1)
     end
+    
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: FQ2) -> (res: FQ2):
+        let (res) = mul(x, x)
+        return (res)
+    end
 
     func is_zero{range_check_ptr}(x : FQ2) -> (bool : felt):
         let (zero_fq2 : FQ2) = get_zero()

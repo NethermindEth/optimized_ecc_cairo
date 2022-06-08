@@ -150,7 +150,7 @@ namespace field_arithmetic_lib:
     # Checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
     # `p_minus_one_div_2` is (p-1)/2. It is passed as an argument rather than computed, since for most applications
     # p (and thus (p-1)/2) will be hardcoded and this library wrapped around with p fixed to the hardcoded value
-    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+    func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         x : Uint384, p : Uint384, p_minus_one_div_2 : Uint384
     ) -> (bool : felt):
         alloc_locals
@@ -166,6 +166,191 @@ namespace field_arithmetic_lib:
             return (1)
         else:
             return (0)
+        end
+    end
+
+    # Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
+    # To do so, the following is done in a hint:
+    # 1. Check if x is a square, if yes, find a square root r of it
+    # 2. If no, then gx *is* a square (for g a generator of F_p^*), so find a square root r of it
+    # 3. Check in Cairo that r**2 = x (mod p) or r**2 = gx (mod p), respectively
+
+    # NOTE: The function assumes that 0 <= x < p
+    func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        x : Uint384, p : Uint384, generator : Uint384
+    ) -> (success : felt, res : Uint384):
+        alloc_locals
+        
+        let (is_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
+        if is_zero == 1:
+            return (1, Uint384(0, 0, 0))
+        end
+
+        local success_x : felt
+        local success_gx : felt
+        local sqrt_root_x : Uint384
+        local sqrt_root_gx : Uint384
+
+        # Compute square roots in a hint
+        %{
+            def split(num: int, num_bits_shift: int = 128, length: int = 3):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift 
+                return tuple(a)
+
+            def pack(z, num_bits_shift: int = 128) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+                
+            def get_square_root_mod_p(a, p):
+                """ Find a quadratic residue (mod p) of 'a'. p
+                    must be an odd prime.
+
+                    Solve the congruence of the form:
+                        x^2 = a (mod p)
+                    And returns success, x. Note that p - x is also a root.
+
+                    success = 0, 1 depending on whether a solution was found or not
+
+                    The Tonelli-Shanks algorithm is used (except
+                    for some simple cases in which the solution
+                    is known from an identity). This algorithm
+                    runs in polynomial time (unless the
+                    generalized Riemann hypothesis is false).
+                """
+                # Simple cases
+                #
+                if a == 0:
+                    return 1, 0
+                if legendre_symbol(a, p) != 1:
+                    return 0, None
+                elif p == 2:
+                    return 0, None
+                elif p % 4 == 3:
+                    return 1, pow(a, (p+1)//4, p)
+
+                # Partition p-1 to s * 2^e for an odd s (i.e.
+                # reduce all the powers of 2 from p-1)
+                #
+                s = p - 1
+                e = 0
+                while s % 2 == 0:
+                    s /= 2
+                    e += 1
+
+                # Find some 'n' with a legendre symbol n|p = -1.
+                # Shouldn't take long.
+                #
+                n = 2
+                while legendre_symbol(n, p) != -1:
+                    n += 1
+
+                # Here be dragons!
+                # Read the paper "Square roots from 1; 24, 51,
+                # 10 to Dan Shanks" by Ezra Brown for more
+                # information
+                #
+
+                # x is a guess of the square root that gets better
+                # with each iteration.
+                # b is the "fudge factor" - by how much we're off
+                # with the guess. The invariant x^2 = ab (mod p)
+                # is maintained throughout the loop.
+                # g is used for successive powers of n to update
+                # both a and b
+                # r is the exponent - decreases with each update
+                #
+                x = pow(a, (s+1)//2, p)
+                b = pow(a, s, p)
+                g = pow(n, s, p)
+                r = e
+
+                while True:
+                    t = b
+                    m = 0
+                    for m in range(r):
+                        if t == 1:
+                            break
+                        t = pow(t, 2, p)
+
+                    if m == 0:
+                        return 1, x
+
+                    gs = pow(g, 2 ** (r - m - 1), p)
+                    g = (gs * gs) % p
+                    x = (x * gs) % p
+                    b = (b * g) % p
+                    r = m
+
+
+            def legendre_symbol(a, p):
+                """ Compute the Legendre symbol a|p using
+                    Euler's criterion. p is a prime, a is
+                    relatively prime to p (if p divides
+                    a, then a|p = 0)
+
+                    Returns 1 if a has a square root modulo
+                    p, -1 otherwise.
+                """
+                ls = pow(a, (p-1)//2, p)
+                return -1 if ls == p - 1 else ls
+
+            generator = pack(ids.generator)
+            x = pack(ids.x)
+            p = pack(ids.p)
+            
+            (success_x, root_x) = get_square_root_mod_p(x, p)
+            (success_gx, root_gx) = get_square_root_mod_p(generator*x, p)
+            
+            # Check that one is 0 and the other is 1
+            if x != 0:
+                assert success_x + success_gx ==1
+
+            
+            # `None` means that no root was found, but we need to transform these into a felt no matter what
+            if root_x == None:
+                root_x = 0
+            if root_gx == None:
+                root_gx = 0
+            ids.success_x = success_x
+            ids.success_gx =success_gx
+            split_root_x = split(root_x)
+            split_root_gx = split(root_gx)
+            ids.sqrt_root_x.d0 = split_root_x[0]
+            ids.sqrt_root_x.d1 = split_root_x[1]
+            ids.sqrt_root_x.d2 = split_root_x[2]
+            ids.sqrt_root_gx.d0 = split_root_gx[0]
+            ids.sqrt_root_gx.d1 = split_root_gx[1]
+            ids.sqrt_root_gx.d2 = split_root_gx[2]
+        %}
+
+        # Verify that the values computed in the hint are what they are supposed to be
+        # 4 happens to be a
+        let (gx : Uint384) = mul(generator, x, p)
+        if success_x==1:
+            let (sqrt_root_x_squared : Uint384) = mul(sqrt_root_x, sqrt_root_x, p)
+            # Note these checks may fail if the input x does not satisfy 0<= x < p
+            let (check_x) = uint384_lib.eq(x, sqrt_root_x_squared)
+            assert check_x = 1
+        else:
+            # In this case success_gx = 1 (TODO: should we check this here?)
+            let (sqrt_root_gx_squared : Uint384) = mul(sqrt_root_gx, sqrt_root_gx, p)
+            let (check_gx) = uint384_lib.eq(gx, sqrt_root_gx_squared)
+            assert check_gx = 1
+        end
+
+
+        
+        # TODO: double check that nothing else needs to be checked
+
+        # Return the appropriate values
+        if success_x == 0:
+            # Note that Uint384(0, 0, 0) is not a square root here, but something needs to be returned
+            return (0, Uint384(0, 0, 0))
+        else:
+            return (1, sqrt_root_x)
         end
     end
 end
