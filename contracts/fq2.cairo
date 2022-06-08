@@ -59,3 +59,12 @@ func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, exp : Uint768)
 
     return (res)
 end
+
+@view
+func sgn0{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (sign : felt):
+    alloc_locals
+
+    let (res : felt) = fq2_lib.sgn0(x)
+
+    return (res)
+end

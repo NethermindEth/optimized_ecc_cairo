@@ -6,6 +6,35 @@ from py_ecc.fields import bls12_381_FQ2 as FQ2
 
 largest_factor = sqrt(2 ** (64 * 11))
 
+def sgn0(fq) -> int:
+    sign = 0
+    zero = 1
+    for x_i in fq.coeffs:
+        sign_i = x_i.n % 2
+        zero_i = x_i == 0
+        sign = sign or (zero and sign_i)
+        zero = zero and zero_i
+    return sign
+
+@given(
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_sgn0(fq2_factory, x1, y1):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.sgn0(splitFQP(x)).call()
+    cairo_result = execution_info.result[0]
+
+    x_fq2 = FQ2(x)
+    python_result = sgn0(x_fq2)
+
+    assert cairo_result == python_result
+
+
 @given(
     x1=st.integers(min_value=0, max_value=(field_modulus)),
     y1=st.integers(min_value=0, max_value=(field_modulus)),

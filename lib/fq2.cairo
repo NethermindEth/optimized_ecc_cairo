@@ -1,5 +1,6 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.math_cmp import is_not_zero
+from starkware.cairo.common.bitwise import bitwise_and, bitwise_or
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq_lib
@@ -250,5 +251,30 @@ namespace fq2_lib:
         let (neg_e1 : Uint384) = uint384_lib.neg(a.e1)
 
         return (res=FQ2(e0=neg_e0, e1=neg_e1))
+    end
+
+    # https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-09#section-4.1
+    func sgn0{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (sign : felt):
+        alloc_locals
+
+        let sign = 0
+        let zero = 1
+
+        let (_, sign_i : Uint384) = uint384_lib.unsigned_div_rem(a.e0, Uint384(d0=2, d1=0, d2=0))
+        let (zero_i : felt) = uint384_lib.eq(a.e0, Uint384(d0=0, d1=0, d2=0))
+
+        let (zero_and_sign_i : felt) = bitwise_and(sign_i.d0, zero)
+
+        let (sign : felt) = bitwise_or(sign, zero_and_sign_i)
+        let (zero : felt) = bitwise_and(zero, zero_i)
+
+        let (_, sign_i : Uint384) = uint384_lib.unsigned_div_rem(a.e1, Uint384(d0=2, d1=0, d2=0))
+        let (zero_i : felt) = uint384_lib.eq(a.e1, Uint384(d0=0, d1=0, d2=0))
+
+        let (zero_and_sign_i : felt) = bitwise_and(sign_i.d0, zero)
+
+        let (sign : felt) = bitwise_or(sign, zero_and_sign_i)
+
+        return (sign=sign)
     end
 end

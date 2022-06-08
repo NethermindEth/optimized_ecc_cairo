@@ -1,12 +1,9 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from starkware.cairo.common.uint256 import Uint256
 from lib.uint384 import Uint384
 from lib.fq import fq_lib
 from lib.fq2 import FQ2, fq2_lib
-from lib.hash_to_field import expand_msg_sha_xmd
-from lib.swu import simplified_swu
-from lib.curve import get_r_mod_p
-from lib.isogeny import isogeny_map_g2
+from lib.uint384_extension import Uint768, uint384_extension_lib
+
 # Jacobian coordinate representation
 # To retrive normal cordinates perform x = x / z ^ 2 and y = y / z ^ 3
 struct G2Point:
@@ -109,28 +106,27 @@ namespace g2_lib:
         return (G2Point(new_x, new_y, new_z))
     end
 
-    func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint256) -> (
-            point_on_curve : G2Point):
-        let (one : Uint256, two : Uint256, three : Uint256, four : Uint256, _, _, _,
-            _) = expand_msg_sha_xmd(hash)
+    func multiply(point : G2Point, n : Uint768) -> (res : G2Point):
+        alloc_locals
 
-        let (u0 : FQ2) = FQ2(one, two)
-        let (u1 : FQ2) = FQ2(three, four)
+        let (is_eq_one : felt) = uint384_extension_lib.eq(
+            n, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
 
-        let (x0 : FQ2, y0 : FQ2) = simplified_swu(u0)
-        let (x1 : FQ2, y1 : FQ2) = simplified_swu(u1)
+        if is_eq_one == 1:
+            return (res=point)
+        end
 
-        let (z : Uint384) = fq2_lib.one()
+        let (n_halved : Uint768,
+            is_odd : Uint384) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
+            n, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+        let (doubled : G2Point) = double(point)
+        if is_odd == 1:
+            let (res : G2Point) = multiply(doubled, n_halved)
+        else:
+            let (res : G2Point) = multiply(doubled, n_halved)
+            let (res : G2Piint) = add(res, point)
+        end
 
-        let p0 : G2Point = G2Point(x=x0, y=y0, z=z)
-        let p1 : G2Point = G2Point(x=x0, y=y0, z=z)
-
-        let (p0 : G2Point) = add(p0, p1)
-        # TODO : affine
-
-        let (p0 : G2Point) = isogeny_map_g2(p0.x, p0.y)
-
-        # TODO : clear cofactor
-        return (p0)
+        return (res=res)
     end
 end
