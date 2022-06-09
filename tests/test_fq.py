@@ -162,11 +162,8 @@ async def test_fq_is_square_specific(fq_factory):
 
     result = execution_info.result[0]
     python_result = pow(x, field_modulus_sub1_div2, field_modulus)
-<<<<<<< HEAD
 
-=======
     
->>>>>>> 1951d082cc125fe8b7c5867fd9dc73dba760ac9d
     # This `if` is checking whether `python_result` is -1 modulo `field_modulus``
     if (python_result - (-1)) % field_modulus == 0:
         # In this case `x` is not a square
