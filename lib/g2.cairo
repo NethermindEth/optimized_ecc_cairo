@@ -131,7 +131,8 @@ namespace g2_lib:
         return (G2Point(new_x, new_y, new_z))
     end
 
-    func multiply(point : G2Point, n : Uint768) -> (res : G2Point):
+    func multiply{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point, n : Uint768) -> (
+            res : G2Point):
         alloc_locals
 
         let (is_eq_one : felt) = uint384_extension_lib.eq(
@@ -143,13 +144,13 @@ namespace g2_lib:
 
         let (n_halved : Uint768,
             is_odd : Uint384) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
-            n, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+            n, Uint384(d0=2, d1=0, d2=0))
         let (doubled : G2Point) = double(point)
-        if is_odd == 1:
+        if is_odd.d0 == 1:
             let (res : G2Point) = multiply(doubled, n_halved)
         else:
             let (res : G2Point) = multiply(doubled, n_halved)
-            let (res : G2Piint) = add(res, point)
+            let (res : G2Point) = add(res, point)
         end
 
         return (res=res)
