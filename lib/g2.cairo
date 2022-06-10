@@ -41,8 +41,8 @@ namespace g2_lib:
     end
 
     # Addition optimized for the curve y**2 = x**3 + 4 using Jacobian coordinate representation
-    func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
-            res : G2Point):
+    func add_py_ecc_version{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            p1 : G2Point, p2 : G2Point) -> (res : G2Point):
         alloc_locals
         let (is_p1_z_coord_zero) = fq2_lib.is_zero(p1.z)
         if is_p1_z_coord_zero == 1:
@@ -154,6 +154,82 @@ namespace g2_lib:
         end
 
         return (res=res)
+    end
+
+    # http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
+    func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G2Point, right : G2Point) -> (
+            res : G2Point):
+        alloc_locals
+
+        # if left.z.d0 == 0:
+        #     return (right)
+        # end
+        # if right.z.d0 == 0:
+        #     return (left)
+        # end
+        let (is_left_z_zero) = fq2_lib.is_zero(left.z)
+        if is_left_z_zero == 1:
+            return (right)
+        end
+        let (is_right_z_zero) = fq2_lib.is_zero(right.z)
+        if is_right_z_zero == 1:
+            return (left)
+        end
+
+        # z1z1 = z1^2
+        let (z1_squared : FQ2) = fq2_lib.square(left.z)
+        # z2z2 = z2^2
+        let (z2_squared : FQ2) = fq2_lib.square(right.z)
+
+        # U1 = X1*Z2Z2
+        let (U1 : FQ2) = fq2_lib.mul(left.x, z2_squared)
+        # U2 = X2*Z1Z1
+        let (U2 : FQ2) = fq2_lib.mul(right.x, z1_squared)
+
+        # S1 = Y1*Z2*Z2Z2
+        let (S1 : FQ2) = fq2_lib.mul_three_terms(left.y, right.z, z2_squared)
+        # S2 = Y2*Z1*Z1Z1
+        let (S2 : FQ2) = fq2_lib.mul_three_terms(right.y, left.z, z1_squared)
+
+        # H = U2-U1
+        let (H : FQ2) = fq2_lib.sub(U2, U1)
+
+        # I = (2*H)^2
+        let (two_H : FQ2) = fq2_lib.scalar_mul(2, H)
+        let (I : FQ2) = fq2_lib.square(two_H)
+
+        # J = H*I
+        let (J : FQ2) = fq2_lib.mul(H, I)
+
+        # r = 2*(S2-S1)
+        let (S_two_sub_S_one) = fq2_lib.sub(S2, S1)
+        let (r : FQ2) = fq2_lib.scalar_mul(2, S_two_sub_S_one)
+
+        # V = U1*I
+        let (V : FQ2) = fq2_lib.mul(U1, I)
+
+        # X3 = r^2-J-2*V
+        let (two_V : FQ2) = fq2_lib.scalar_mul(2, V)
+
+        let (r_squared : FQ2) = fq2_lib.square(r)
+
+        let (X3 : FQ2) = fq2_lib.sub_three_terms(r_squared, J, two_V)
+
+        # Y3 = r*(V-X3)-2*S1*J
+        let (V_sub_X3 : FQ2) = fq2_lib.sub(V, X3)
+        let (r_mul_V_sub_X3 : FQ2) = fq2_lib.mul(r, V_sub_X3)
+        let (two_S1 : FQ2) = fq2_lib.scalar_mul(2, S1)
+        let (two_S1_mul_J : FQ2) = fq2_lib.mul(two_S1, J)
+        let (Y3 : FQ2) = fq2_lib.sub(r_mul_V_sub_X3, two_S1_mul_J)
+
+        # Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2)*H
+        let (Z1_plus_Z2 : FQ2) = fq2_lib.add(left.z, right.z)
+        let (Z1_plus_Z2_squared : FQ2) = fq2_lib.square(Z1_plus_Z2)
+        let (inner : FQ2) = fq2_lib.sub_three_terms(Z1_plus_Z2_squared, z1_squared, z2_squared)
+        let (Z3 : FQ2) = fq2_lib.mul(inner, H)
+
+        let res : G2Point = G2Point(x=X3, y=Y3, z=Z3)
+        return (res)
     end
 
     # TODO: Do we need scalar mult by Uint384 here? Not just felt?

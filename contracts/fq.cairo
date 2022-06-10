@@ -27,7 +27,7 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint38
 end
 
 @view
-func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}( scalar, x : Uint384 ) -> (
+func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, x : Uint384) -> (
         res : Uint384):
     alloc_locals
 
@@ -35,7 +35,6 @@ func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}( scalar, x : Uin
 
     return (res)
 end
-
 
 @view
 func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
@@ -67,10 +66,10 @@ func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, exponent :
 end
 
 @view
-func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
+func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool):
     alloc_locals
 
-    let (bool) = fq_lib.is_square(x)
+    let (bool) = fq_lib.is_square_non_optimized(x)
 
     return (bool)
 end
@@ -83,4 +82,14 @@ func from_64_bytes{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint256, 
     let (res : Uint384) = fq_lib.from_64_bytes(x, y)
 
     return (res)
+end
+
+@view
+func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (
+        success : felt, res : Uint384):
+    alloc_locals
+
+    let (success, res : Uint384) = fq_lib.get_square_root(x)
+
+    return (success, res)
 end
