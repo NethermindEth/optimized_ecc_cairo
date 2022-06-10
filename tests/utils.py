@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, TypeVar
+from typing import List, Union, TypeVar, Callable
 from py_ecc.fields import optimized_bls12_381_FQ2 as FQ2
 one_bigint6 = (1, 0, 0, 0, 0, 0)
 
@@ -12,9 +12,6 @@ field_modulus_sub1_div2 = 200120477761083369670889491286795207827844140996950394
 max_felt = 2**241
 max_limb = 2**128 - 1
 all_ones = 2**384 - 1
-
-
-
     
 
 def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
@@ -81,6 +78,14 @@ def print_fq2(params):
 
 def neg_to_uint384(num):
     return split(all_ones - num + 1)
+
+
+def bitwise_or_bytes(var, key):
+    return bytes(a ^ b for a, b in zip(var, key))
+
+bytes_to_int_little: Callable[[bytes], int] = lambda word: int.from_bytes(word, "little")
+
+bytes_32_to_uint_256_little : Callable[[bytes], tuple] = lambda word : split(bytes_to_int_little(word), 128, 2)
 
 T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
 IntOrUint384 = Union[int, T_Uint384]
