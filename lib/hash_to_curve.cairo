@@ -33,6 +33,8 @@ func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint25
     return (p0)
 end
 
+# @dev hash_to_curve but with the sha256 hash step omitted.
+# @dev This allows us to test the rest of the function without needing the sha256 builtin
 func expanded_hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         one : Uint256, two : Uint256, three : Uint256, four : Uint256) -> (
         point_on_curve : G2Point):
