@@ -31,7 +31,7 @@ func get_params_three_isogeny_g2() -> (params : ParamsThreeIsogenyG2):
         x_num_4=FQ2(e0=Uint384(d0=149667379933325743832568580208170000081, d1=269940798292737708730660959008714360181, d2=30724874262591027616701507579391489556), e1=Uint384(d0=0, d1=0, d2=0)),
         x_den_1=FQ2(e0=Uint384(d0=0, d1=0, d2=0), e1=Uint384(d0=40769914829639538012874174947278170723, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751)),
         x_den_2=FQ2(e0=Uint384(d0=12, d1=0, d2=0), e1=Uint384(d0=40769914829639538012874174947278170783, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751)),
-        x_den_3=FQ2(e0=Uint384(d0=313635500375121084810881640338032885757, d1=159249536114007638540741953206796900538, d2=29193015012204308844271843190429379693), e1=Uint384(d0=0, d1=0, d2=0)),
+        x_den_3=FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0)),
         x_den_4=FQ2(e0=Uint384(d0=0, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0)),
         y_num_1=FQ2(e0=Uint384(d0=335693145642762702200156386192687290118, d1=20590820487717257360856140803476022528, d2=28164468074041775315309715281108865427), e1=Uint384(d0=335693145642762702200156386192687290118, d1=20590820487717257360856140803476022528, d2=28164468074041775315309715281108865427)),
         y_num_2=FQ2(e0=Uint384(d0=0, d1=0, d2=0), e1=Uint384(d0=122487436713566051823985796909984552894, d1=67485199573184427182665239752178590045, d2=7681218565647756904175376894847872389)),
@@ -40,7 +40,7 @@ func get_params_three_isogeny_g2() -> (params : ParamsThreeIsogenyG2):
         y_den_1=FQ2(e0=Uint384(d0=40769914829639538012874174947278170363, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751), e1=Uint384(d0=40769914829639538012874174947278170363, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751)),
         y_den_2=FQ2(e0=Uint384(d0=0, d1=0, d2=0), e1=Uint384(d0=40769914829639538012874174947278170579, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751)),
         y_den_3=FQ2(e0=Uint384(d0=18, d1=0, d2=0), e1=Uint384(d0=40769914829639538012874174947278170777, d1=133542214618860690590306275168919549476, d2=34565483545414906068789196026815425751)),
-        y_den_4=FQ2(e0=Uint384(d0=313635500375121084810881640338032885757, d1=159249536114007638540741953206796900538, d2=29193015012204308844271843190429379693), e1=Uint384(d0=0, d1=0, d2=0))
+        y_den_4=FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0))
         ))
 end
 
@@ -51,6 +51,20 @@ func isogeny_map_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y :
     let (z_2 : FQ2) = fq2_lib.pow(z, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
     let (z_3 : FQ2) = fq2_lib.pow(z, Uint768(d0=3, d1=0, d2=0, d3=0, d4=0, d5=0))
 
+    %{
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (z.d0, z.d1, z.d2)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+
+        def packFQP(z):
+            z_split = (z.e0, z.e1)
+            return tuple(pack(z_component, 128) for i, z_component in enumerate(z_split))
+
+        print("z " + str(packFQP(ids.z)))
+        print("z^2 " + str(packFQP(ids.z_2)))
+        print("z^3 " + str(packFQP(ids.z_3)))
+    %}
     let (params : ParamsThreeIsogenyG2) = get_params_three_isogeny_g2()
 
     let x_num : FQ2 = params.x_num_4
@@ -59,59 +73,66 @@ func isogeny_map_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y :
     let y_den : FQ2 = params.y_den_4
 
     let (x_num : FQ2) = fq2_lib.mul(x_num, x)
-    let (z_1_mul_1) = fq2_lib.mul(z, params.x_num_1)
-    let (x_num) = fq2_lib.add(x_num, z_1_mul_1)
+    let (z_1_mul_3) = fq2_lib.mul(z, params.x_num_3)
+    let (x_num) = fq2_lib.add(x_num, z_1_mul_3)
 
     let (x_num : FQ2) = fq2_lib.mul(x_num, x)
     let (z_2_mul_2) = fq2_lib.mul(z_2, params.x_num_2)
     let (x_num) = fq2_lib.add(x_num, z_2_mul_2)
 
     let (x_num : FQ2) = fq2_lib.mul(x_num, x)
-    let (z_3_mul_3) = fq2_lib.mul(z_3, params.x_num_3)
-    let (x_num) = fq2_lib.add(x_num, z_3_mul_3)
+    let (z_3_mul_1) = fq2_lib.mul(z_3, params.x_num_1)
+    let (x_num) = fq2_lib.add(x_num, z_3_mul_1)
 
     let (x_den : FQ2) = fq2_lib.mul(x_den, x)
-    let (z_1_mul_1) = fq2_lib.mul(z, params.x_den_1)
-    let (x_den) = fq2_lib.add(x_den, z_1_mul_1)
+    let (z_1_mul_3) = fq2_lib.mul(z, params.x_den_3)
+    let (x_den) = fq2_lib.add(x_den, z_1_mul_3)
 
     let (x_den : FQ2) = fq2_lib.mul(x_den, x)
     let (z_2_mul_2) = fq2_lib.mul(z_2, params.x_den_2)
     let (x_den) = fq2_lib.add(x_den, z_2_mul_2)
 
     let (x_den : FQ2) = fq2_lib.mul(x_den, x)
-    let (z_3_mul_3) = fq2_lib.mul(z_3, params.x_den_3)
-    let (x_den) = fq2_lib.add(x_den, z_3_mul_3)
+    let (z_3_mul_1) = fq2_lib.mul(z_3, params.x_den_1)
+    let (x_den) = fq2_lib.add(x_den, z_3_mul_1)
 
     let (y_num : FQ2) = fq2_lib.mul(y_num, x)
-    let (z_1_mul_1) = fq2_lib.mul(z, params.y_num_1)
-    let (y_num) = fq2_lib.add(y_num, z_1_mul_1)
+    let (z_1_mul_3) = fq2_lib.mul(z, params.y_num_3)
+    let (y_num) = fq2_lib.add(y_num, z_1_mul_3)
 
     let (y_num : FQ2) = fq2_lib.mul(y_num, x)
     let (z_2_mul_2) = fq2_lib.mul(z_2, params.y_num_2)
     let (y_num) = fq2_lib.add(y_num, z_2_mul_2)
 
     let (y_num : FQ2) = fq2_lib.mul(y_num, x)
-    let (z_3_mul_3) = fq2_lib.mul(z_3, params.y_num_3)
-    let (y_num) = fq2_lib.add(y_num, z_3_mul_3)
+    let (z_3_mul_1) = fq2_lib.mul(z_3, params.y_num_1)
+    let (y_num) = fq2_lib.add(y_num, z_3_mul_1)
 
-    let (x_num : FQ2) = fq2_lib.mul(x_num, x)
-    let (z_1_mul_1) = fq2_lib.mul(z, params.x_num_1)
-    let (x_num) = fq2_lib.add(x_num, z_1_mul_1)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
+    let (y_den : FQ2) = fq2_lib.mul(y_den, x)
+    let (z_1_mul_3) = fq2_lib.mul(z, params.y_den_3)
+    let (y_den) = fq2_lib.add(y_den, z_1_mul_3)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
 
-    let (x_num : FQ2) = fq2_lib.mul(x_num, x)
-    let (z_2_mul_2) = fq2_lib.mul(z_2, params.x_num_2)
-    let (x_num) = fq2_lib.add(x_num, z_2_mul_2)
+    let (y_den : FQ2) = fq2_lib.mul(y_den, x)
+    let (z_2_mul_2) = fq2_lib.mul(z_2, params.y_den_2)
+    let (y_den) = fq2_lib.add(y_den, z_2_mul_2)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
 
-    let (x_num : FQ2) = fq2_lib.mul(x_num, x)
-    let (z_3_mul_3) = fq2_lib.mul(z_3, params.x_num_3)
-    let (x_num) = fq2_lib.add(x_num, z_3_mul_3)
+    let (y_den : FQ2) = fq2_lib.mul(y_den, x)
+    let (z_3_mul_1) = fq2_lib.mul(z_3, params.y_den_1)
+    let (y_den) = fq2_lib.add(y_den, z_3_mul_1)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
 
     let (y_num : FQ2) = fq2_lib.mul(y_num, y)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
+    %{ print("z " + str(packFQP(ids.z))) %}
     let (y_den : FQ2) = fq2_lib.mul(y_den, z)
 
+    let (z_res : FQ2) = fq2_lib.mul(x_den, y_den)
+    %{ print("y_den " + str(packFQP(ids.y_den))) %}
     let (x_res : FQ2) = fq2_lib.mul(x_num, y_den)
     let (y_res : FQ2) = fq2_lib.mul(y_num, x_den)
-    let (z_res : FQ2) = fq2_lib.mul(x_den, y_den)
 
     return (x_res, y_res, z_res)
 end

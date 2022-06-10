@@ -8,56 +8,17 @@ from py_ecc.fields import (
     optimized_bls12_381_FQ2 as FQ2,
 )
 
-@given(
-    x_e0=st.integers(min_value=55, max_value=field_modulus - 1),
-    x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-    y_e0=st.integers(min_value=2, max_value=field_modulus - 1),
-    y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-    z_e0=st.integers(min_value=1, max_value=field_modulus - 1),
-    z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-)
-@settings(deadline=None)
-@pytest.mark.asyncio
-async def test_clear_cofactor(
-    hash_to_curve_factory,
-    x_e0,
-    x_e1,
-    y_e0,
-    y_e1,
-    z_e0,
-    z_e1,
-):
-    x = splitFQP((x_e0, x_e1))
-    y = splitFQP( (y_e0, y_e1) )
-    z = splitFQP( (z_e0, z_e1) )
-
-    py_ecc_res = clear_cofactor_G2((FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1))))
-    execution_info = await hash_to_curve_factory.clear_cofactor_g2((x, y, z)).call()
-
-    assert 1 == 0
-    res = packFQP(execution_info.result[0])
-    assert res == py_ecc_res
-
-
-@given(
-    x_e0=st.integers(min_value=55, max_value=field_modulus - 1),
-    x_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-    y_e0=st.integers(min_value=2, max_value=field_modulus - 1),
-    y_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-    z_e0=st.integers(min_value=1, max_value=field_modulus - 1),
-    z_e1=st.integers(min_value=0, max_value=field_modulus - 1),
-)
-@settings(deadline=None)
 @pytest.mark.asyncio
 async def test_isogeny_map_g2(
-    hash_to_curve_factory,
-    x_e0,
-    x_e1,
-    y_e0,
-    y_e1,
-    z_e0,
-    z_e1,
+    hash_to_curve_factory
 ):  
+    x_e0 = 1
+    x_e1 = 2
+    y_e0 = 3
+    y_e1 = 4
+    z_e0 = 5
+    z_e1 = 6
+
     contract = hash_to_curve_factory
     
     x = splitFQP((x_e0, x_e1))
@@ -67,25 +28,42 @@ async def test_isogeny_map_g2(
     py_ecc_res = iso_map_G2(FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1)))
 
     execution_info = await contract.isogeny_g2(x, y, z).call()
-    assert 1 == 2
     g2point = (FQ2(packFQP(execution_info.result.x_res)), 
     FQ2(packFQP(execution_info.result.y_res)), 
     FQ2(packFQP(execution_info.result.z_res)))
-
     
-    print('lollol')
-    print(g2point[0].coeffs[0])
-    print( py_ecc_res[0].coeffs[0])
     assert int(g2point[0].coeffs[0]) == int(py_ecc_res[0].coeffs[0])
-    print("lol")
-    print(str(g2point[0].coeffs) + " eq to " + str(py_ecc_res[0].coeffs))
-    print(str(g2point[1].coeffs) + " eq to " + str(py_ecc_res[1].coeffs))
-    print(str(g2point[2].coeffs) + " eq to " + str(py_ecc_res[2].coeffs))
+    assert int(g2point[0].coeffs[1]) == int(py_ecc_res[0].coeffs[1])
+
+    assert int(g2point[1].coeffs[0]) == int(py_ecc_res[1].coeffs[0])
+    assert int(g2point[1].coeffs[1]) == int(py_ecc_res[1].coeffs[1])
+    
+    assert int(g2point[2].coeffs[0]) == int(py_ecc_res[2].coeffs[0])
+    assert int(g2point[2].coeffs[1]) == int(py_ecc_res[2].coeffs[1])
 
 
+@pytest.mark.skip(reason="No")
+@pytest.mark.asyncio
+async def test_clear_cofactor(
+    hash_to_curve_factory
+):  
+    x_e0 = 1
+    x_e1 = 2
+    y_e0 = 3
+    y_e1 = 4
+    z_e0 = 5
+    z_e1 = 6
 
+    x = splitFQP((x_e0, x_e1))
+    y = splitFQP( (y_e0, y_e1) )
+    z = splitFQP( (z_e0, z_e1) )
 
-@pytest.mark.skip("")
+    py_ecc_res = clear_cofactor_G2((FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1))))
+    execution_info = await hash_to_curve_factory.clear_cofactor_g2((x, y, z)).call()
+    res = packFQP(execution_info.result[0])
+    assert res == py_ecc_res
+
+@pytest.mark.skip(reason="No")
 @pytest.mark.parametrize('H', [sha256])
 @pytest.mark.parametrize(
     'msg,x,y',
@@ -112,14 +90,13 @@ async def test_expanded_hash_to_curve(
     y,
     H
 ):  
+
     DST = b'QUUX-V01-CS02-with-BLS12381G2_XMD:SHA-256_SSWU_RO_'
     u0, u1 = hash_to_field_FQ2(msg, 2, DST, H)
     q0 = map_to_curve_G2(u0)
 
     a = u0.coeffs[0]
-    print("going to curve")
     execution_info = await hash_to_curve_factory.fq2_to_curve(splitFQP(u0.coeffs)).call()
-    print("done to curve")
     x = execution_info.result.x
     y = execution_info.result.y
     z = execution_info.result.z
