@@ -1,21 +1,19 @@
 from re import A
-from matplotlib.cm import register_cmap
 import pytest
 from hypothesis import given, strategies as st, settings
 from sympy import Segment2D
 from utils import (
     create_G2Point_from_execution_result,
     field_modulus,
-    split,
     g2_add,
     g2_double,
     get_g2_point_from_seed,
     g2_scalar_mul,
     get_g2_infinity_point,
     create_G2Point_from_tuple,
+    splitFQP, 
+    pack
 )
-
-from utils import G2Point, splitFQP, pack
 
 
 @pytest.mark.asyncio

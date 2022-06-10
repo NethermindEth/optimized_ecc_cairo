@@ -117,8 +117,8 @@ namespace fq2_lib:
         end
         return (1)
     end
-    
-    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: FQ2) -> (res: FQ2):
+
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (res : FQ2):
         let (res) = mul(x, x)
         return (res)
     end
@@ -167,19 +167,6 @@ namespace fq2_lib:
         return (res)
     end
 
-    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (product : FQ2):
-        alloc_locals
-
-        let (t_0 : Uint384) = fq_lib.add(a.e0, a.e1)
-        let (t_1 : Uint384) = fq_lib.sub(a.e0, a.e1)
-        let (t_2 : Uint384) = fq_lib.scalar_mul(2, a.e0)
-
-        let (c_0 : Uint384) = fq_lib.mul(t_0, t_1)
-        let (c_1 : Uint384) = fq_lib.mul(t_2, a.e1)
-
-        return (product=FQ2(e0=c_0, e1=c_1))
-    end
-
     func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2, exp : Uint768) -> (res : FQ2):
         let o : FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0))
         let (res : FQ2) = pow_inner(a, exp, o)
@@ -224,7 +211,7 @@ namespace fq2_lib:
         let (c1 : Uint384) = fq_lib.mul(a.e1, a.e1)
         let (c3 : Uint384) = fq_lib.add(c0, c1)
 
-        let (is_quad_nonresidue : felt) = fq_lib.is_square(c3)
+        let (is_quad_nonresidue : felt) = fq_lib.is_square_non_optimized(c3)
 
         return (is_quad_nonresidue)
     end

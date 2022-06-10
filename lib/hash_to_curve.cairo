@@ -5,21 +5,23 @@ from lib.isogeny import isogeny_map_g2
 from lib.swu import optimized_sswu
 from lib.g2 import G2Point, g2_lib
 from lib.hash_to_field import expand_msg_sha_xmd
+from lib.uint384 import Uint384
 from lib.uint384_extension import Uint768
 
 func hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(hash : Uint256) -> (
         point_on_curve : G2Point):
     alloc_locals
-    let (one : Uint256, two : Uint256, three : Uint256, four : Uint256, _, _, _,
-        _) = expand_msg_sha_xmd(hash)
+    let (one : Uint256, two : Uint256, three : Uint256, four : Uint256) = expand_msg_sha_xmd(hash)
 
-    let (u0 : FQ2) = FQ2(one, two)
-    let (u1 : FQ2) = FQ2(three, four)
+    let u0 : FQ2 = FQ2(
+        e0=Uint384(d0=one.low, d1=one.high, d2=0), e1=Uint384(d0=two.low, d1=two.high, d2=0))
+    let u1 : FQ2 = FQ2(
+        e0=Uint384(d0=three.low, d1=three.high, d2=0), e1=Uint384(d0=four.low, d1=four.high, d2=0))
 
     let (x0 : FQ2, y0 : FQ2, z0 : FQ2) = map_to_curve_g2(u0)
     let (x1 : FQ2, y1 : FQ2, z1 : FQ2) = map_to_curve_g2(u1)
 
-    let (z : Uint384) = fq2_lib.one()
+    let (z : FQ2) = fq2_lib.one()
 
     let p0 : G2Point = G2Point(x=x0, y=y0, z=z0)
     let p1 : G2Point = G2Point(x=x1, y=y1, z=z1)
@@ -35,13 +37,15 @@ func expanded_hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         one : Uint256, two : Uint256, three : Uint256, four : Uint256) -> (
         point_on_curve : G2Point):
     alloc_locals
-    let (u0 : FQ2) = FQ2(one, two)
-    let (u1 : FQ2) = FQ2(three, four)
+    let u0 : FQ2 = FQ2(
+        e0=Uint384(d0=one.low, d1=one.high, d2=0), e1=Uint384(d0=two.low, d1=two.high, d2=0))
+    let u1 : FQ2 = FQ2(
+        e0=Uint384(d0=three.low, d1=three.high, d2=0), e1=Uint384(d0=four.low, d1=four.high, d2=0))
 
     let (x0 : FQ2, y0 : FQ2, z0 : FQ2) = map_to_curve_g2(u0)
     let (x1 : FQ2, y1 : FQ2, z1 : FQ2) = map_to_curve_g2(u1)
 
-    let (z : Uint384) = fq2_lib.one()
+    let (z : FQ2) = fq2_lib.one()
 
     let p0 : G2Point = G2Point(x=x0, y=y0, z=z0)
     let p1 : G2Point = G2Point(x=x1, y=y1, z=z1)
