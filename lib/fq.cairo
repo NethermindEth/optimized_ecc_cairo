@@ -53,6 +53,8 @@ namespace fq_lib:
         let (res : Uint384) = mul(x, x)
         return (res)
     end
+    
+    
 
     # NOTE: Scalar has to be at most than 2**128 - 1
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : Uint384) -> (

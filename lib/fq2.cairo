@@ -28,7 +28,8 @@ namespace fq2_lib:
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
         return (FQ2(e0=e0, e1=e1))
     end
-
+    
+    # TODO: due to how fq_lib.scalar is implemented, this only supports multiplication by scalars of at most 128 bits
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
         product : FQ2
     ):
@@ -153,8 +154,8 @@ namespace fq2_lib:
     # Not tested
     # Computes x - y - z
     func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
-        let (x_times_y : FQ2) = sub(x, y)
-        let (res : FQ2) = sub(x_times_y, z)
+        let (x_sub_y : FQ2) = sub(x, y)
+        let (res : FQ2) = sub(x_sub_y, z)
         return (res)
     end
 end

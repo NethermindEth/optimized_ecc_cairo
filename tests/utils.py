@@ -1,3 +1,4 @@
+from lib2to3.pgen2.token import OP
 from typing import List, Tuple, Union, TypeVar
 from py_ecc.fields import optimized_bls12_381_FQ2 as FQ2
 one_bigint6 = (1, 0, 0, 0, 0, 0)
@@ -170,21 +171,44 @@ class Optimized_Point3D_Modified(object):
         self.x = x
         self.y = y
         self.z = z
-
-    def __eq__(self, other):
-        print(self.x * self.z)
-        print(other.x * other.z)
-        return self.x * self.z == other.x * other.z
     
+    # def __eq__(self, other):
+    #     print(self.x / self.z**2)
+    #     print(other.x / other.z**2)
+    #     print(self.y / self.y**2)
+    #     print(other.y / other.y**2)
+    #     if self.z == FQ2.zero():
+    #         return other.z == FQ2.zero()
+    #     else:
+    #         true_x_self = self.x / (self.z**2)
+    #         true_y_self = self.y / (self.z**3)
+    #         true_x_other = other.x / (other.z**2)
+    #         true_y_other = other.y / (other.z**3)
+    #         return true_x_self == true_x_other and true_y_self == true_y_other 
+    def __eq__(self, other):
+        print(self.x / self.z)
+        print(other.x / other.z)
+        print(self.y / self.z)
+        print(other.y / other.z)
+        if self.z == FQ2.zero():
+            return other.z == FQ2.zero()
+        else:
+            true_x_self = self.x / (self.z)
+            true_y_self = self.y / (self.z)
+            true_x_other = other.x / (other.z)
+            true_y_other = other.y / (other.z)
+            print((true_x_self == true_x_other), (true_y_self == true_y_other))
+            return (true_x_self == true_x_other) and (true_y_self == true_y_other)
+        
     def asTuple(self):
         return (
             tuple([split(coef)  for coef in self.x.coeffs]), 
             tuple([split(coef)  for coef in self.y.coeffs]), 
             tuple([split(coef)  for coef in self.z.coeffs]), 
             )
-    
+        
     def __repr__(self):
-        return f"({self.x}, {self.y}, {self.z})"
+        return f"Optimized_Point3D_Modified({self.x}, {self.y}, {self.z})"
 
 # Given an initial integer seed, creates a G2 point by taking the powers of the seed
 # Used in testing: to reduce the number of variables to be explored by `hypothesis`
@@ -204,6 +228,7 @@ def create_G2Point_from_execution_result(result):
         FQ2((pack(result[0][0]), pack(result[0][1]))),
         FQ2((pack(result[1][0]), pack(result[1][1]))),
         FQ2((pack(result[2][0]), pack(result[2][1]))),
+        #FQ2((pack(result[2][0]), pack(result[2][1]))),
     )
 
 def create_G2Point_from_tuple(tuple_of_reduced_integers): 
@@ -231,6 +256,27 @@ def g2_double(pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
     newx = 2 * H * S
     newy = W * (4 * B - H) - 8 * y * y * S_squared
     newz = 8 * S * S_squared
+    
+    
+    print("python_HI")
+    print("python_W", W)
+    print("python_S", S)
+    print("python_B", B)
+    print("python_W_squared", W**2)
+    print("python_8_times_B", 8*B)
+    print("python_H",H)
+    print("python_H_times_S", H*S)
+    print("python_new_x", newx)
+    print("python_S_squared", S**2)
+    print("python_inner_term_2",  y * y * S_squared)
+    #print("python_eight_times_inner_term_2", packFQP(ids.eight_times_inner_term_2))
+    print("python_four_times_B", 4*B)
+    print("python_four_times_B_sub_H", 4*B -H)
+    print("python_inner_term_1",W * (4 * B - H))
+    print("python_new_y", newy)
+    print("python_S_cubed", S*S**2)
+    print("python_new_z", newz)
+
     return Optimized_Point3D_Modified(newx, newy, newz)
 
 
@@ -261,6 +307,7 @@ def g2_add(p1: Optimized_Point3D_Modified,
     newx = V * A
     newy = U * (V_squared_times_V2 - A) - V_cubed * U2
     newz = V_cubed * W
+    
     return Optimized_Point3D_Modified(newx, newy, newz)
 
 
