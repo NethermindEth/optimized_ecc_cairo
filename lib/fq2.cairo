@@ -28,7 +28,7 @@ namespace fq2_lib:
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
         return (FQ2(e0=e0, e1=e1))
     end
-    
+
     # TODO: due to how fq_lib.scalar is implemented, this only supports multiplication by scalars of at most 128 bits
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
         product : FQ2
@@ -56,16 +56,16 @@ namespace fq2_lib:
 
         return (FQ2(e0=first_term, e1=second_term))
     end
-    
+
     # Find b such that b*a = 1 in FQ2
     # First the inverse is computed in a hint, and then verified in Cairo
     # The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     # multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     # d0 and d1
-    func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a: FQ2) -> (inverse: FQ2):
+    func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (inverse : FQ2):
         alloc_locals
         local a_inverse : FQ2
-        let (field_modulus: Uint384) = get_modulus()
+        let (field_modulus : Uint384) = get_modulus()
         %{
             def split(num: int, num_bits_shift : int = 128, length: int = 3):
                 a = []
@@ -77,11 +77,11 @@ namespace fq2_lib:
             def pack(z, num_bits_shift: int = 128) -> int:
                 limbs = (z.d0, z.d1, z.d2)
                 return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-            
+
             e0 = pack(ids.a.e0)
             e1 = pack(ids.a.e1)
             field_modulus = pack(ids.field_modulus)
-            
+
             if e0 != 0:
                 e0_inv = pow(e0, -1, field_modulus)
                 new_e0 = pow(e0 + (e1**2) * e0_inv, -1, field_modulus)
@@ -89,21 +89,21 @@ namespace fq2_lib:
             else:
                 new_e0 = 0
                 new_e1 = pow(-e1, -1, field_modulus)
-            
+
             new_e0_split = split(new_e0)
             new_e1_split = split(new_e1)
-            
+
             ids.a_inverse.e0.d0 = new_e0_split[0]
             ids.a_inverse.e0.d1 = new_e0_split[1]
             ids.a_inverse.e0.d2 = new_e0_split[2]
-            
+
             ids.a_inverse.e1.d0 = new_e1_split[0]
             ids.a_inverse.e1.d1 = new_e1_split[1]
             ids.a_inverse.e1.d2 = new_e1_split[2]
         %}
-        
-        let (a_inverse_times_a: FQ2) = mul(a_inverse, a)
-        let (one: FQ2) = get_one()
+
+        let (a_inverse_times_a : FQ2) = mul(a_inverse, a)
+        let (one : FQ2) = get_one()
         let (is_one) = eq(a_inverse_times_a, one)
         assert is_one = 1
         return (a_inverse)
@@ -120,8 +120,68 @@ namespace fq2_lib:
         end
         return (1)
     end
-    
-    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: FQ2) -> (res: FQ2):
+
+    # The sqrt r of (a, b) in Fq2 can be found by writting r and x as  polynomials,
+    # i.e. r = r_0 + r_1 x, (a,b)= a+bx
+    # then wrting the equation (r_0 + r1 x)**2 = a + bx
+    # and solving for r_0 and r_1 modulo the irreducible polynomial f that defines Fq2 (in our case f = x**2 + 1)
+    # For this particular f we have, if ab != 0 (the other cases are easier)
+    # r_1  = sqrt(-a + sqrt(a**2 + b**2))/2)
+    # r_0 = b r_1^{-1} /2
+    # If any of the sqrt in Fq in the formulas does not exists, then the sqrt of (a,b) in Fq2
+    # Otherwise choosing any of the two possible sqrt each time yields a sqrt of (a, b) in Fq2
+    # Note that the function `get_sqrt` from the library fq.cairo tells us
+    # with security whether an element has a sqrt or not
+    func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(element : FQ2) -> (
+        bool : felt, sqrt : FQ2
+    ):
+        let a : Uint384 = element.e0
+        let b : Uint384 = element.e1
+        
+        # TODO: create a dedicated eq function in fq.cairo (and probably use a FQ struct everywhere instead of Uint384)
+        let (is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
+        let (is_b_zero) = uint384_lib.eq(b, Uint384(0,0,0))
+
+        if is_a_zero == 1:
+            if is_b_zero == 1:
+                return (1, Uint384(0, 0, 0))
+            else:
+                let (zero : FQ2) = get_zero()
+                # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
+                return (0, zero)
+            end
+        else:
+            if is_b_zero == 1:
+                let (bool, res : Uint384) = fq_lib.get_square_root(a)
+                let (sqrt : FQ2) = FQ2(res, Uint384(0, 0, 0))
+                return (bool, sqrt)
+            else:
+                let (a_squared : FQ2) = fq_lib.mul(a, a)
+                let (b_squared : FQ2) = fq_lib.mul(b, b)
+                let (a_squared_plus_b_squared : FQ2) = fq_lib.add(a_squared, b_squared)
+                let (bool, sqrt : Uint384) = fq_lib.get_square_root(a_squared_plus_b_squared)
+                if bool == 0:
+                    let (zero : FQ2) = get_zero()
+                    # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
+                    return (0, zero)
+                end
+                let (minus_a_plus_sqrt : Uint384) = fq_lib.sub(sqrt, a)
+                let (two_inverse : Uint384) = fq_lib.inverse(Uint384(2, 0, 0))
+                let (minus_a_plus_sqrt_div_2 : Uint384) = fq_lib.mul(minus_a_plus_sqrt, two_inverse)
+                let (bool, r1 : Uint384) = fq_lib.get_square_root(minus_a_plus_sqrt_div_2)
+                if bool == 0:
+                    let (zero : FQ2) = get_zero()
+                    return (0, zero)
+                end
+                let (twice_r1 : Uint384) = fq_lib.scalar_mul(2, r1)
+                let (twice_r1_inverse : Uint384) = fq_lib.inverse(twice_r1)
+                let (r0 : Uint384) = fq_lib.mul(b, twice_r1_inverse)
+                return (1, FQ2(r0, r1))
+            end
+        end
+    end
+
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (res : FQ2):
         let (res) = mul(x, x)
         return (res)
     end
@@ -145,15 +205,19 @@ namespace fq2_lib:
     end
 
     # Not tested
-    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        x : FQ2, y : FQ2, z : FQ2
+    ) -> (res : FQ2):
         let (x_times_y : FQ2) = mul(x, y)
         let (res : FQ2) = mul(x_times_y, z)
         return (res)
     end
-    
+
     # Not tested
     # Computes x - y - z
-    func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+    func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        x : FQ2, y : FQ2, z : FQ2
+    ) -> (res : FQ2):
         let (x_sub_y : FQ2) = sub(x, y)
         let (res : FQ2) = sub(x_sub_y, z)
         return (res)

@@ -70,7 +70,8 @@ namespace fq_lib:
 
         return (reduced)
     end
-
+    
+    # TODO: in field_arithmetic we implement first the function a/x mod p. Make consistent
     # finds x in a x ≅ 1 (mod q)
     func inverse{range_check_ptr}(a : Uint384) -> (res : Uint384):
         alloc_locals
@@ -108,6 +109,7 @@ namespace fq_lib:
         let (success, res: Uint384) = field_arithmetic_lib.get_square_root(x, p, generator)
         return (success, res)
     end
+
 end
 
 # # func inverse_inner{range_check_ptr}(a : BigInt6, m : BigInt6, x : BigInt6, y : BigInt6) -> (
