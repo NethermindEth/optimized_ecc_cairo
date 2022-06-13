@@ -86,3 +86,13 @@ func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (bool :
 
     return (res)
 end
+
+@view
+func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(value : FQ2) -> (
+        success : felt, res : FQ2):
+    alloc_locals
+
+    let (success, res : FQ2) = fq2_lib.get_square_root(value)
+
+    return (success, res)
+end

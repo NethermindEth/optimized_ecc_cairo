@@ -14,7 +14,6 @@ from utils import (
     splitFQP, 
     pack
 )
-from copy import deepcopy
 
 
 @pytest.mark.asyncio
@@ -246,13 +245,11 @@ async def test_g2_add_specific(g2_factory):
     a = get_g2_point_from_seed(a_seed)
     b = get_g2_point_from_seed(b_seed)
 
-    python_result = g2_add(deepcopy(a), deepcopy(b))
+    python_result = g2_add(a, b)
     # double_result = g2_double(a)
     # python_result = g2_add(a, python_result)
 
-    execution_info = await contract.add(
-        deepcopy(a).asTuple(), deepcopy(b).asTuple()
-    ).call()
+    execution_info = await contract.add(a.asTuple(), b.asTuple()).call()
     res = execution_info.result[0]
     cairo_result = create_G2Point_from_execution_result(res)
 
@@ -333,3 +330,4 @@ async def test_g2_scalar_mul_specific(g2_factory):
     assert python_result == python_result2
     print("ff2")
     assert cairo_result2 == python_result
+

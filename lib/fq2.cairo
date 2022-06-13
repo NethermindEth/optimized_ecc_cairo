@@ -132,16 +132,18 @@ namespace fq2_lib:
     # with security whether an element has a sqrt or not
     func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(element : FQ2) -> (
             bool : felt, sqrt : FQ2):
+        alloc_locals
         let a : Uint384 = element.e0
         let b : Uint384 = element.e1
 
         # TODO: create a dedicated eq function in fq.cairo (and probably use a FQ struct everywhere instead of Uint384)
-        let (is_a_zero) = uint384_lib.eq(a, Uint384(0, 0, 0))
-        let (is_b_zero) = uint384_lib.eq(b, Uint384(0, 0, 0))
+        let (local is_a_zero) = uint384_lib.eq(a, Uint384(0, 0, 0))
+        let (local is_b_zero) = uint384_lib.eq(b, Uint384(0, 0, 0))
 
         if is_a_zero == 1:
             if is_b_zero == 1:
-                return (1, Uint384(0, 0, 0))
+                let (zero : FQ2) = get_zero()
+                return (1, zero)
             else:
                 let (zero : FQ2) = get_zero()
                 # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
@@ -150,19 +152,20 @@ namespace fq2_lib:
         else:
             if is_b_zero == 1:
                 let (bool, res : Uint384) = fq_lib.get_square_root(a)
-                let (sqrt : FQ2) = FQ2(res, Uint384(0, 0, 0))
+                let sqrt = FQ2(res, Uint384(0, 0, 0))
                 return (bool, sqrt)
             else:
-                let (a_squared : FQ2) = fq_lib.mul(a, a)
-                let (b_squared : FQ2) = fq_lib.mul(b, b)
-                let (a_squared_plus_b_squared : FQ2) = fq_lib.add(a_squared, b_squared)
-                let (bool, sqrt : Uint384) = fq_lib.get_square_root(a_squared_plus_b_squared)
+                let (a_squared : Uint384) = fq_lib.mul(a, a)
+                let (b_squared : Uint384) = fq_lib.mul(b, b)
+                let (a_squared_plus_b_squared : Uint384) = fq_lib.add(a_squared, b_squared)
+                let (bool, sqrt_a_squared_plus_b_squared : Uint384) = fq_lib.get_square_root(
+                    a_squared_plus_b_squared)
                 if bool == 0:
                     let (zero : FQ2) = get_zero()
                     # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
                     return (0, zero)
                 end
-                let (minus_a_plus_sqrt : Uint384) = fq_lib.sub(sqrt, a)
+                let (minus_a_plus_sqrt : Uint384) = fq_lib.sub(sqrt_a_squared_plus_b_squared, a)
                 let (two_inverse : Uint384) = fq_lib.inverse(Uint384(2, 0, 0))
                 let (minus_a_plus_sqrt_div_2 : Uint384) = fq_lib.mul(minus_a_plus_sqrt, two_inverse)
                 let (bool, r1 : Uint384) = fq_lib.get_square_root(minus_a_plus_sqrt_div_2)
