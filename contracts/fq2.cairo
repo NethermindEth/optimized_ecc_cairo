@@ -6,8 +6,7 @@ from lib.BigInt6 import BigInt6
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 @view
-func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
-        res : FQ2):
+func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.add(x, y)
@@ -16,8 +15,7 @@ func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
 end
 
 @view
-func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
-        res : FQ2):
+func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.sub(x, y)
@@ -26,8 +24,7 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
 end
 
 @view
-func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
-        res : FQ2):
+func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.scalar_mul(x, y)
@@ -36,8 +33,7 @@ func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ
 end
 
 @view
-func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
-        res : FQ2):
+func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.mul(x, y)
@@ -45,10 +41,8 @@ func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
     return (res)
 end
 
-
 @view
-func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
-        res : FQ2):
+func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.inv(x)
@@ -56,11 +50,8 @@ func inv{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
     return (res)
 end
 
-
-
 @view
-func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
-        res : felt):
+func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (res : felt):
     alloc_locals
 
     let (res) = fq2_lib.eq(x, y)
@@ -68,11 +59,8 @@ func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (
     return (res)
 end
 
-
-
 @view
-func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
-        bool : felt):
+func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (bool : felt):
     alloc_locals
 
     let (res) = fq2_lib.is_zero(x)
@@ -80,3 +68,13 @@ func is_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (
     return (res)
 end
 
+@view
+func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(value : FQ2) -> (
+    success : felt, res : FQ2
+):
+    alloc_locals
+
+    let (success, res : FQ2) = fq2_lib.get_square_root(value)
+
+    return (success, res)
+end

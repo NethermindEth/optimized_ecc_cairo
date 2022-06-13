@@ -77,7 +77,7 @@ namespace fq_lib:
         alloc_locals
         let (q : Uint384) = get_modulus()
         let one = Uint384(1, 0, 0)
-        let (res : Uint384) = field_arithmetic_lib.div(one, a)
+        let (res : Uint384) = field_arithmetic_lib.div(one, a, q)
         return (res)
     end
 
