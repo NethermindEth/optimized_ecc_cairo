@@ -55,6 +55,7 @@ namespace fq_lib:
         return (reduced)
     end
 
+    # TODO: in field_arithmetic we implement first the function a/x mod p. Make consistent
     # finds x in a x ≅ 1 (mod q)
     func inverse{range_check_ptr}(a : Uint384) -> (res : Uint384):
         alloc_locals

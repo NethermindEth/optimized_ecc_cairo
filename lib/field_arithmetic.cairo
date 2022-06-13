@@ -146,7 +146,8 @@ namespace field_arithmetic_lib:
             return (res_mul)
         end
     end
-
+    
+    # WARNING: Will be deprecated
     # Checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
     # `p_minus_one_div_2` is (p-1)/2. It is passed as an argument rather than computed, since for most applications
     # p (and thus (p-1)/2) will be hardcoded and this library wrapped around with p fixed to the hardcoded value
@@ -353,4 +354,6 @@ namespace field_arithmetic_lib:
             return (1, sqrt_root_x)
         end
     end
+    
+    
 end

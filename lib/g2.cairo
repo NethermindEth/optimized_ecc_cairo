@@ -14,7 +14,7 @@ struct G2Point:
 end
 
 namespace g2_lib:
-    func is_point_at_infinity(point : G2Point) -> (bool : felt):
+    func is_point_at_infinity{range_check_ptr}(point : G2Point) -> (bool : felt):
         let (is_z_coord_zero) = fq2_lib.is_zero(point.z)
         return (is_z_coord_zero)
     end
@@ -25,15 +25,30 @@ namespace g2_lib:
     func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
             bool : felt):
         alloc_locals
-        let (local p1_x_times_z : FQ2) = fq2_lib.mul(p1.x, p1.z)
-        let (p2_x_times_z : FQ2) = fq2_lib.mul(p2.x, p2.z)
-        let (is_x_coord_eq) = fq2_lib.eq(p1_x_times_z, p2_x_times_z)
+
+        let (is_p1_infinity) = is_point_at_infinity(p1)
+        let (is_p2_infinity) = is_point_at_infinity(p2)
+        if is_p1_infinity == 1:
+            if is_p2_infinity == 1:
+                return (1)
+            else:
+                return (0)
+            end
+        else:
+            if is_p2_infinity == 1:
+                return (0)
+            end
+        end
+
+        # TODO: can be done without normalizing, using multiplication instead of division
+        # None of the point is the point at infinity
+        let (p1_x : FQ2, p1_y : FQ2) = normalize(p1)
+        let (p2_x : FQ2, p2_y : FQ2) = normalize(p2)
+        let (is_x_coord_eq) = fq2_lib.eq(p1_x, p2_x)
         if is_x_coord_eq == 0:
             return (0)
         end
-        let (p1_y_times_z : FQ2) = fq2_lib.mul(p1.y, p1.z)
-        let (p2_y_times_z : FQ2) = fq2_lib.mul(p2.y, p2.z)
-        let (is_y_coord_eq) = fq2_lib.eq(p1_y_times_z, p2_y_times_z)
+        let (is_y_coord_eq) = fq2_lib.eq(p1_y, p2_y)
         if is_y_coord_eq == 0:
             return (0)
         end
@@ -41,8 +56,8 @@ namespace g2_lib:
     end
 
     # Addition optimized for the curve y**2 = x**3 + 4 using Jacobian coordinate representation
-    func add_py_ecc_version{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-            p1 : G2Point, p2 : G2Point) -> (res : G2Point):
+    func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
+            res : G2Point):
         alloc_locals
         let (is_p1_z_coord_zero) = fq2_lib.is_zero(p1.z)
         if is_p1_z_coord_zero == 1:
@@ -61,6 +76,9 @@ namespace g2_lib:
 
         let (is_v1_eq_v2) = fq2_lib.eq(V1, V2)
         let (is_u1_eq_u2) = fq2_lib.eq(U1, U2)
+
+        %{ print("findme", ids.is_v1_eq_v2, ids.is_u1_eq_u2) %}
+
         if is_v1_eq_v2 == 1:
             if is_u1_eq_u2 == 1:
                 let (double_p1 : G2Point) = double(p1)
@@ -102,31 +120,61 @@ namespace g2_lib:
     # Computes `point + point`
     func double{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(point : G2Point) -> (res : G2Point):
         alloc_locals
+        # TODO: remove all possible locals when done debugging
         let (W : FQ2) = fq2_lib.mul(point.x, point.x)
         let (local W : FQ2) = fq2_lib.scalar_mul(3, W)
         let (S : FQ2) = fq2_lib.mul(point.y, point.z)
         let (B : FQ2) = fq2_lib.mul_three_terms(point.x, point.y, S)
 
         let (W_squared : FQ2) = fq2_lib.mul(W, W)
-        let (eight_times_B : FQ2) = fq2_lib.scalar_mul(8, B)
+        let (local eight_times_B : FQ2) = fq2_lib.scalar_mul(8, B)
         let (H : FQ2) = fq2_lib.sub(W_squared, eight_times_B)
 
         # Compute new_x
-        let (H_times_S : FQ2) = fq2_lib.mul(H, S)
+        let (local H_times_S : FQ2) = fq2_lib.mul(H, S)
         let (new_x : FQ2) = fq2_lib.scalar_mul(2, H_times_S)
 
         # Compute new_y
         let (S_squared : FQ2) = fq2_lib.mul(S, S)
-        let (inner_term_2 : FQ2) = fq2_lib.mul_three_terms(point.y, point.y, S_squared)
-        let (eight_times_inner_term_2 : FQ2) = fq2_lib.scalar_mul(8, inner_term_2)
-        let (four_times_B : FQ2) = fq2_lib.scalar_mul(4, B)
-        let (four_times_B_sub_H : FQ2) = fq2_lib.sub(four_times_B, H)
-        let (inner_term_1 : FQ2) = fq2_lib.mul(W, four_times_B_sub_H)
-        let (new_y : FQ2) = fq2_lib.sub(inner_term_1, inner_term_2)
+        let (aux_inner_term_2 : FQ2) = fq2_lib.mul_three_terms(point.y, point.y, S_squared)
+        let (local inner_term_2 : FQ2) = fq2_lib.scalar_mul(8, aux_inner_term_2)
+        let (local four_times_B : FQ2) = fq2_lib.scalar_mul(4, B)
+        let (local four_times_B_sub_H : FQ2) = fq2_lib.sub(four_times_B, H)
+        let (local inner_term_1 : FQ2) = fq2_lib.mul(W, four_times_B_sub_H)
+        let (local new_y : FQ2) = fq2_lib.sub(inner_term_1, inner_term_2)
 
         # Compute new_z
-        let (S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
-        let (new_z : FQ2) = fq2_lib.scalar_mul(8, S_cubed)
+        let (local S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
+        let (local new_z : FQ2) = fq2_lib.scalar_mul(8, S_cubed)
+
+        %{
+            def pack(z, num_bits_shift: int = 128) -> int:
+                limbs = (limb for limb in z)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            def packFQP(z):
+                z = [[z.e0.d0, z.e0.d1, z.e0.d2], [z.e1.d0, z.e1.d1, z.e1.d2]]
+                return tuple(pack(z_component) for z_component in z)
+
+            print("HI")
+            print("W", packFQP(ids.W))
+            print("S", packFQP(ids.S))
+            print("B", packFQP(ids.B))
+            print("W_squared", packFQP(ids.W_squared))
+            print("8_times_B", packFQP(ids.eight_times_B))
+            print("H", packFQP(ids.H))
+            print("H_times_S", packFQP(ids.H_times_S))
+            print("new_x", packFQP(ids.new_x))
+            print("S_squared", packFQP(ids.S_squared))
+            print("inner_term_2", packFQP(ids.inner_term_2))
+            #print("eight_times_inner_term_2", packFQP(ids.eight_times_inner_term_2))
+            print("four_times_B", packFQP(ids.four_times_B))
+            print("four_times_B_sub_H", packFQP(ids.four_times_B_sub_H))
+            print("inner_term_1", packFQP(ids.inner_term_1))
+            print("new_y", packFQP(ids.new_y))
+            print("S_cubed", packFQP(ids.S_cubed))
+            print("new_z", packFQP(ids.new_z))
+        %}
 
         return (G2Point(new_x, new_y, new_z))
     end
@@ -157,8 +205,8 @@ namespace g2_lib:
     end
 
     # http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
-    func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G2Point, right : G2Point) -> (
-            res : G2Point):
+    func add_noncents{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            left : G2Point, right : G2Point) -> (res : G2Point):
         alloc_locals
 
         # if left.z.d0 == 0:
@@ -269,27 +317,41 @@ namespace g2_lib:
         return (G2Point(x=one, y=one, z=zero))
     end
 
+    # TODO: Not tested
+    # Transforms (x,y,z) into (x/z^3, y/z^2) assuming z != 0, i.e. (x,y,z) != point_at_infinity
+    func normalize{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (
+            normalized_x : FQ2, normalized_y : FQ2):
+        alloc_locals
+        let (bool) = is_point_at_infinity(point)
+        assert bool = 0
+        # let (z_squared : FQ2) = fq2_lib.mul(point.z, point.z)
+        # let (local z_cubed : FQ2) = fq2_lib.mul(z_squared, point.z)
+        # let (z_squared_inverse : FQ2) = fq2_lib.inv(z_squared)
+        # let (z_cubed_inverse : FQ2) = fq2_lib.inv(z_cubed)
+        # let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_squared_inverse)
+        # let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_cubed_inverse)
+        # return (normalized_x, normalized_y)
+        let (z_inverse : FQ2) = fq2_lib.inv(point.z)
+        let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_inverse)
+        let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_inverse)
+        return (normalized_x, normalized_y)
+    end
+
     # Check that a point is on the curve defined by y**2 = x**3 + 4
     # TODO: check that this is the correct equation
+    # TODO: Can be done without normalizing, avoiding making divisions
     func is_on_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point, b) -> (
             bool : felt):
         let (is_point_at_infinity) = is_point_at_infinity(point)
         if is_point_at_infinity == 1:
             return (1)
         end
-        let x = point.x
-        let y = point.y
-        let z = point.z
-        let (x_square) = fq2_lib.mul(x, x)
-        let (y_square) = fq2_lib.mul(y, y)
-        let (z_square) = fq2_lib.mul(z, z)
-        let (x_cubed) = fq2_lib.mul(x, x_cubed)
-        let (z_cubed) = fq2_lib.mul(z, z_cubed)
-        let (y_square_times_z) = fq2_lib.mul(y_square, z)
-        let (y_square_times_z) = fq2_lib.mul(y_square, z)
-        let (x_cubed_times_z) = fq2_lib.mul(x_cubed, z)
-        let (four_times_z) = fq2_lib.scalar_mul(4, z)
-        let (res) = fq2_lib.sub_three_terms(y_square_times_z, x_cubed_times_z, four_times_z)
+        let (x_normalized : FQ2, y_normalized : FQ2) = normalize(point)
+        let (x_square) = fq2_lib.mul(x_normalized, x_normalized)
+        let (y_square) = fq2_lib.mul(y_normalized, y_normalized)
+        let (x_cubed) = fq2_lib.mul(x_normalized, x_square)
+        let four = FQ2(Uint384(4, 0, 0), Uint384(0, 0, 0))
+        let (res) = fq2_lib.sub_three_terms(y_square, x_cubed, four)
         let (is_res_zero) = fq2_lib.is_zero(res)
         return (is_res_zero)
     end

@@ -114,7 +114,7 @@ async def test_fq_sub(fq_factory, x, y):
 
 
 @given(
-    x=st.integers(min_value=1, max_value=(field_modulus)),
+    x=st.integers(min_value=0, max_value=field_modulus-1),
     scalar=st.integers(min_value=0, max_value=2**128 - 1),
 )
 @settings(deadline=None)
