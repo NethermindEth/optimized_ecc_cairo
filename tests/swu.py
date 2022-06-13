@@ -67,4 +67,16 @@ def generate_optimized_sswu():
     print(neg_to_uint384(EV2))
     print(neg_to_uint384(EV4))
 
-generate_optimized_sswu()
+
+
+def get_psi():
+    psi_x_i = pack([int('890dc9e4867545c3', 16), int('2af322533285a5d5', 16), int('50880866309b7e2c', 16), int('a20d1b8c7e881024', 16), int('14e4f04fe2db9068', 16), int('14e56d3f1564853a', 16)], 64)
+
+    psi_y = pack([int('3e2f585da55c9ad1', 16), int('4294213d86c18183', 16), int('382844c88b623732', 16), int('92ad2afd19103e18', 16), int('1d794e4fac7cf0b9', 16), int('0bd592fc7d825ec8', 16)], 64)
+    psi_y_i = pack([int('7bcfa7a25aa30fda', 16), int('dc17dec12a927e7c', 16), int('2f088dd86b4ebef1', 16), int('d1ca2087da74d4a7', 16), int('2da2596696cebc1d', 16), int('0e2b7eedbbfd87d2', 16)], 64)
+    print(split(psi_x_i))
+
+    print(split(psi_y))
+    print(split(psi_y_i))
+
+get_psi()

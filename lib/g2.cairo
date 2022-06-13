@@ -293,4 +293,65 @@ namespace g2_lib:
         let (is_res_zero) = fq2_lib.is_zero(res)
         return (is_res_zero)
     end
+
+    # # psix = 1 / (nr ^ (p - 1)/3)
+    # # p = 16019282247729705411943748644318972617695120099330552659862384536985976748491357143400656079302193429974954385540170730531103884539706905936200202421036435811093013034271812758016407969496331661418541023677774899971425993489485369
+    # # r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    # # n = 0x5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5
+    func get_psi_x() -> (psi_x : FQ2):
+        return (
+            psi_x=FQ2(e0=Uint384(d0=0, d1=0, d2=0),
+            e1=Uint384(d0=57090000153090263371005173459775210947, d1=215402993932478976138402828039445249580, d2=27775811676944536350107783208663486568)))
+    end
+
+    func get_psi_y() -> (psi_y : FQ2):
+        return (
+            psi_y=FQ2(e0=Uint384(d0=88498181851007361581448886694209952465, d1=194966426654809473394864639982321153842, d2=15730448420644313803453897928225910969),
+            e1=Uint384(d0=292554099899570639894799895684836429786, d1=278858154884989680658816242618366607089, d2=18835035124770592265335298098589514781)))
+    end
+
+    func psi{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (res : G2Point):
+        alloc_locals
+
+        let (conjugate_x : FQ2) = fq2_lib.conjugate(point.x)
+        let (conjugate_y : FQ2) = fq2_lib.conjugate(point.y)
+        let (conjugate_z : FQ2) = fq2_lib.conjugate(point.z)
+
+        let (psi_x : FQ2) = get_psi_x()
+        let (x_psi_x) = fq2_lib.mul(conjugate_x, psi_x)
+        let (psi_y : FQ2) = get_psi_y()
+        let (y_psi_y) = fq2_lib.mul(conjugate_y, psi_y)
+
+        return (res=G2Point(x=x_psi_x, y=y_psi_y, conjugate_z))
+    end
+
+    # TODO Use two_psi optimized equation
+    func two_psi{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (
+            res : G2Point):
+        alloc_locals
+
+        let (psi_one : G2Point) = psi(point)
+        let (psi_two : G2Point) = psi(psi_one)
+
+        return (res=psi_two)
+    end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Point) -> (res : G2Point):
+        alloc_locals
+
+        let (neg_y : FQ2) = fq2_lib.neg(p.y)
+
+        return (res=G2Point(x=p.x, y=neg_y, z=p.z))
+    end
+
+    func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : G2Point, b : G2Point) -> (
+            res : G2Point):
+        alloc_locals
+
+        let (neg_b : G2Point) = neg(b)
+
+        let (a_plus_b : G2Point) = add(a, neg_b)
+
+        return (res=a_plus_b)
+    end
 end

@@ -1,6 +1,6 @@
 import pytest
 from hashlib import sha256
-from utils import packFQP, splitFQP, packPoint, pack, field_modulus
+from utils import packFQP, splitFQP, packPoint
 from hypothesis import given, strategies as st, settings
 from py_ecc.bls.hash_to_curve import hash_to_field_FQ2, map_to_curve_G2, iso_map_G2, clear_cofactor_G2
 
@@ -8,6 +8,64 @@ from py_ecc.fields import (
     optimized_bls12_381_FQ2 as FQ2,
 )
 
+@pytest.mark.asyncio
+async def test_clear_cofactor(
+    hash_to_curve_factory
+):  
+    x_e0 = 1
+    x_e1 = 2
+    y_e0 = 3
+    y_e1 = 4
+    z_e0 = 5
+    z_e1 = 6
+
+    x = splitFQP((x_e0, x_e1))
+    y = splitFQP( (y_e0, y_e1) )
+    z = splitFQP( (z_e0, z_e1) )
+
+    py_ecc_res = clear_cofactor_G2((FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1))))
+    execution_info = await hash_to_curve_factory.clear_cofactor((x, y, z)).call()
+    print(execution_info)
+    res = packFQP(execution_info.result[0])
+    
+    print(py_ecc_res)
+    print(res)
+    assert res == py_ecc_res
+
+@pytest.mark.asyncio
+async def test_clear_cofactor_2(
+    hash_to_curve_factory
+):  
+    #inputs
+    x_e0 = 1065677406967200509816609499423259421477445516936070432894744706131545618018271371235777696275644395847741467606580
+    x_e1 = 1887682510382714014190262300940983615521688066406415135067802172795843728841716142801324000687676752845938582926909
+    y_e0 = 3730666344553575518590442575555769011339512398551213036648031241094160328848553196936091635343188818506625671304033
+    y_e1 = 3548517930152064589316394673841985885287391702088751980600432153435572174202349318006796823996071474565297895193995
+    z_e0 = 3380320199399472671518931668520476396067793891014375699959770179129436917079329549063156654260311289858147769057277
+    z_e1 = 0
+
+    x = splitFQP((x_e0, x_e1))
+    y = splitFQP( (y_e0, y_e1) )
+    z = splitFQP( (z_e0, z_e1) )
+
+    #expected outputs
+    x_e0 = 1238357236673976904883383761949897458005933398715862486388082680596358564909360901167639680636649250024252200864048
+    x_e1 = 2176671478811685548685422537274628613259355473920336201642139022643792583601891777492539871795574743143444755746685
+    y_e0 = 307039709067892459706689765653742856053194360031017753606766825975525841751062961662075693543241207032539288958627
+    y_e1 = 1057356291936096153218738131832523104416552153568862430652162642421229797640178040652221705178352835014718288323878
+    z_e0 = 680515110440998969567192184401320539904999763830162702295655804716894250114174528471767566465332043369093230737599
+    z_e1 = 2697028571936275266627777139954894429115172404954742516935731907450806602655154006786709169673582907014422306284443
+
+    expected = (FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1)))
+    execution_info = await hash_to_curve_factory.clear_cofactor((x, y, z)).call()
+    print(execution_info)
+    res = packFQP(execution_info.result[0])
+    
+    print(expected)
+    print(res)
+    assert res == expected
+
+@pytest.mark.skip(reason="No")
 @pytest.mark.asyncio
 async def test_isogeny_map_g2(
     hash_to_curve_factory
@@ -41,27 +99,6 @@ async def test_isogeny_map_g2(
     assert int(g2point[2].coeffs[0]) == int(py_ecc_res[2].coeffs[0])
     assert int(g2point[2].coeffs[1]) == int(py_ecc_res[2].coeffs[1])
 
-
-@pytest.mark.skip(reason="No")
-@pytest.mark.asyncio
-async def test_clear_cofactor(
-    hash_to_curve_factory
-):  
-    x_e0 = 1
-    x_e1 = 2
-    y_e0 = 3
-    y_e1 = 4
-    z_e0 = 5
-    z_e1 = 6
-
-    x = splitFQP((x_e0, x_e1))
-    y = splitFQP( (y_e0, y_e1) )
-    z = splitFQP( (z_e0, z_e1) )
-
-    py_ecc_res = clear_cofactor_G2((FQ2((x_e0, x_e1)), FQ2((y_e0, y_e1)), FQ2((z_e0, z_e1))))
-    execution_info = await hash_to_curve_factory.clear_cofactor_g2((x, y, z)).call()
-    res = packFQP(execution_info.result[0])
-    assert res == py_ecc_res
 
 @pytest.mark.skip(reason="No")
 @pytest.mark.parametrize('H', [sha256])

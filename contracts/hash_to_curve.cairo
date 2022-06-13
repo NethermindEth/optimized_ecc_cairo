@@ -3,7 +3,7 @@
 
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
-from lib.hash_to_curve import map_to_curve_g2, multiply_clear_cofactor_g2
+from lib.hash_to_curve import map_to_curve_g2, clear_cofactor_g2, mul_x
 from lib.fq2 import FQ2
 from lib.isogeny import isogeny_map_g2
 from lib.g2 import G2Point
@@ -27,11 +27,10 @@ func isogeny_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2
 end
 
 @view
-func clear_cofactor_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Point) -> (
-        res : G2Point):
+func clear_cofactor{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Point) -> (res : G2Point):
     alloc_locals
 
-    let (res) = multiply_clear_cofactor_g2(p)
+    let (res) = clear_cofactor_g2(p)
 
     return (res)
 end

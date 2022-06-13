@@ -344,6 +344,15 @@ func get_roots_of_unity_four() -> (res : FQ2):
         FQ2(e0=Uint384(d0=316894176541198687613159979572632210441, d1=96002276489854850962923926559567004101, d2=8884304212930445318911794655404326910), e1=Uint384(d0=23388190379739775850214627859136001015, d1=244280090431083612500450680872201207354, d2=331398062708008018144462812776363884545)))
 end
 
+func sqrt_div{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
+        is_valid : felt, sqrt_candidate : FQ2):
+    alloc_locals
+    let (inv_v : FQ2) = fq2_lib.inv(v)
+
+    let (u_div_v : FQ2) = fq2_lib.mul(u, v)
+
+    return (1, u)
+end
 func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
         is_valid : felt, sqrt_candidate : FQ2):
     alloc_locals
