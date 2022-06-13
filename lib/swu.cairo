@@ -191,7 +191,7 @@ func optimized_sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> 
     tempvar denominator = denominator
     let (u : FQ2, v : FQ2) = get_u_and_v(numerator, denominator)
 
-    let (success : felt, y : FQ2) = sqrt_div_fq2(u, v)
+    let (success : felt, y : FQ2) = sqrt_div(u, v)
 
     if success == 1:
         let (denominator : FQ2) = fq2_lib.mul(denominator, y)
@@ -351,8 +351,10 @@ func sqrt_div{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) 
 
     let (u_div_v : FQ2) = fq2_lib.mul(u, v)
 
-    return (1, u)
+    let (success : felt, sqrt : FQ2) = fq2_lib.get_square_root(u_div_v)
+    return (success, sqrt)
 end
+
 func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
         is_valid : felt, sqrt_candidate : FQ2):
     alloc_locals
