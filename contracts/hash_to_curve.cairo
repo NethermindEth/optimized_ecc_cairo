@@ -10,15 +10,14 @@ from lib.g2 import G2Point
 from lib.hash_to_field import expand_msg_sha_xmd
 from lib.swu import optimized_sswu, sqrt_div
 
-
 @view
-func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (succes : felt, sqrt_candidate : FQ2):
+func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
+        success : felt, sqrt_candidate : FQ2):
     alloc_locals
     let (success : felt, sqrt_candidate) = sqrt_div(u, v)
 
     return (success, sqrt_candidate)
 end
-
 
 @view
 func sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> (x : FQ2, y : FQ2, z : FQ2):

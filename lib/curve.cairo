@@ -15,7 +15,7 @@ const P2_p_minus_one_div_2 = 17282741772707453034394598013407712875
 
 # @dev modify the returned value of this function to adjust the modulus
 # @dev modulus must be less than 2 ** (128 * 3)
-func get_modulus{range_check_ptr}() -> (mod : Uint384):
+func get_modulus() -> (mod : Uint384):
     return (mod=Uint384(d0=P0, d1=P1, d2=P2))
 end
 

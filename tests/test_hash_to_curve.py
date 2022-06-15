@@ -1,37 +1,73 @@
 import pytest
 from hashlib import sha256
-from utils import packFQP, splitFQP, packPoint, pack
+from utils import packFQP, splitFQP, packPoint, pack, field_modulus, split
 from hypothesis import given, strategies as st, settings
 from py_ecc.bls.hash_to_curve import hash_to_field_FQ2, map_to_curve_G2, iso_map_G2, clear_cofactor_G2
-from py_ecc.optimized_bls12_381.optimized_swu import sqrt_division_FQ2
+from py_ecc.optimized_bls12_381.optimized_swu import sqrt_division_FQ2, optimized_swu_G2
 from py_ecc.fields import (
     optimized_bls12_381_FQ2 as FQ2,
 )
 
+
 @pytest.mark.asyncio
-async def test_sqrt_div_fq2(
+async def test_sswu(
     hash_to_curve_factory
 ):  
-    #inputs
-    u_e0 = 1
-    u_e1 = 2
-    v_e0 = 3
-    v_e1 = 4
+    x_e0 = 1
+    x_e1 = 2
 
+    x = splitFQP((x_e0, x_e1))
+
+    g2 = optimized_swu_G2(FQ2((x_e0, x_e1)))
+    
+    execution_info = await hash_to_curve_factory.sswu(x).call()
+    print(execution_info)
+    
+    res = (FQ2(packFQP(execution_info.result.x)), 
+    FQ2(packFQP(execution_info.result.y)), 
+    FQ2(packFQP(execution_info.result.z)))
+
+    assert res == g2
+
+
+@given(
+    u_e0=st.integers(min_value=1,  max_value=(field_modulus)),
+    u_e1=st.integers(min_value=1,  max_value=(field_modulus)),
+    v_e0=st.integers(min_value=1,  max_value=(field_modulus)),
+    v_e1=st.integers(min_value=1,  max_value=(field_modulus)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_sqrt_div_fq2(
+    hash_to_curve_factory,
+    u_e0,
+    u_e1,
+    v_e0,
+    v_e1
+):  
+    #u_e0 = 6704466015615104
+    #u_e1 = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015661693267331723563
+    #v_e0 = 15458688000000
+    #v_e1 = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664007519488559787
     u = splitFQP((u_e0, u_e1))
     v = splitFQP( (v_e0, v_e1) )
 
+    print("gamma 1 " + str(splitFQP((904866787643216493162865161557708182631874241001798140054005332761593399486327068831291837213091505867113151808954, 744463903445922011632319549511244450475031948600322091634279861502307378579394884098823525357703520279878374341889))))
+
     success, expected = sqrt_division_FQ2(FQ2((u_e0, u_e1)), FQ2((v_e0, v_e1)))
     
-
-    execution_info = await hash_to_curve_factory.sqrt_div_fq2((u, v)).call()
+    execution_info = await hash_to_curve_factory.sqrt_div_fq2(u, v).call()
     print(execution_info)
     
     is_success = execution_info.result[0]
     quotient = (FQ2(packFQP(execution_info.result[1])))
-
+    
     assert is_success == success
-    assert quotient == expected
+    if is_success == 1:
+        print(quotient)
+        print(expected)
+        assert quotient.coeffs[0] == expected.coeffs[0]
+        assert quotient.coeffs[1] == expected.coeffs[1]
 
 @pytest.mark.skip(reason="No")
 @pytest.mark.asyncio

@@ -299,8 +299,8 @@ namespace fq2_lib:
     func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
         alloc_locals
 
-        let (neg_e0 : Uint384) = uint384_lib.neg(a.e0)
-        let (neg_e1 : Uint384) = uint384_lib.neg(a.e1)
+        let (neg_e0 : Uint384) = fq_lib.neg(a.e0)
+        let (neg_e1 : Uint384) = fq_lib.neg(a.e1)
 
         return (res=FQ2(e0=neg_e0, e1=neg_e1))
     end

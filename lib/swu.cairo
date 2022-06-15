@@ -29,7 +29,6 @@ func simplified_swu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2) -> 
     alloc_locals
 
     let (params : ParamsSWU) = get_swu_g2_params()
-    # should use squaring algorithm
     let (u_squared : FQ2) = fq2_lib.square(u)
 
     let (tv1 : FQ2) = fq2_lib.mul(u_squared, params.z)
@@ -77,12 +76,12 @@ end
 
 func get_iso_3_z() -> (res : FQ2):
     return (
-        FQ2(e0=Uint384(d0=340282366920938463463374607431768211455,
-            d1=340282366920938463463374607431768211455,
-            d2=340282366920938463463374607431768211455),
-        e1=Uint384(d0=340282366920938463463374607431768211454,
-            d1=340282366920938463463374607431768211455,
-            d2=340282366920938463463374607431768211455)))
+        FQ2(e0=Uint384(d0=40769914829639538012874174947278170793,
+            d1=133542214618860690590306275168919549476,
+            d2=34565483545414906068789196026815425751),
+        e1=Uint384(d0=40769914829639538012874174947278170794,
+            d1=133542214618860690590306275168919549476,
+            d2=34565483545414906068789196026815425751)))
 end
 
 func get_iso_3_a() -> (res : FQ2):
@@ -153,24 +152,22 @@ func optimized_sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> 
         x : FQ2, y : FQ2, z : FQ2):
     alloc_locals
 
-    let (t2 : FQ2) = fq2_lib.pow(t, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+    let (t2 : FQ2) = fq2_lib.square(t)
+
     let (iso_3_z : FQ2) = get_iso_3_z()
 
     let (iso_3_z_t2 : FQ2) = fq2_lib.mul(t2, iso_3_z)
 
-    let (iso_3_z_t2_squared : FQ2) = fq2_lib.pow(
-        iso_3_z_t2, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+    let (iso_3_z_t2_squared : FQ2) = fq2_lib.square(iso_3_z_t2)
 
     let (temp : FQ2) = fq2_lib.add(iso_3_z_t2, iso_3_z_t2_squared)
 
     let (iso_3_a : FQ2) = get_iso_3_a()
     let (denominator_positive : FQ2) = fq2_lib.mul(iso_3_a, temp)
     let (denominator : FQ2) = fq2_lib.neg(denominator_positive)
-
     let (fq2_one : FQ2) = fq2_lib.one()
     let (temp : FQ2) = fq2_lib.add(fq2_one, temp)
     let (iso_3_b : FQ2) = get_iso_3_b()
-
     let (numerator : FQ2) = fq2_lib.mul(iso_3_b, temp)
 
     let (is_denominator_zero : felt) = fq2_lib.is_zero(denominator)
@@ -190,12 +187,9 @@ func optimized_sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> 
     tempvar bitwise_ptr = bitwise_ptr
     tempvar denominator = denominator
     let (u : FQ2, v : FQ2) = get_u_and_v(numerator, denominator)
-
     let (success : felt, y : FQ2) = sqrt_div(u, v)
-
     if success == 1:
-        let (denominator : FQ2) = fq2_lib.mul(denominator, y)
-
+        let (y : FQ2) = fq2_lib.mul(denominator, y)
         return (x=numerator, y=y, z=denominator)
     end
 
@@ -203,7 +197,7 @@ func optimized_sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> 
 
     # u(x1) = Z^3 * t^6 * u(x0)
     let (t_cubed : FQ2) = fq2_lib.pow(t, Uint768(d0=3, d1=0, d2=0, d3=0, d4=0, d5=0))
-    let (sqrt_candidate : FQ2) = fq2_lib.mul(t_cubed, t_cubed)
+    let (sqrt_candidate : FQ2) = fq2_lib.mul(y, t_cubed)
 
     let (eta_one : FQ2) = get_eta_one()
     let (success_eta_one : felt, y : FQ2) = test_eta(sqrt_candidate, eta_one, u, v)
@@ -274,8 +268,7 @@ func test_eta{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         sqrt_candidate : FQ2, eta : FQ2, u : FQ2, v : FQ2) -> (success_eta : felt, y : FQ2):
     alloc_locals
     let (eta_sqrt_candidate : FQ2) = fq2_lib.mul(eta, sqrt_candidate)
-    let (eta_sqrt_candidate_squared : FQ2) = fq2_lib.pow(
-        eta_sqrt_candidate, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+    let (eta_sqrt_candidate_squared : FQ2) = fq2_lib.square(eta_sqrt_candidate)
 
     let (temp1) = x_mul_v_min_u(eta_sqrt_candidate_squared, u, v)
 
@@ -344,7 +337,12 @@ func get_roots_of_unity_four() -> (res : FQ2):
         FQ2(e0=Uint384(d0=316894176541198687613159979572632210441, d1=96002276489854850962923926559567004101, d2=8884304212930445318911794655404326910), e1=Uint384(d0=23388190379739775850214627859136001015, d1=244280090431083612500450680872201207354, d2=331398062708008018144462812776363884545)))
 end
 
-func sqrt_div{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
+func shim_gamma() -> (res : FQ2):
+    return (
+        FQ2(e0=Uint384(d0=315208049354068805969386575530880615866, d1=125835844130418832073271597055281785007, d2=7814582097993668642094023786432426361), e1=Uint384(d0=196238733878133270818936303615113248001, d1=127563673452180505374255364553514690979, d2=6429315753342538434315993643252623774)))
+end
+
+func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
         is_valid : felt, sqrt_candidate : FQ2):
     alloc_locals
     let (inv_v : FQ2) = fq2_lib.inv(v)
@@ -355,7 +353,7 @@ func sqrt_div{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) 
     return (success, sqrt)
 end
 
-func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
+func sqrt_div{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
         is_valid : felt, sqrt_candidate : FQ2):
     alloc_locals
 
@@ -363,17 +361,13 @@ func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : F
     let (t0 : FQ2) = fq2_lib.mul(u, v_pow_seven)
     let (v_pow_eight : FQ2) = fq2_lib.pow(v, Uint768(d0=8, d1=0, d2=0, d3=0, d4=0, d5=0))
     let (t1 : FQ2) = fq2_lib.mul(t0, v_pow_eight)
-
     let (p_minus_9_div_16 : Uint768) = get_p_minus_9_div_16()
-
     let (gamma : FQ2) = fq2_lib.pow(t1, p_minus_9_div_16)
-    let (gamma : FQ2) = fq2_lib.mul(t0, gamma)
 
+    let (gamma : FQ2) = fq2_lib.mul(t0, gamma)
     let (root : FQ2) = get_roots_of_unity_one()
     let (sqrt_candidate : FQ2) = fq2_lib.mul(gamma, root)
-
     let (temp2 : FQ2) = x_mul_v_min_u(sqrt_candidate, u, v)
-
     let (is_valid_sqrt : felt) = fq2_lib.is_zero(temp2)
 
     if is_valid_sqrt == 1:
@@ -382,9 +376,7 @@ func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : F
 
     let (root : FQ2) = get_roots_of_unity_two()
     let (sqrt_candidate : FQ2) = fq2_lib.mul(gamma, root)
-
     let (temp2 : FQ2) = x_mul_v_min_u(sqrt_candidate, u, v)
-
     let (is_valid_sqrt : felt) = fq2_lib.is_zero(temp2)
 
     if is_valid_sqrt == 1:
@@ -393,9 +385,7 @@ func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : F
 
     let (root : FQ2) = get_roots_of_unity_three()
     let (sqrt_candidate : FQ2) = fq2_lib.mul(gamma, root)
-
     let (temp2 : FQ2) = x_mul_v_min_u(sqrt_candidate, u, v)
-
     let (is_valid_sqrt : felt) = fq2_lib.is_zero(temp2)
 
     if is_valid_sqrt == 1:
@@ -404,9 +394,7 @@ func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : F
 
     let (root : FQ2) = get_roots_of_unity_four()
     let (sqrt_candidate : FQ2) = fq2_lib.mul(gamma, root)
-
     let (temp2 : FQ2) = x_mul_v_min_u(sqrt_candidate, u, v)
-
     let (is_valid_sqrt : felt) = fq2_lib.is_zero(temp2)
 
     if is_valid_sqrt == 1:
@@ -419,10 +407,9 @@ end
 func x_mul_v_min_u{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         sqrt_candidate : FQ2, u : FQ2, v : FQ2) -> (res : FQ2):
     alloc_locals
-    let (sqrt_candidate_squared : FQ2) = fq2_lib.pow(
-        sqrt_candidate, Uint768(d0=2, d1=0, d2=0, d3=0, d4=0, d5=0))
+    let (sqrt_candidate_squared : FQ2) = fq2_lib.square(sqrt_candidate)
     let (times_v : FQ2) = fq2_lib.mul(sqrt_candidate_squared, v)
-    let (temp2 : FQ2) = fq2_lib.sub(times_v, v)
+    let (temp2 : FQ2) = fq2_lib.sub(times_v, u)
 
     return (res=temp2)
 end

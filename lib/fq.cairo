@@ -158,4 +158,12 @@ namespace fq_lib:
             d1=0,
             d2=0))
     end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint384) -> (res : Uint384):
+        let (modulus : Uint384) = get_modulus()
+
+        let (res : Uint384) = sub(modulus, input)
+
+        return (res)
+    end
 end
