@@ -29,13 +29,13 @@ namespace fq2_lib:
         return (FQ2(e0=e0, e1=e1))
     end
 
-    # TODO: due to how fq_lib.scalar is implemented, this only supports multiplication by scalars of at most 128 bits
-    func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
+    # Multiplies an element of FQ2 by an element of FQ
+    func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : FQ2) -> (
         product : FQ2
     ):
         alloc_locals
-        let (e0 : Uint384) = fq_lib.scalar_mul(x, y.e0)
-        let (e1 : Uint384) = fq_lib.scalar_mul(x, y.e1)
+        let (e0 : Uint384) = fq_lib.mul(x, y.e0)
+        let (e1 : Uint384) = fq_lib.mul(x, y.e1)
 
         return (FQ2(e0=e0, e1=e1))
     end
@@ -120,7 +120,10 @@ namespace fq2_lib:
         end
         return (1)
     end
-
+    
+    
+    # NOTE/TODO: Not tested. However it is tested implicitly by the test of square_root_division_fq2 
+    
     # The sqrt r of (a, b) in Fq2 can be found by writting r and x as  polynomials,
     # i.e. r = r_0 + r_1 x, (a,b)= a+bx
     # then wrting the equation (r_0 + r1 x)**2 = a + bx
@@ -128,7 +131,7 @@ namespace fq2_lib:
     # For this particular f we have, if ab != 0 (the other cases are easier)
     # r_1  = sqrt(-a + sqrt(a**2 + b**2))/2)
     # r_0 = b r_1^{-1} /2
-    # If any of the sqrt in Fq in the formulas does not exists, then the sqrt of (a,b) in Fq2
+    # If any of the sqrt in Fq in the formulas does not exists, then the sqrt of (a,b) in Fq2 does not exist
     # Otherwise choosing any of the two possible sqrt each time yields a sqrt of (a, b) in Fq2
     # Note that the function `get_sqrt` from the library fq.cairo tells us
     # with security whether an element has a sqrt or not
@@ -142,7 +145,20 @@ namespace fq2_lib:
         # TODO: create a dedicated eq function in fq.cairo (and probably use a FQ struct everywhere instead of Uint384)
         let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
         let (local is_b_zero) = uint384_lib.eq(b, Uint384(0,0,0))
+        
+        %{
+        
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (limb for limb in z)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
+        def packFQP(z):
+            z = [[z.e0.d0, z.e0.d1, z.e0.d2], [z.e1.d0, z.e1.d1, z.e1.d2]]
+            return tuple(pack(z_component) for z_component in z)
+        
+        print("is_a_and_b_zero", ids.is_a_zero, ids.is_b_zero)
+        %}
+        
         if is_a_zero == 1:
             if is_b_zero == 1:
                 let (zero: FQ2) = get_zero()
@@ -156,6 +172,16 @@ namespace fq2_lib:
             if is_b_zero == 1:
                 let (bool, res : Uint384) = fq_lib.get_square_root(a)
                 let sqrt  = FQ2(res, Uint384(0, 0, 0))
+                %{
+                
+                    def pack(z, num_bits_shift: int = 128) -> int:
+                        limbs = (limb for limb in z)
+                        return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+                        
+                    # print("sqrt", pack([ids.sqrt.e0.d0,ids.sqrt.e0.d1,ids.sqrt.e0.d2]), pack([ids.sqrt.e1.d0,ids.sqrt.e1.d1,ids.sqrt.e1.d2]))
+                    #print("sqrt", ids.sqrt.e0.d0, ids.sqrt.e0.d1, ids.sqrt.e0.d2, ids.sqrt.e1.d0,ids.sqrt.e1.d1,ids.sqrt.e1.d2)
+                    print("sqrt", ids.res.d0, ids.res.d1, ids.res.d2)
+                %}
                 return (bool, sqrt)
             else:
                 let (a_squared : Uint384) = fq_lib.mul(a, a)

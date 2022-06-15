@@ -39,7 +39,9 @@ def unsafe_split(num: int, length: int = 6) -> List[int]:
 
 
 def pack(z, num_bits_shift: int = 128) -> int:
-    limbs = (limb for limb in z)
+    print('hohoho', z)
+    limbs = list(z)
+    print("hhuhuhu", limbs)
     return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
 
@@ -313,15 +315,16 @@ def g2_add(p1: Optimized_Point3D_Modified,
 
 
 # Elliptic curve point multiplication
-def g2_scalar_mul(scalar, pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
+def g2_scalar_mul(scalar: Uint384, pt: Optimized_Point3D_Modified) -> Optimized_Point3D_Modified:
+    scalar = pack(list(scalar))
     if scalar == 0:
         return Optimized_Point3D_Modified(FQ2.one(), FQ2.one(), FQ2.zero())
     elif scalar == 1:
         return pt
     elif not scalar % 2:
-        return g2_scalar_mul(scalar // 2, g2_double(pt))
+        return g2_scalar_mul(split(scalar // 2), g2_double(pt))
     else:
-        return g2_add(g2_scalar_mul( int(scalar // 2), g2_double(pt)), pt)
+        return g2_add(g2_scalar_mul( split(int(scalar // 2)), g2_double(pt)), pt)
 
 def get_g2_infinity_point():
     return Optimized_Point3D_Modified(

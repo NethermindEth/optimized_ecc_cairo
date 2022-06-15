@@ -1,6 +1,6 @@
 from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.uint384 import Uint384
+from lib.uint384 import Uint384, uint384_lib
 from lib.fq import fq_lib
 from lib.fq2 import FQ2, fq2_lib
 
@@ -25,7 +25,7 @@ namespace g2_lib:
         bool : felt
     ):
         alloc_locals
-        
+
         let (is_p1_infinity) = is_point_at_infinity(p1)
         let (is_p2_infinity) = is_point_at_infinity(p2)
         if is_p1_infinity == 1:
@@ -38,12 +38,12 @@ namespace g2_lib:
             if is_p2_infinity == 1:
                 return (0)
             end
-        end    
-        
+        end
+
         # TODO: can be done without normalizing, using multiplication instead of division
         # None of the point is the point at infinity
-        let (p1_x: FQ2, p1_y: FQ2) = normalize(p1)
-        let (p2_x: FQ2, p2_y: FQ2) = normalize(p2)
+        let (p1_x : FQ2, p1_y : FQ2) = normalize(p1)
+        let (p2_x : FQ2, p2_y : FQ2) = normalize(p2)
         let (is_x_coord_eq) = fq2_lib.eq(p1_x, p2_x)
         if is_x_coord_eq == 0:
             return (0)
@@ -77,11 +77,9 @@ namespace g2_lib:
 
         let (is_v1_eq_v2) = fq2_lib.eq(V1, V2)
         let (is_u1_eq_u2) = fq2_lib.eq(U1, U2)
-        
-        %{
-            print("findme", ids.is_v1_eq_v2, ids.is_u1_eq_u2)
-        %}
-        
+
+        %{ print("findme", ids.is_v1_eq_v2, ids.is_u1_eq_u2) %}
+
         if is_v1_eq_v2 == 1:
             if is_u1_eq_u2 == 1:
                 let (double_p1 : G2Point) = double(p1)
@@ -103,7 +101,7 @@ namespace g2_lib:
         let (W : FQ2) = fq2_lib.mul(p1.z, p2.z)
 
         let (U_squared_times_W : FQ2) = fq2_lib.mul_three_terms(U, U, W)
-        let (twice_V_squared_times_V2 : FQ2) = fq2_lib.scalar_mul(2, V_squared_times_V2)
+        let (twice_V_squared_times_V2 : FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), V_squared_times_V2)
         let (A : FQ2) = fq2_lib.sub_three_terms(
             U_squared_times_W, V_cubed, twice_V_squared_times_V2
         )
@@ -126,42 +124,40 @@ namespace g2_lib:
         alloc_locals
         # TODO: remove all possible locals when done debugging
         let (W : FQ2) = fq2_lib.mul(point.x, point.x)
-        let (local W : FQ2) = fq2_lib.scalar_mul(3, W)
+        let (local W : FQ2) = fq2_lib.scalar_mul(Uint384(3,0,0), W)
         let (S : FQ2) = fq2_lib.mul(point.y, point.z)
         let (B : FQ2) = fq2_lib.mul_three_terms(point.x, point.y, S)
 
         let (W_squared : FQ2) = fq2_lib.mul(W, W)
-        let (local eight_times_B : FQ2) = fq2_lib.scalar_mul(8, B)
+        let (local eight_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), B)
         let (H : FQ2) = fq2_lib.sub(W_squared, eight_times_B)
 
         # Compute new_x
         let (local H_times_S : FQ2) = fq2_lib.mul(H, S)
-        let (new_x : FQ2) = fq2_lib.scalar_mul(2, H_times_S)
+        let (new_x : FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), H_times_S)
 
         # Compute new_y
         let (S_squared : FQ2) = fq2_lib.mul(S, S)
         let (aux_inner_term_2 : FQ2) = fq2_lib.mul_three_terms(point.y, point.y, S_squared)
-        let (local inner_term_2 : FQ2) = fq2_lib.scalar_mul(8, aux_inner_term_2)
-        let (local four_times_B : FQ2) = fq2_lib.scalar_mul(4, B)
+        let (local inner_term_2 : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), aux_inner_term_2)
+        let (local four_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(4,0,0), B)
         let (local four_times_B_sub_H : FQ2) = fq2_lib.sub(four_times_B, H)
         let (local inner_term_1 : FQ2) = fq2_lib.mul(W, four_times_B_sub_H)
         let (local new_y : FQ2) = fq2_lib.sub(inner_term_1, inner_term_2)
 
         # Compute new_z
         let (local S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
-        let (local new_z : FQ2) = fq2_lib.scalar_mul(8, S_cubed)
-        
-        
+        let (local new_z : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), S_cubed)
+
         %{
-            
             def pack(z, num_bits_shift: int = 128) -> int:
                 limbs = (limb for limb in z)
                 return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-            
+
             def packFQP(z):
                 z = [[z.e0.d0, z.e0.d1, z.e0.d2], [z.e1.d0, z.e1.d1, z.e1.d2]]
                 return tuple(pack(z_component) for z_component in z)
-            
+
             print("HI")
             print("W", packFQP(ids.W))
             print("S", packFQP(ids.S))
@@ -180,110 +176,40 @@ namespace g2_lib:
             print("new_y", packFQP(ids.new_y))
             print("S_cubed", packFQP(ids.S_cubed))
             print("new_z", packFQP(ids.new_z))
-        
         %}
-        
+
         return (G2Point(new_x, new_y, new_z))
-    end
-
-    # http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
-    func add_noncents{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        left : G2Point, right : G2Point
-    ) -> (res : G2Point):
-        alloc_locals
-
-        # if left.z.d0 == 0:
-        #     return (right)
-        # end
-        # if right.z.d0 == 0:
-        #     return (left)
-        # end
-        let (is_left_z_zero) = fq2_lib.is_zero(left.z)
-        if is_left_z_zero == 1:
-            return (right)
-        end
-        let (is_right_z_zero) = fq2_lib.is_zero(right.z)
-        if is_right_z_zero == 1:
-            return (left)
-        end
-
-        # z1z1 = z1^2
-        let (z1_squared : FQ2) = fq2_lib.square(left.z)
-        # z2z2 = z2^2
-        let (z2_squared : FQ2) = fq2_lib.square(right.z)
-
-        # U1 = X1*Z2Z2
-        let (U1 : FQ2) = fq2_lib.mul(left.x, z2_squared)
-        # U2 = X2*Z1Z1
-        let (U2 : FQ2) = fq2_lib.mul(right.x, z1_squared)
-
-        # S1 = Y1*Z2*Z2Z2
-        let (S1 : FQ2) = fq2_lib.mul_three_terms(left.y, right.z, z2_squared)
-        # S2 = Y2*Z1*Z1Z1
-        let (S2 : FQ2) = fq2_lib.mul_three_terms(right.y, left.z, z1_squared)
-
-        # H = U2-U1
-        let (H : FQ2) = fq2_lib.sub(U2, U1)
-
-        # I = (2*H)^2
-        let (two_H : FQ2) = fq2_lib.scalar_mul(2, H)
-        let (I : FQ2) = fq2_lib.square(two_H)
-
-        # J = H*I
-        let (J : FQ2) = fq2_lib.mul(H, I)
-
-        # r = 2*(S2-S1)
-        let (S_two_sub_S_one) = fq2_lib.sub(S2, S1)
-        let (r : FQ2) = fq2_lib.scalar_mul(2, S_two_sub_S_one)
-
-        # V = U1*I
-        let (V : FQ2) = fq2_lib.mul(U1, I)
-
-        # X3 = r^2-J-2*V
-        let (two_V : FQ2) = fq2_lib.scalar_mul(2, V)
-
-        let (r_squared : FQ2) = fq2_lib.square(r)
-
-        let (X3 : FQ2) = fq2_lib.sub_three_terms(r_squared, J, two_V)
-
-        # Y3 = r*(V-X3)-2*S1*J
-        let (V_sub_X3 : FQ2) = fq2_lib.sub(V, X3)
-        let (r_mul_V_sub_X3 : FQ2) = fq2_lib.mul(r, V_sub_X3)
-        let (two_S1 : FQ2) = fq2_lib.scalar_mul(2, S1)
-        let (two_S1_mul_J : FQ2) = fq2_lib.mul(two_S1, J)
-        let (Y3 : FQ2) = fq2_lib.sub(r_mul_V_sub_X3, two_S1_mul_J)
-
-        # Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2)*H
-        let (Z1_plus_Z2 : FQ2) = fq2_lib.add(left.z, right.z)
-        let (Z1_plus_Z2_squared : FQ2) = fq2_lib.square(Z1_plus_Z2)
-        let (inner : FQ2) = fq2_lib.sub_three_terms(Z1_plus_Z2_squared, z1_squared, z2_squared)
-        let (Z3 : FQ2) = fq2_lib.mul(inner, H)
-
-        let res : G2Point = G2Point(x=X3, y=Y3, z=Z3)
-        return (res)
     end
 
     # TODO: Do we need scalar mult by Uint384 here? Not just felt?
     # Computes scalar * point, which means point added with itself `scalar` times
-    func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar, point : G2Point) -> (
-        res : G2Point
-    ):
+    func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        scalar : Uint384, point : G2Point
+    ) -> (res : G2Point):
+        alloc_locals
         %{
             def pack(z, num_bits_shift: int = 128) -> int:
                 limbs = (limb for limb in z)
                 return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
-            print("findme", ids.scalar, pack([ids.point.x.e0.d0,ids.point.x.e0.d1,ids.point.x.e0.d2]), pack([ids.point.x.e1.d0,ids.point.x.e1.d1,ids.point.x.e1.d2]), pack([ids.point.y.e0.d0,ids.point.y.e0.d1,ids.point.y.e0.d2]), pack([ids.point.y.e1.d0,ids.point.y.e1.d1,ids.point.y.e1.d2]), pack([ids.point.z.e0.d0,ids.point.z.e0.d1,ids.point.z.e0.d2]), pack([ids.point.z.e1.d0,ids.point.z.e1.d1,ids.point.z.e1.d2]))
+            #print("findme", ids.scalar, pack([ids.point.x.e0.d0,ids.point.x.e0.d1,ids.point.x.e0.d2]), pack([ids.point.x.e1.d0,ids.point.x.e1.d1,ids.point.x.e1.d2]), pack([ids.point.y.e0.d0,ids.point.y.e0.d1,ids.point.y.e0.d2]), pack([ids.point.y.e1.d0,ids.point.y.e1.d1,ids.point.y.e1.d2]), pack([ids.point.z.e0.d0,ids.point.z.e0.d1,ids.point.z.e0.d2]), pack([ids.point.z.e1.d0,ids.point.z.e1.d1,ids.point.z.e1.d2]))
         %}
-        if scalar == 0:
+
+        let (local is_scalar_zero) = uint384_lib.eq(scalar, Uint384(0,0,0))
+        let (local is_scalar_one) = uint384_lib.eq(scalar, Uint384(1,0,0))
+
+
+        if is_scalar_zero == 1:
             return get_zero()
         end
-        if scalar == 1:
+        if is_scalar_one == 1:
             return (point)
         end
         let (double_point : G2Point) = double(point)
-        let (quotient, remainder) = unsigned_div_rem(scalar, 2)
-        if remainder == 0:
+        let (quotient : Uint384, remainder : Uint384) = uint384_lib.unsigned_div_rem(scalar, Uint384(2,0,0))
+        
+        let (is_remainder_zero) = uint384_lib.eq(remainder, Uint384(0, 0, 0))
+        if is_remainder_zero == 0:
             let (quotient_mul_double_point : G2Point) = scalar_mul(quotient, double_point)
             return (quotient_mul_double_point)
         else:
@@ -322,6 +248,7 @@ namespace g2_lib:
         return (normalized_x, normalized_y)
     end
 
+    # TODO: Not tested
     # Check that a point is on the curve defined by y**2 = x**3 + 4
     # TODO: check that this is the correct equation
     # TODO: Can be done without normalizing, avoiding making divisions
@@ -332,11 +259,11 @@ namespace g2_lib:
         if is_point_at_infinity == 1:
             return (1)
         end
-        let (x_normalized: FQ2, y_normalized: FQ2) = normalize(point)
+        let (x_normalized : FQ2, y_normalized : FQ2) = normalize(point)
         let (x_square) = fq2_lib.mul(x_normalized, x_normalized)
         let (y_square) = fq2_lib.mul(y_normalized, y_normalized)
         let (x_cubed) = fq2_lib.mul(x_normalized, x_square)
-        let four = FQ2(Uint384(4,0,0), Uint384(0, 0, 0))
+        let four = FQ2(Uint384(4, 0, 0), Uint384(0, 0, 0))
         let (res) = fq2_lib.sub_three_terms(y_square, x_cubed, four)
         let (is_res_zero) = fq2_lib.is_zero(res)
         return (is_res_zero)
