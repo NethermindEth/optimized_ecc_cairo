@@ -3,7 +3,7 @@
 
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
-from lib.hash_to_curve import map_to_curve_g2, clear_cofactor_g2, mul_x
+from lib.hash_to_curve import map_to_curve_g2, clear_cofactor_g2
 from lib.fq2 import FQ2
 from lib.isogeny import isogeny_map_g2
 from lib.g2 import G2Point
