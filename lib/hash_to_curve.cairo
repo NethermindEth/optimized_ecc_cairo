@@ -83,28 +83,51 @@ func clear_cofactor_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Poi
         res : G2Point):
     alloc_locals
 
+    %{
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (z.d0, z.d1, z.d2)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+
+        def packFQP(z):
+            z_split = (z.e0, z.e1)
+            return tuple(pack(z_component, 128) for i, z_component in enumerate(z_split))
+
+
+        def packG2(z):
+            z_split = (z.x, z.y, z.z)
+            return tuple(packFQP(z_component, 128) for i, z_component in enumerate(z_split))
+    %}
+
     let (two_p : G2Point) = g2_lib.double(p)
+    %{ print("two_p " + str(packG2(ids.two_p))) %}
     # P2 = ψ^2(2P)
     let (psi_squared_two_p : G2Point) = g2_lib.two_psi(two_p)
+    %{ print("psi_squared_two_p " + str(packG2(ids.psi_squared_two_p))) %}
     # P1 = ψ(P)
     let (psi_p : G2Point) = g2_lib.psi(p)
-
+    %{ print("psi_p " + str(packG2(ids.psi_p))) %}
     # -xP0
     let (p_mul_x) = mul_x(p)
+    %{ print("p_mul_x " + str(packG2(ids.p_mul_x))) %}
     # -xP0 - P1
     let (minus_psi_p) = g2_lib.sub(psi_p, p_mul_x)
-
+    %{ print("minus_psi_p " + str(packG2(ids.minus_psi_p))) %}
     # (x^2)P0 + xP1
     let (second_mul_x) = mul_x(minus_psi_p)
-
+    %{ print("second_mul_x " + str(packG2(ids.second_mul_x))) %}
     # (-x-1)P0
     let (res : G2Point) = g2_lib.sub(p_mul_x, p)
+    %{ print("res " + str(packG2(ids.res))) %}
     # (x^2-x-1)P0 + xP1
     let (res : G2Point) = g2_lib.sub(second_mul_x, res)
+    %{ print("res " + str(packG2(ids.res))) %}
     # (x^2-x-1)P0 + (x-1)P1
     let (res : G2Point) = g2_lib.add(res, psi_p)
+    %{ print("res " + str(packG2(ids.res))) %}
     # (x^2-x-1)P0 + (x-1)P1 + P2
     let (res : G2Point) = g2_lib.add(res, psi_squared_two_p)
+    %{ print("res " + str(packG2(ids.res))) %}
 
     return (res)
 end
