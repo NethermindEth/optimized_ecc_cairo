@@ -39,9 +39,7 @@ def unsafe_split(num: int, length: int = 6) -> List[int]:
 
 
 def pack(z, num_bits_shift: int = 128) -> int:
-    print('hohoho', z)
     limbs = list(z)
-    print("hhuhuhu", limbs)
     return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
 

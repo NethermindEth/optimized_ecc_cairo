@@ -14,7 +14,7 @@ end
 func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, right : G1Point) -> (
         res : G1Point):
     alloc_locals
-    
+
     if left.z.d0 == 0:
         return (right)
     end
@@ -78,7 +78,6 @@ func add_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(left : G1Point, righ
     return (res)
 end
 
-
 func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         x : Uint384, y : Uint384, z : Uint384) -> (res : Uint384):
     alloc_locals
@@ -97,25 +96,4 @@ func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     let (res : Uint384) = fq_lib.mul(x_mul_y, z)
 
     return (res)
-end
-
-# TODO: Not used anywhere in the repo?
-# CONSTANTS
-func g1() -> (res : G1Point):
-    return (
-        res=G1Point(x=Uint384(0xfb3af00adb22c6bb,
-            0x6c55e83ff97a1aef,
-            0xa14e3a3f171bac58,
-            0xc3688c4f9774b905,
-            0x2695638c4fa9ac0f,
-            0x17f1d3a73197d794),
-        y=Uint384(0x0caa232946c5e7e1,
-            0xd03cc744a2888ae4,
-            0xdb18cb2c04b3ed,
-            0xfcf5e095d5d00af6,
-            0xa09e30ed741d8ae4,
-            0x08b3f481e3aaa0f1),
-        z=Uint384(
-            0, 0, 0, 0, 0, 0)
-        ))
 end
