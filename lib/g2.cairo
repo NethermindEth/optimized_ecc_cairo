@@ -19,8 +19,6 @@ namespace g2_lib:
     end
 
     # Following `py_ecc` for these functions.
-    # TODO: For G1 we used a different (but equivalent) version of addition. Should we uniformize?
-
     func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
         bool : felt
     ):
@@ -124,16 +122,16 @@ namespace g2_lib:
         alloc_locals
         # TODO: remove all possible locals when done debugging
         let (W : FQ2) = fq2_lib.mul(point.x, point.x)
-        let (local W : FQ2) = fq2_lib.scalar_mul(Uint384(3,0,0), W)
+        let (W : FQ2) = fq2_lib.scalar_mul(Uint384(3,0,0), W)
         let (S : FQ2) = fq2_lib.mul(point.y, point.z)
         let (B : FQ2) = fq2_lib.mul_three_terms(point.x, point.y, S)
 
         let (W_squared : FQ2) = fq2_lib.mul(W, W)
-        let (local eight_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), B)
+        let (eight_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), B)
         let (H : FQ2) = fq2_lib.sub(W_squared, eight_times_B)
 
         # Compute new_x
-        let (local H_times_S : FQ2) = fq2_lib.mul(H, S)
+        let (H_times_S : FQ2) = fq2_lib.mul(H, S)
         let (new_x : FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), H_times_S)
 
         # Compute new_y
@@ -146,54 +144,17 @@ namespace g2_lib:
         let (local new_y : FQ2) = fq2_lib.sub(inner_term_1, inner_term_2)
 
         # Compute new_z
-        let (local S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
-        let (local new_z : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), S_cubed)
-
-        %{
-            def pack(z, num_bits_shift: int = 128) -> int:
-                limbs = (limb for limb in z)
-                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-
-            def packFQP(z):
-                z = [[z.e0.d0, z.e0.d1, z.e0.d2], [z.e1.d0, z.e1.d1, z.e1.d2]]
-                return tuple(pack(z_component) for z_component in z)
-
-            print("HI")
-            print("W", packFQP(ids.W))
-            print("S", packFQP(ids.S))
-            print("B", packFQP(ids.B))
-            print("W_squared", packFQP(ids.W_squared))
-            print("8_times_B", packFQP(ids.eight_times_B))
-            print("H", packFQP(ids.H))
-            print("H_times_S", packFQP(ids.H_times_S))
-            print("new_x", packFQP(ids.new_x))
-            print("S_squared", packFQP(ids.S_squared))
-            print("inner_term_2", packFQP(ids.inner_term_2))
-            #print("eight_times_inner_term_2", packFQP(ids.eight_times_inner_term_2))
-            print("four_times_B", packFQP(ids.four_times_B))
-            print("four_times_B_sub_H", packFQP(ids.four_times_B_sub_H))
-            print("inner_term_1", packFQP(ids.inner_term_1))
-            print("new_y", packFQP(ids.new_y))
-            print("S_cubed", packFQP(ids.S_cubed))
-            print("new_z", packFQP(ids.new_z))
-        %}
+        let (S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
+        let (new_z : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), S_cubed)
 
         return (G2Point(new_x, new_y, new_z))
     end
 
-    # TODO: Do we need scalar mult by Uint384 here? Not just felt?
     # Computes scalar * point, which means point added with itself `scalar` times
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         scalar : Uint384, point : G2Point
     ) -> (res : G2Point):
         alloc_locals
-        %{
-            def pack(z, num_bits_shift: int = 128) -> int:
-                limbs = (limb for limb in z)
-                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-
-            #print("findme", ids.scalar, pack([ids.point.x.e0.d0,ids.point.x.e0.d1,ids.point.x.e0.d2]), pack([ids.point.x.e1.d0,ids.point.x.e1.d1,ids.point.x.e1.d2]), pack([ids.point.y.e0.d0,ids.point.y.e0.d1,ids.point.y.e0.d2]), pack([ids.point.y.e1.d0,ids.point.y.e1.d1,ids.point.y.e1.d2]), pack([ids.point.z.e0.d0,ids.point.z.e0.d1,ids.point.z.e0.d2]), pack([ids.point.z.e1.d0,ids.point.z.e1.d1,ids.point.z.e1.d2]))
-        %}
 
         let (local is_scalar_zero) = uint384_lib.eq(scalar, Uint384(0,0,0))
         let (local is_scalar_one) = uint384_lib.eq(scalar, Uint384(1,0,0))
@@ -235,13 +196,6 @@ namespace g2_lib:
         alloc_locals
         let (bool) = is_point_at_infinity(point)
         assert bool = 0
-        # let (z_squared : FQ2) = fq2_lib.mul(point.z, point.z)
-        # let (local z_cubed : FQ2) = fq2_lib.mul(z_squared, point.z)
-        # let (z_squared_inverse : FQ2) = fq2_lib.inv(z_squared)
-        # let (z_cubed_inverse : FQ2) = fq2_lib.inv(z_cubed)
-        # let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_squared_inverse)
-        # let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_cubed_inverse)
-        # return (normalized_x, normalized_y)
         let (z_inverse : FQ2) = fq2_lib.inv(point.z)
         let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_inverse)
         let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_inverse)

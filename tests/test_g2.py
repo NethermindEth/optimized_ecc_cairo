@@ -4,9 +4,10 @@ import pytest
 from hypothesis import given, strategies as st, settings
 from sympy import Segment2D
 from utils import (
-    create_G2Point_from_execution_result,
     field_modulus,
-    split,
+    split
+)
+from g2_utils import (
     g2_add,
     g2_double,
     get_g2_point_from_seed,
