@@ -1,20 +1,23 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from lib.fq12 import FQ12
 from lib.g1 import G1Point
+from lib.g2 import G2Point
 from lib.uint384 import Uint384, uint384_lib
 from lib.fq import fq_lib
+from lib.fq2 import FQ2
 
-struct G2PointFQ12:
+# TODO rename this
+struct GTPoint:
     member x : FQ12
     member y : FQ12
     member z : FQ12
 end
 
-func cast_point_to_fq12(pt : G1Point) -> (res : G2PointFQ12):
+func cast_point_to_fq12(pt : G1Point) -> (res : GTPoint):
     let zero = Uint384(d0=0, d1=0, d2=0)
 
     return (
-        res=G2PointFQ12(x=FQ12(e0=pt.x, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
+        res=GTPoint(x=FQ12(e0=pt.x, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
         y=FQ12(e0=pt.y, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
         z=FQ12(e0=pt.z, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero)))
 end
@@ -55,7 +58,6 @@ func line_func_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     let (num_eq_zero : felt) = uint384_lib.eq(m_numerator, zero)
 
     if num_eq_zero == 1:
-        %{ print("num is zero ") %}
         let (x_1_x_1) = fq_lib.square(p1.x)
         let (m_numerator) = fq_lib.mul(x=x_1_x_1, y=Uint384(d0=3, d1=0, d2=0))
 
@@ -87,4 +89,19 @@ func line_func_g1{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     let (y) = fq_lib.mul(p1.z, pt.z)
 
     return (x, y)
+end
+
+# twist G2Point to GTPoint
+func twist{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(pt : G2Point) -> (res : GTPoint):
+    alloc_locals
+
+    let (x_min_x_i : Uint384) = fq_lib.sub(pt.x.e0, pt.x.e1)
+    let (y_min_y_i : Uint384) = fq_lib.sub(pt.y.e0, pt.y.e1)
+    let (z_min_z_i : Uint384) = fq_lib.sub(pt.z.e0, pt.z.e1)
+
+    let zero = Uint384(d0=0, d1=0, d2=0)
+    return (
+        res=GTPoint(x=FQ12(e0=zero, e1=x_min_x_i, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=pt.x.e1, e8=zero, e9=zero, e10=zero, e11=zero),
+        y=FQ12(e0=y_min_y_i, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=pt.y.e1, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
+        z=FQ12(e0=zero, e1=zero, e2=zero, e3=z_min_z_i, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=pt.z.e1, e10=zero, e11=zero)))
 end
