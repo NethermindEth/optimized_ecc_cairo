@@ -362,6 +362,7 @@ namespace uint384_lib:
             return (1)
         else:
             return (0)
+        end
     end
 
     # Computes the bitwise XOR of 2 uint256 integers.

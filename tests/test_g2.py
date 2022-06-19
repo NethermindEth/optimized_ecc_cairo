@@ -7,7 +7,7 @@ from utils import (
     field_modulus,
     split
 )
-from g2_utils import (
+from utils_g2 import (
     g2_add,
     g2_double,
     get_g2_point_from_seed,
