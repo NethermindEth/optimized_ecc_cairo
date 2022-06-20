@@ -194,17 +194,29 @@ namespace fq2_lib:
                     return (0, zero)
                 end
                 let (minus_a_plus_sqrt : Uint384) = fq_lib.sub(sqrt_a_squared_plus_b_squared, a)
-                let (two_inverse : Uint384) = fq_lib.inverse(Uint384(2, 0, 0))
+                let (local two_inverse : Uint384) = fq_lib.inverse(Uint384(2, 0, 0))
                 let (minus_a_plus_sqrt_div_2 : Uint384) = fq_lib.mul(minus_a_plus_sqrt, two_inverse)
                 let (bool, r1 : Uint384) = fq_lib.get_square_root(minus_a_plus_sqrt_div_2)
-                if bool == 0:
-                    let (zero : FQ2) = get_zero()
-                    return (0, zero)
+                if bool == 1:
+                    let (twice_r1 : Uint384) = fq_lib.scalar_mul(2, r1)
+                    let (twice_r1_inverse : Uint384) = fq_lib.inverse(twice_r1)
+                    let (r0 : Uint384) = fq_lib.mul(b, twice_r1_inverse)
+                    return (1, FQ2(r0, r1))
+                else:
+                    let (minus_sqrt: Uint384) = fq_lib.sub(Uint384(0,0,0), sqrt_a_squared_plus_b_squared)
+                    let (minus_a_minus_sqrt : Uint384) = fq_lib.sub(minus_sqrt, a)
+                    let (minus_a_minus_sqrt_div_2 : Uint384) = fq_lib.mul(minus_a_minus_sqrt, two_inverse)
+                    let (bool, r1 : Uint384) = fq_lib.get_square_root(minus_a_minus_sqrt_div_2)
+                    if bool == 1:
+                       let (twice_r1 : Uint384) = fq_lib.scalar_mul(2, r1)
+                       let (twice_r1_inverse : Uint384) = fq_lib.inverse(twice_r1)
+                       let (r0 : Uint384) = fq_lib.mul(b, twice_r1_inverse)
+                       return (1, FQ2(r0, r1)) 
+                    else:
+                        let (zero : FQ2) = get_zero()
+                        return (0, zero)
+                    end
                 end
-                let (twice_r1 : Uint384) = fq_lib.scalar_mul(2, r1)
-                let (twice_r1_inverse : Uint384) = fq_lib.inverse(twice_r1)
-                let (r0 : Uint384) = fq_lib.mul(b, twice_r1_inverse)
-                return (1, FQ2(r0, r1))
             end
         end
     end

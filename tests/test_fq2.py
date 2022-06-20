@@ -194,7 +194,7 @@ async def test_g2_get_sqrt(fq2_factory, x0, x1):
     contract = fq2_factory
 
     x_fq2 = FQ2((x0, x1))
-    python_success = has_squareroot_v2(x_fq2)
+    python_success = has_squareroot(x_fq2)
 
     execution_info = await contract.get_square_root((split(x0), split(x1))).call()
     cairo_success = execution_info.result[0]
@@ -204,5 +204,4 @@ async def test_g2_get_sqrt(fq2_factory, x0, x1):
     assert cairo_success == int(python_success)
 
     if cairo_success == 1:
-        print("findme2", cairo_sqrt)
         assert cairo_sqrt**2 == x_fq2
