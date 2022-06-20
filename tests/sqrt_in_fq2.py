@@ -39,13 +39,17 @@ def has_squareroot_v2(value):
             return 0
     else:
         if b==0:
-            return pow(a, (q-1)//2, q)
+            leg_symbol= pow(a, (q-1)//2, q)
+            if leg_symbol == -1:
+                return 0
+            else:
+                return 1
         else:
             l = a**2 + b**2
             success, l_sqrt=field_sqrt(l, q)
             if success == 0:
                 return 0
-            k = (-a + l_sqrt) / FQ2(2,0,0)
+            k = (-a + l_sqrt) / FQ2((2,0,0))
             success, r1 = field_sqrt(k, q)
             if success == 0:
                 return 0
