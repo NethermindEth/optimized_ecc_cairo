@@ -14,6 +14,7 @@ from utils_g2 import (
     g2_scalar_mul,
     get_g2_infinity_point,
     create_G2Point_from_tuple,
+    create_G2Point_from_execution_result
 )
 
 

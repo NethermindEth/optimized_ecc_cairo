@@ -28,4 +28,27 @@ def has_squareroot(value):
     if legendre_delta == -1:
         return -1
     return 1
-    
+
+def has_squareroot_v2(value):
+    a, b = value.coeffs[0].n, value.coeffs[1].n
+    print("findme", type(a), type(b))
+    if a==0:
+        if b==0:
+            return 1
+        else:
+            return 0
+    else:
+        if b==0:
+            return pow(a, (q-1)//2, q)
+        else:
+            l = a**2 + b**2
+            success, l_sqrt=field_sqrt(l, q)
+            if success == 0:
+                return 0
+            k = (-a + l_sqrt) / FQ2(2,0,0)
+            success, r1 = field_sqrt(k, q)
+            if success == 0:
+                return 0
+            # In this case the sqrt is ( b / (2*r1), r1 )
+            return 1
+      

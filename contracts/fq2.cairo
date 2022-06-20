@@ -1,6 +1,6 @@
 %lang starknet
 %builtins range_check bitwise
-
+from lib.uint384 import Uint384
 from lib.fq2 import fq2_lib, FQ2
 from lib.BigInt6 import BigInt6
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
@@ -24,7 +24,7 @@ func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2) -> (r
 end
 
 @view
-func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (res : FQ2):
+func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : FQ2) -> (res : FQ2):
     alloc_locals
 
     let (res : FQ2) = fq2_lib.scalar_mul(x, y)
