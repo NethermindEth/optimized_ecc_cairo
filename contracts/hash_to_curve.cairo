@@ -3,12 +3,21 @@
 
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
-from lib.hash_to_curve import map_to_curve_g2, clear_cofactor_g2
+from lib.hash_to_curve import map_to_curve_g2, clear_cofactor_g2, expanded_hash_to_curve
 from lib.fq2 import FQ2
 from lib.isogeny import isogeny_map_g2
 from lib.g2 import G2Point
 from lib.hash_to_field import expand_msg_sha_xmd
 from lib.swu import optimized_sswu, sqrt_div
+
+@view
+func exp_hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        one : Uint256, two : Uint256, three : Uint256, four : Uint256) -> (
+        point_on_curve : G2Point):
+    let (res : G2Point) = expanded_hash_to_curve(one, two, three, four)
+
+    return (res)
+end
 
 @view
 func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
