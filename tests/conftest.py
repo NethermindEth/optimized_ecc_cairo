@@ -4,28 +4,7 @@ import os
 import pytest
 from starkware.starknet.testing.starknet import Starknet
 from starkware.starknet.compiler.compile import compile_starknet_files
-
-one_bigint6 = (1, 0, 0, 0, 0, 0)
-
-max_base_bigint6 = (2**64 - 1, 0, 0, 0, 0, 0)
-max_base_bigint6_sum = 2 ** (64 * 5)
-
-
-def split(num: int) -> List[int]:
-    BASE = 2**64
-    a = ()
-    for _ in range(6):
-        num, residue = divmod(num, BASE)
-        a.append(residue)
-    assert num == 0
-    return a
-
-
-def pack(z):
-
-    limbs = z.d0, z.d1, z.d2, z.d3, z.d4, z.d5
-
-    return sum(limb * 2 ** (64 * i) for i, limb in enumerate(limbs))
+from starkware.starknet.definitions.general_config import build_general_config, default_general_config
 
 
 FQ_CONTRACT = os.path.join("contracts", "fq.cairo")
@@ -33,9 +12,8 @@ G1_CONTRACT = os.path.join("contracts", "g1.cairo")
 G2_CONTRACT = os.path.join("contracts", "g2.cairo")
 FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")
 FQ12_CONTRACT = os.path.join("contracts", "fq12.cairo")
-BARRET_ALGORITHM_CONTRACT = os.path.join("contracts", "barret_algorithm.cairo")
 PAIRING_CONTRACT = os.path.join("contracts", "pairing.cairo")
-
+HASH_TO_CURVE_CONTRACT = os.path.join("contracts", "hash_to_curve.cairo")
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -44,7 +22,11 @@ def event_loop():
 
 @pytest.fixture(scope="module")
 async def starknet_factory():
-    starknet = await Starknet.empty()
+    MAX_STEPS = 10 ** 60
+    default_config = default_general_config
+    default_config['invoke_tx_max_n_steps'] = MAX_STEPS
+    config = build_general_config(default_config)
+    starknet = await Starknet.empty(config)
     return starknet
 
 
@@ -91,6 +73,17 @@ async def g2_factory(starknet_factory):
 
 
 @pytest.fixture(scope="module")
+async def g2_factory(starknet_factory):
+    
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def= compile_starknet_files(files=[G2_CONTRACT], disable_hint_validation=True)
+    g2_contract = await starknet.deploy(contract_def=contract_def)
+
+    return g2_contract
+
+@pytest.fixture(scope="module")
 async def fq2_factory(starknet_factory):
 
     starknet = starknet_factory
@@ -118,8 +111,9 @@ async def fq12_factory(starknet_factory):
     return fq_contract
 
 @pytest.fixture(scope="module")
-async def pairing_factory(starknet_factory):
 
+
+async def pairing_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
@@ -129,3 +123,25 @@ async def pairing_factory(starknet_factory):
     pairing_contract = await starknet.deploy(contract_def=contract_def)
 
     return pairing_contract
+
+async def hash_to_curve_factory(starknet_factory):
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def = compile_starknet_files(
+        files=[PAIRING_CONTRACT], disable_hint_validation=True
+    )
+    pairing_contract = await starknet.deploy(contract_def=contract_def)
+
+    return pairing_contract
+        
+async def hash_to_curve_factory(starknet_factory):
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_def = compile_starknet_files(
+        files=[HASH_TO_CURVE_CONTRACT], disable_hint_validation=True
+    )
+    hash_to_curve_contract = await starknet.deploy(contract_def=contract_def)
+
+    return hash_to_curve_contract

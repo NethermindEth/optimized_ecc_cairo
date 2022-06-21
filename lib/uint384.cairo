@@ -354,6 +354,16 @@ namespace uint384_lib:
         end
         return (1)
     end
+    
+    # Return true if both integers are equal.
+    func is_zero{range_check_ptr}(a : Uint384) -> (res : felt):
+        let (is_a_zero) = eq(a, Uint384(0, 0, 0))
+        if is_a_zero == 1:
+            return (1)
+        else:
+            return (0)
+        end
+    end
 
     # Computes the bitwise XOR of 2 uint256 integers.
     func xor{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : Uint384, b : Uint384) -> (

@@ -3,6 +3,7 @@ from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from lib.uint384 import Uint384, uint384_lib
 from lib.fq import fq_lib
 from lib.fq2 import FQ2, fq2_lib
+from lib.uint384_extension import Uint768, uint384_extension_lib
 
 # Jacobian coordinate representation
 # To retrive normal cordinates perform x = x / z ^ 2 and y = y / z ^ 3
@@ -19,11 +20,8 @@ namespace g2_lib:
     end
 
     # Following `py_ecc` for these functions.
-    # TODO: For G1 we used a different (but equivalent) version of addition. Should we uniformize?
-
     func eq{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
-        bool : felt
-    ):
+            bool : felt):
         alloc_locals
 
         let (is_p1_infinity) = is_point_at_infinity(p1)
@@ -57,8 +55,7 @@ namespace g2_lib:
 
     # Addition optimized for the curve y**2 = x**3 + 4 using Jacobian coordinate representation
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p1 : G2Point, p2 : G2Point) -> (
-        res : G2Point
-    ):
+            res : G2Point):
         alloc_locals
         let (is_p1_z_coord_zero) = fq2_lib.is_zero(p1.z)
         if is_p1_z_coord_zero == 1:
@@ -103,8 +100,7 @@ namespace g2_lib:
         let (U_squared_times_W : FQ2) = fq2_lib.mul_three_terms(U, U, W)
         let (twice_V_squared_times_V2 : FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), V_squared_times_V2)
         let (A : FQ2) = fq2_lib.sub_three_terms(
-            U_squared_times_W, V_cubed, twice_V_squared_times_V2
-        )
+            U_squared_times_W, V_cubed, twice_V_squared_times_V2)
 
         let (new_x : FQ2) = fq2_lib.mul(V, A)
 
@@ -124,16 +120,16 @@ namespace g2_lib:
         alloc_locals
         # TODO: remove all possible locals when done debugging
         let (W : FQ2) = fq2_lib.mul(point.x, point.x)
-        let (local W : FQ2) = fq2_lib.scalar_mul(Uint384(3,0,0), W)
+        let (W : FQ2) = fq2_lib.scalar_mul(Uint384(3,0,0), W)
         let (S : FQ2) = fq2_lib.mul(point.y, point.z)
         let (B : FQ2) = fq2_lib.mul_three_terms(point.x, point.y, S)
 
         let (W_squared : FQ2) = fq2_lib.mul(W, W)
-        let (local eight_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), B)
+        let (eight_times_B : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), B)
         let (H : FQ2) = fq2_lib.sub(W_squared, eight_times_B)
 
         # Compute new_x
-        let (local H_times_S : FQ2) = fq2_lib.mul(H, S)
+        let (H_times_S : FQ2) = fq2_lib.mul(H, S)
         let (new_x : FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), H_times_S)
 
         # Compute new_y
@@ -146,60 +142,25 @@ namespace g2_lib:
         let (local new_y : FQ2) = fq2_lib.sub(inner_term_1, inner_term_2)
 
         # Compute new_z
-        let (local S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
-        let (local new_z : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), S_cubed)
+        let (S_cubed : FQ2) = fq2_lib.mul(S, S_squared)
+        let (new_z : FQ2) = fq2_lib.scalar_mul(Uint384(8,0,0), S_cubed)
 
-        %{
-            def pack(z, num_bits_shift: int = 128) -> int:
-                limbs = (limb for limb in z)
-                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-
-            def packFQP(z):
-                z = [[z.e0.d0, z.e0.d1, z.e0.d2], [z.e1.d0, z.e1.d1, z.e1.d2]]
-                return tuple(pack(z_component) for z_component in z)
-
-            print("HI")
-            print("W", packFQP(ids.W))
-            print("S", packFQP(ids.S))
-            print("B", packFQP(ids.B))
-            print("W_squared", packFQP(ids.W_squared))
-            print("8_times_B", packFQP(ids.eight_times_B))
-            print("H", packFQP(ids.H))
-            print("H_times_S", packFQP(ids.H_times_S))
-            print("new_x", packFQP(ids.new_x))
-            print("S_squared", packFQP(ids.S_squared))
-            print("inner_term_2", packFQP(ids.inner_term_2))
-            #print("eight_times_inner_term_2", packFQP(ids.eight_times_inner_term_2))
-            print("four_times_B", packFQP(ids.four_times_B))
-            print("four_times_B_sub_H", packFQP(ids.four_times_B_sub_H))
-            print("inner_term_1", packFQP(ids.inner_term_1))
-            print("new_y", packFQP(ids.new_y))
-            print("S_cubed", packFQP(ids.S_cubed))
-            print("new_z", packFQP(ids.new_z))
-        %}
 
         return (G2Point(new_x, new_y, new_z))
     end
 
-    # TODO: Do we need scalar mult by Uint384 here? Not just felt?
     # Computes scalar * point, which means point added with itself `scalar` times
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         scalar : Uint384, point : G2Point
     ) -> (res : G2Point):
-        alloc_locals
-        %{
-            def pack(z, num_bits_shift: int = 128) -> int:
-                limbs = (limb for limb in z)
-                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
 
-            #print("findme", ids.scalar, pack([ids.point.x.e0.d0,ids.point.x.e0.d1,ids.point.x.e0.d2]), pack([ids.point.x.e1.d0,ids.point.x.e1.d1,ids.point.x.e1.d2]), pack([ids.point.y.e0.d0,ids.point.y.e0.d1,ids.point.y.e0.d2]), pack([ids.point.y.e1.d0,ids.point.y.e1.d1,ids.point.y.e1.d2]), pack([ids.point.z.e0.d0,ids.point.z.e0.d1,ids.point.z.e0.d2]), pack([ids.point.z.e1.d0,ids.point.z.e1.d1,ids.point.z.e1.d2]))
-        %}
+        alloc_locals
 
         let (local is_scalar_zero) = uint384_lib.eq(scalar, Uint384(0,0,0))
         let (local is_scalar_one) = uint384_lib.eq(scalar, Uint384(1,0,0))
 
-
         if is_scalar_zero == 1:
+
             return get_zero()
         end
         if is_scalar_one == 1:
@@ -230,18 +191,10 @@ namespace g2_lib:
     # TODO: Not tested
     # Transforms (x,y,z) into (x/z^3, y/z^2) assuming z != 0, i.e. (x,y,z) != point_at_infinity
     func normalize{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (
-        normalized_x : FQ2, normalized_y : FQ2
-    ):
+            normalized_x : FQ2, normalized_y : FQ2):
         alloc_locals
         let (bool) = is_point_at_infinity(point)
         assert bool = 0
-        # let (z_squared : FQ2) = fq2_lib.mul(point.z, point.z)
-        # let (local z_cubed : FQ2) = fq2_lib.mul(z_squared, point.z)
-        # let (z_squared_inverse : FQ2) = fq2_lib.inv(z_squared)
-        # let (z_cubed_inverse : FQ2) = fq2_lib.inv(z_cubed)
-        # let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_squared_inverse)
-        # let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_cubed_inverse)
-        # return (normalized_x, normalized_y)
         let (z_inverse : FQ2) = fq2_lib.inv(point.z)
         let (normalized_x : FQ2) = fq2_lib.mul(point.x, z_inverse)
         let (normalized_y : FQ2) = fq2_lib.mul(point.y, z_inverse)
@@ -253,8 +206,7 @@ namespace g2_lib:
     # TODO: check that this is the correct equation
     # TODO: Can be done without normalizing, avoiding making divisions
     func is_on_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point, b) -> (
-        bool : felt
-    ):
+            bool : felt):
         let (is_point_at_infinity) = is_point_at_infinity(point)
         if is_point_at_infinity == 1:
             return (1)
@@ -267,5 +219,66 @@ namespace g2_lib:
         let (res) = fq2_lib.sub_three_terms(y_square, x_cubed, four)
         let (is_res_zero) = fq2_lib.is_zero(res)
         return (is_res_zero)
+    end
+
+    # # psix = 1 / (nr ^ (p - 1)/3)
+    # # p = 16019282247729705411943748644318972617695120099330552659862384536985976748491357143400656079302193429974954385540170730531103884539706905936200202421036435811093013034271812758016407969496331661418541023677774899971425993489485369
+    # # r = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+    # # n = 0x5d543a95414e7f1091d50792876a202cd91de4547085abaa68a205b2e5a7ddfa628f1cb4d9e82ef21537e293a6691ae1616ec6e786f0c70cf1c38e31c7238e5
+    func get_psi_x() -> (psi_x : FQ2):
+        return (
+            psi_x=FQ2(e0=Uint384(d0=0, d1=0, d2=0),
+            e1=Uint384(d0=57090000153090263371005173459775210947, d1=215402993932478976138402828039445249580, d2=27775811676944536350107783208663486568)))
+    end
+
+    func get_psi_y() -> (psi_y : FQ2):
+        return (
+            psi_y=FQ2(e0=Uint384(d0=88498181851007361581448886694209952465, d1=194966426654809473394864639982321153842, d2=15730448420644313803453897928225910969),
+            e1=Uint384(d0=292554099899570639894799895684836429786, d1=278858154884989680658816242618366607089, d2=18835035124770592265335298098589514781)))
+    end
+
+    func psi{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (res : G2Point):
+        alloc_locals
+
+        let (conjugate_x : FQ2) = fq2_lib.conjugate(point.x)
+        let (conjugate_y : FQ2) = fq2_lib.conjugate(point.y)
+        let (conjugate_z : FQ2) = fq2_lib.conjugate(point.z)
+
+        let (psi_x : FQ2) = get_psi_x()
+        let (x_psi_x) = fq2_lib.mul(conjugate_x, psi_x)
+        let (psi_y : FQ2) = get_psi_y()
+        let (y_psi_y) = fq2_lib.mul(conjugate_y, psi_y)
+
+        return (res=G2Point(x=x_psi_x, y=y_psi_y, conjugate_z))
+    end
+
+    # TODO Use two_psi optimized equation
+    func two_psi{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(point : G2Point) -> (
+            res : G2Point):
+        alloc_locals
+
+        let (psi_one : G2Point) = psi(point)
+        let (psi_two : G2Point) = psi(psi_one)
+
+        return (res=psi_two)
+    end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Point) -> (res : G2Point):
+        alloc_locals
+
+        let (neg_y : FQ2) = fq2_lib.neg(p.y)
+
+        return (res=G2Point(x=p.x, y=neg_y, z=p.z))
+    end
+
+    func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : G2Point, b : G2Point) -> (
+            res : G2Point):
+        alloc_locals
+
+        let (neg_b : G2Point) = neg(b)
+
+        let (a_plus_b : G2Point) = add(a, neg_b)
+
+        return (res=a_plus_b)
     end
 end

@@ -18,9 +18,9 @@ def get_square_root_mod_p(a, p):
     """
     # Simple cases
     #
-    if a == 0:
+    if a % p == 0:
         return 1, 0
-    if legendre_symbol(a, p) != 1:
+    if legendre_symbol(a, p) == -1:
         return 0, None
     elif p == 2:
         return 0, None
