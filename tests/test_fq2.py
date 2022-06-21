@@ -1,24 +1,72 @@
 import pytest
-from utils import split, packFQP, field_modulus, splitFQP
+from utils import split, packFQP, field_modulus, splitFQP, max_base_bigint12_sum
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 from py_ecc.fields import bls12_381_FQ2 as FQ2
+from sqrt_in_fq2 import wrapped_modular_squareroot
 
 largest_factor = sqrt(2 ** (64 * 11))
 
+def sgn0(fq) -> int:
+    sign = 0
+    zero = 1
+    for x_i in fq.coeffs:
+        sign_i = x_i.n % 2
+        zero_i = x_i == 0
+        sign = sign or (zero and sign_i)
+        zero = zero and zero_i
+    return sign
 
 @given(
-    x1=st.integers(min_value=1, max_value=(field_modulus)),
-    x2=st.integers(min_value=1, max_value=(field_modulus)),
-    y1=st.integers(min_value=1, max_value=(field_modulus)),
-    y2=st.integers(min_value=1, max_value=(field_modulus)),
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_sgn0(fq2_factory, x1, y1):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.sgn0(splitFQP(x)).call()
+    cairo_result = execution_info.result[0]
+
+    x_fq2 = FQ2(x)
+    python_result = sgn0(x_fq2)
+
+    assert cairo_result == python_result
+
+
+@given(
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+    exp=st.integers(min_value=0, max_value=(max_base_bigint12_sum))
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_pow(fq2_factory, x1, y1, exp):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.pow(splitFQP(x), split(exp, 128, 6)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ2(x)
+    python_result = x_fq2 ** exp
+
+    assert cairo_result == python_result.coeffs
+
+@given(
+    x1=st.integers(min_value=1, max_value=field_modulus - 1),
+    x2=st.integers(min_value=0, max_value=field_modulus - 1),
+    y1=st.integers(min_value=1, max_value=field_modulus - 1),
+    y2=st.integers(min_value=0, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
 async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
     x = (x1, x2)
     y = (y1, y2)
-
+    
     contract = fq2_factory
     execution_info = await contract.mul(splitFQP(x), splitFQP(y)).call()
     cairo_result = packFQP(execution_info.result[0])
@@ -32,10 +80,10 @@ async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
 
 # checks that (1 + x) * y = y + x * y
 @given(
-    x1=st.integers(min_value=1, max_value=(field_modulus)),
-    x2=st.integers(min_value=1, max_value=(field_modulus)),
-    y1=st.integers(min_value=1, max_value=(field_modulus)),
-    y2=st.integers(min_value=1, max_value=(field_modulus)),
+    x1=st.integers(min_value=1, max_value=field_modulus - 1),
+    x2=st.integers(min_value=0, max_value=field_modulus - 1),
+    y1=st.integers(min_value=1, max_value=field_modulus - 1),
+    y2=st.integers(min_value=0, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
@@ -134,5 +182,64 @@ async def test_fq2_get_inverse(fq2_factory, x0, x1):
     x_inv = packFQP(execution_info.result[0])
     x_inv_fq2 = FQ2(x_inv)
     x_fq2 = FQ2((x0, x1))
+
+    assert x_fq2 * x_inv_fq2 == FQ2.one()
+
+
+@given(
+    x0=st.integers(min_value=1, max_value=field_modulus - 1),
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+    y0=st.integers(min_value=1, max_value=field_modulus - 1),
+    y1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_eq(fq2_factory, x0, x1, y0, y1):
+    contract = fq2_factory
+    execution_info = await contract.eq(
+        (split(x0), split(x1)),
+        (split(y0), split(y1)),
+    ).call()
+
+    res = execution_info.result[0]
+    x_fq2 = FQ2((x0, x1))
+    y_fq2 = FQ2((y0, y1))
+    python_res = int(x_fq2 == y_fq2)
+    assert res == python_res
+
+
+@given(
+    x0=st.integers(min_value=1, max_value=field_modulus - 1),
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_is_zero(fq2_factory, x0, x1):
+    contract = fq2_factory
+    execution_info = await contract.is_zero((split(x0), split(x1))).call()
+
+    res = execution_info.result[0]
+    x_fq2 = FQ2((x0, x1))
+    zero_fq2 = FQ2.zero()
+    python_res = int(x_fq2 == zero_fq2)
+    assert res == python_res
+
+
+@given(
+    x0=st.integers(min_value=1, max_value=field_modulus - 1),
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_g2_get_sqrt(fq2_factory, x0, x1):
+    contract = fq2_factory
     
-    assert x_fq2 * x_inv_fq2 ==  FQ2.one()
+    x_fq2 = FQ2((x0, x1))
+    python_success, python_sqrt = wrapped_modular_squareroot(x_fq2)
+
+    execution_info = await contract.get_square_root((split(x0), split(x1))).call()
+    cairo_success = execution_info.result[0]
+    cairo_sqrt = packFQP(execution_info.result[1])
+
+    assert cairo_success == int(python_success)
+    assert cairo_sqrt == python_sqrt

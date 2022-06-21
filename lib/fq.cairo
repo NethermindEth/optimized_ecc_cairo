@@ -4,6 +4,7 @@ from lib.field_arithmetic import field_arithmetic_lib
 from lib.curve import get_modulus, get_r_squared, get_p_minus_one_div_2
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
+from starkware.cairo.common.math_cmp import is_not_zero
 
 namespace fq_lib:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384, y : Uint384) -> (
@@ -43,7 +44,9 @@ namespace fq_lib:
     # NOTE: Scalar has to be at most than 2**128 - 1
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(scalar : felt, x : Uint384) -> (
             product : Uint384):
-        # TODO: this assertion fails but not sure why
+        # TODO: I want to check that scalar is at most 2**128
+        # But I get an error if I do, even fi the scalar is less than 2**128. I think [range_check_ptr] is already filled?
+
         # assert [range_check_ptr] = scalar
 
         let packed : Uint384 = Uint384(d0=scalar, d1=0, d2=0)
@@ -52,12 +55,13 @@ namespace fq_lib:
         return (reduced)
     end
 
+    # TODO: in field_arithmetic we implement first the function a/x mod p. Make consistent
     # finds x in a x ≅ 1 (mod q)
     func inverse{range_check_ptr}(a : Uint384) -> (res : Uint384):
         alloc_locals
         let (q : Uint384) = get_modulus()
         let one = Uint384(1, 0, 0)
-        let (res : Uint384) = field_arithmetic_lib.div(one, a)
+        let (res : Uint384) = field_arithmetic_lib.div(one, a, q)
         return (res)
     end
 
@@ -66,30 +70,30 @@ namespace fq_lib:
         alloc_locals
         let (q : Uint384) = get_modulus()
         let (res : Uint384) = field_arithmetic_lib.pow(x, exponent, q)
+        %{ print("done") %}
         return (res)
     end
 
     # checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
-    func is_square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (bool : felt):
+    func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (
+            bool : felt):
         alloc_locals
-        let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
-        if is_x_zero == 1:
-            return (1)
-        end
+        let (p : Uint384) = get_modulus()
         let (p_minus_one_div_2 : Uint384) = get_p_minus_one_div_2()
-        let (res : Uint384) = pow(x, p_minus_one_div_2)
-        %{
-            limbs = [ids.res.d0, ids.res.d1, ids.res.d2]
-            r = sum(limb << (128 * i) for i, limb in enumerate(limbs))
-            print('findme2', r)
-        %}
-        let (is_res_zero) = uint384_lib.eq(res, Uint384(0, 0, 0))
-        let (is_res_one) = uint384_lib.eq(res, Uint384(1, 0, 0))
-        if is_res_one == 1:
-            return (1)
-        else:
-            return (0)
-        end
+        let (res) = field_arithmetic_lib.is_square_non_optimized(x, p, p_minus_one_div_2)
+        return (res)
+    end
+
+    # Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
+    # WARNING: Expects x to satisy 0 <= x < p-1
+    func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : Uint384) -> (
+            success : felt, res : Uint384):
+        alloc_locals
+        let (p : Uint384) = get_modulus()
+        # 2 happens to be a generator
+        let generator = Uint384(2, 0, 0)
+        let (success, res : Uint384) = field_arithmetic_lib.get_square_root(x, p, generator)
+        return (success, res)
     end
 
     func from_256_bits{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint256) -> (
@@ -126,5 +130,40 @@ namespace fq_lib:
         let (e0_mul_f : Uint384) = mul(e0, r_mul_2_exp_256)
         let (e1_final : Uint384) = add(e1, e0_mul_f)
         return (e1_final)
+    end
+
+    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : Uint384) -> (
+            is_quad_nonresidue : felt):
+        let (is_n_zero : felt) = is_not_zero(a.d0 + a.d1 + a.d2)
+
+        if is_n_zero == 0:
+            return (1)
+        else:
+            return (0)
+        end
+    end
+
+    # @dev one is r mod p
+    func one() -> (res : Uint384):
+        return (
+            res=Uint384(
+            d0=313635500375121084810881640338032885757,
+            d1=159249536114007638540741953206796900538,
+            d2=29193015012204308844271843190429379693))
+    end
+
+    func zero() -> (res : Uint384):
+        return (res=Uint384(
+            d0=0,
+            d1=0,
+            d2=0))
+    end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(input : Uint384) -> (res : Uint384):
+        let (modulus : Uint384) = get_modulus()
+
+        let (res : Uint384) = sub(modulus, input)
+
+        return (res)
     end
 end

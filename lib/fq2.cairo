@@ -1,4 +1,6 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from starkware.cairo.common.math_cmp import is_not_zero
+from starkware.cairo.common.bitwise import bitwise_and, bitwise_or
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq_lib
@@ -23,10 +25,10 @@ namespace fq2_lib:
         alloc_locals
         let (e0 : Uint384) = fq_lib.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
-
         return (FQ2(e0=e0, e1=e1))
     end
 
+    # TODO: due to how fq_lib.scalar is implemented, this only supports multiplication by scalars of at most 128 bits
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ2) -> (
             product : FQ2):
         alloc_locals
@@ -105,7 +107,6 @@ namespace fq2_lib:
         return (a_inverse)
     end
 
-    # TODO: test
     func eq{range_check_ptr}(x : FQ2, y : FQ2) -> (bool : felt):
         let (is_e0_eq) = uint384_lib.eq(x.e0, y.e0)
         if is_e0_eq == 0:
@@ -118,26 +119,92 @@ namespace fq2_lib:
         return (1)
     end
 
-    # TODO: test
+    # The sqrt r of (a, b) in Fq2 can be found by writting r and x as  polynomials,
+    # i.e. r = r_0 + r_1 x, (a,b)= a+bx
+    # then wrting the equation (r_0 + r1 x)**2 = a + bx
+    # and solving for r_0 and r_1 modulo the irreducible polynomial f that defines Fq2 (in our case f = x**2 + 1)
+    # For this particular f we have, if ab != 0 (the other cases are easier)
+    # r_1  = sqrt(-a + sqrt(a**2 + b**2))/2)
+    # r_0 = b r_1^{-1} /2
+    # If any of the sqrt in Fq in the formulas does not exists, then the sqrt of (a,b) in Fq2
+    # Otherwise choosing any of the two possible sqrt each time yields a sqrt of (a, b) in Fq2
+    # Note that the function `get_sqrt` from the library fq.cairo tells us
+    # with security whether an element has a sqrt or not
+    func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(element : FQ2) -> (
+            bool : felt, sqrt : FQ2):
+        alloc_locals
+        let a : Uint384 = element.e0
+        let b : Uint384 = element.e1
+
+        # TODO: create a dedicated eq function in fq.cairo (and probably use a FQ struct everywhere instead of Uint384)
+        let (local is_a_zero) = uint384_lib.eq(a, Uint384(0, 0, 0))
+        let (local is_b_zero) = uint384_lib.eq(b, Uint384(0, 0, 0))
+
+        if is_a_zero == 1:
+            if is_b_zero == 1:
+                let (zero : FQ2) = get_zero()
+                return (1, zero)
+            else:
+                let (zero : FQ2) = get_zero()
+                # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
+                return (0, zero)
+            end
+        else:
+            if is_b_zero == 1:
+                let (bool, res : Uint384) = fq_lib.get_square_root(a)
+                let sqrt = FQ2(res, Uint384(0, 0, 0))
+                return (bool, sqrt)
+            else:
+                let (a_squared : Uint384) = fq_lib.mul(a, a)
+                let (b_squared : Uint384) = fq_lib.mul(b, b)
+                let (a_squared_plus_b_squared : Uint384) = fq_lib.add(a_squared, b_squared)
+                let (bool, sqrt_a_squared_plus_b_squared : Uint384) = fq_lib.get_square_root(
+                    a_squared_plus_b_squared)
+                if bool == 0:
+                    let (zero : FQ2) = get_zero()
+                    # In this case there is no sqrt but we need to return an FQ2 as the second component regardless
+                    return (0, zero)
+                end
+                let (minus_a_plus_sqrt : Uint384) = fq_lib.sub(sqrt_a_squared_plus_b_squared, a)
+                let (two_inverse : Uint384) = fq_lib.inverse(Uint384(2, 0, 0))
+                let (minus_a_plus_sqrt_div_2 : Uint384) = fq_lib.mul(minus_a_plus_sqrt, two_inverse)
+                let (bool, r1 : Uint384) = fq_lib.get_square_root(minus_a_plus_sqrt_div_2)
+                if bool == 0:
+                    let (zero : FQ2) = get_zero()
+                    return (0, zero)
+                end
+                let (twice_r1 : Uint384) = fq_lib.scalar_mul(2, r1)
+                let (twice_r1_inverse : Uint384) = fq_lib.inverse(twice_r1)
+                let (r0 : Uint384) = fq_lib.mul(b, twice_r1_inverse)
+                return (1, FQ2(r0, r1))
+            end
+        end
+    end
+
+    func square{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2) -> (res : FQ2):
+        let (res) = mul(x, x)
+        return (res)
+    end
+
     func is_zero{range_check_ptr}(x : FQ2) -> (bool : felt):
         let (zero_fq2 : FQ2) = get_zero()
         let (is_x_zero) = eq(x, zero_fq2)
         return (is_x_zero)
     end
 
-    # TODO: test
+    # Not tested
     func get_zero() -> (zero : FQ2):
         let zero_fq2 = FQ2(Uint384(0, 0, 0), Uint384(0, 0, 0))
         return (zero_fq2)
     end
 
-    # TODO: test
+    # Not tested
     func get_one() -> (one : FQ2):
         let one_fq1 = FQ2(Uint384(1, 0, 0), Uint384(0, 0, 0))
         return (one_fq1)
     end
 
-    # TODO: test
+    # Not tested
     func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
         let (x_times_y : FQ2) = mul(x, y)
@@ -145,12 +212,126 @@ namespace fq2_lib:
         return (res)
     end
 
-    # TODO: test
+    # Not tested
     # Computes x - y - z
     func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
-        let (x_times_y : FQ2) = sub(x, y)
-        let (res : FQ2) = sub(x_times_y, z)
+        let (x_sub_y : FQ2) = sub(x, y)
+        let (res : FQ2) = sub(x_sub_y, z)
         return (res)
+    end
+
+    # TODO: test
+    # Computes x - y - z
+    func add_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ2, y : FQ2, z : FQ2) -> (res : FQ2):
+        let (x_times_y : FQ2) = add(x, y)
+        let (res : FQ2) = add(x_times_y, z)
+        return (res)
+    end
+
+    func pow{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2, exp : Uint768) -> (res : FQ2):
+        let o : FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0))
+        let (res : FQ2) = pow_inner(a, exp, o)
+        return (res)
+    end
+    func pow_inner{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            a : FQ2, exp : Uint768, o : FQ2) -> (res : FQ2):
+        alloc_locals
+
+        let (is_exp_zero : felt) = uint384_extension_lib.eq(
+            a=exp, b=Uint768(d0=0, d1=0, d2=0, d3=0, d4=0, d5=0))
+
+        if is_exp_zero == 1:
+            return (o)
+        end
+        let (new_exp : Uint768, _) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
+            a=exp, div=Uint384(d0=2, d1=0, d2=0))
+
+        let (a_sqr : FQ2) = mul(a, a)
+        let (and_one : Uint768) = uint384_extension_lib.and(
+            exp, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
+        if and_one.d0 == 1:
+            let (o_new : FQ2) = mul(a, o)
+            let (power : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+        else:
+            let (power : FQ2) = pow_inner(a_sqr, new_exp, o)
+        end
+
+        return (res=power)
+    end
+
+    func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
+        let (res) = is_not_zero(a.e0.d0 + a.e0.d1 + a.e0.d2 + a.e1.d0 + a.e1.d1 + a.e1.d2)
+        return (res)
+    end
+
+    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (
+            is_quad_nonresidue : felt):
+        alloc_locals
+
+        let (c0 : Uint384) = fq_lib.mul(a.e0, a.e0)
+        let (c1 : Uint384) = fq_lib.mul(a.e1, a.e1)
+        let (c3 : Uint384) = fq_lib.add(c0, c1)
+
+        let (is_quad_nonresidue : felt) = fq_lib.is_square_non_optimized(c3)
+
+        return (is_quad_nonresidue)
+    end
+
+    # TODO : REMOVE
+    func sqrt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        return (a)
+    end
+
+    func one{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : FQ2):
+        return (
+            res=FQ2(e0=Uint384(
+                d0=1,
+                d1=0,
+                d2=0),
+            e1=Uint384(
+                d0=0,
+                d1=0,
+                d2=0)))
+    end
+
+    func neg{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        alloc_locals
+
+        let (neg_e0 : Uint384) = fq_lib.neg(a.e0)
+        let (neg_e1 : Uint384) = fq_lib.neg(a.e1)
+
+        return (res=FQ2(e0=neg_e0, e1=neg_e1))
+    end
+
+    # https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-09#section-4.1
+    func sgn0{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (sign : felt):
+        alloc_locals
+
+        let sign = 0
+        let zero = 1
+
+        let (_, sign_i : Uint384) = uint384_lib.unsigned_div_rem(a.e0, Uint384(d0=2, d1=0, d2=0))
+        let (zero_i : felt) = uint384_lib.eq(a.e0, Uint384(d0=0, d1=0, d2=0))
+
+        let (zero_and_sign_i : felt) = bitwise_and(sign_i.d0, zero)
+
+        let (sign : felt) = bitwise_or(sign, zero_and_sign_i)
+        let (zero : felt) = bitwise_and(zero, zero_i)
+
+        let (_, sign_i : Uint384) = uint384_lib.unsigned_div_rem(a.e1, Uint384(d0=2, d1=0, d2=0))
+        let (zero_i : felt) = uint384_lib.eq(a.e1, Uint384(d0=0, d1=0, d2=0))
+
+        let (zero_and_sign_i : felt) = bitwise_and(sign_i.d0, zero)
+
+        let (sign : felt) = bitwise_or(sign, zero_and_sign_i)
+
+        return (sign=sign)
+    end
+
+    func conjugate{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ2) -> (res : FQ2):
+        let (neg_x_i) = uint384_lib.neg(a.e1)
+        return (res=FQ2(e0=a.e0, e1=neg_x_i))
     end
 end

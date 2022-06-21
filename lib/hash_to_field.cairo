@@ -41,8 +41,7 @@ end
 # follows hash_to_fp_XMDSHA256 except we use keccak pending a SHA256 builtin
 # expects msg to be big endian
 func expand_msg_sha_xmd{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(msg : Uint256) -> (
-        one : Uint256, two : Uint256, three : Uint256, four : Uint256, five : Uint256,
-        six : Uint256, seven : Uint256, eight : Uint256):
+        one : Uint256, two : Uint256, three : Uint256, four : Uint256):
     # inputs
     # # msg of bytes, 32 byte string
     # # domain, string such as "BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_NUL_"
@@ -102,13 +101,9 @@ func expand_msg_sha_xmd{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(msg : Ui
         b_0=b_0_final, prev_b_i=b_1_final, index=0)
     let (b_i_1 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_0, index=1)
     let (b_i_2 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_1, index=2)
-    let (b_i_3 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_2, index=3)
-    let (b_i_4 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_3, index=4)
-    let (b_i_5 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_4, index=5)
-    let (b_i_6 : Uint256) = hash_b_i{keccak_ptr=keccak_ptr}(b_0=b_0_final, prev_b_i=b_i_5, index=6)
 
     # Call finalize once at the end to verify the soundness of the execution
     finalize_keccak(keccak_ptr_start=keccak_ptr_start, keccak_ptr_end=keccak_ptr)
 
-    return (b_1_final, b_i_0, b_i_1, b_i_2, b_i_3, b_i_4, b_i_5, b_i_6)
+    return (b_1_final, b_i_0, b_i_1, b_i_2)
 end

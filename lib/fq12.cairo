@@ -80,8 +80,6 @@ namespace fq12:
         return (res)
     end
 
-    # TODO: would it be better to compute multiplication using a tower of small extensions?
-    # The modulus polynomial coeffs are : 2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12, b : FQ12) -> (
             product : FQ12):
         alloc_locals
