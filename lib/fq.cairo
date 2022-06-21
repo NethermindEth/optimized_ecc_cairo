@@ -166,4 +166,18 @@ namespace fq_lib:
 
         return (res)
     end
+
+    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : Uint384, y : Uint384, z : Uint384) -> (res : Uint384):
+        let (x_times_y : Uint384) = mul(x, y)
+        let (res : Uint3842) = mul(x_times_y, z)
+        return (res)
+    end
+
+    func sub_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : Uint384, y : Uint384, z : Uint384) -> (res : Uint384):
+        let (x_sub_y : Uint384) = sub(x, y)
+        let (res : Uint384) = sub(x_sub_y, z)
+        return (res)
+    end
 end
