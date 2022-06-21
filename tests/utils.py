@@ -1,5 +1,4 @@
-from lib2to3.pgen2.token import OP
-from typing import List, Tuple, Union, TypeVar
+from typing import List, Union, TypeVar, Callable
 from py_ecc.fields import optimized_bls12_381_FQ2 as FQ2
 one_bigint6 = (1, 0, 0, 0, 0, 0)
 
@@ -12,8 +11,7 @@ field_modulus = 4002409555221667393417789825735904156556882819939007885332058136
 field_modulus_sub1_div2 = 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279893
 max_felt = 2**241
 max_limb = 2**128 - 1
-
-
+all_ones = 2**384 - 1
     
 
 def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
@@ -46,6 +44,13 @@ def pack(z, num_bits_shift: int = 128) -> int:
 def packFQP(z):
     return tuple(pack(z_component) for z_component in z)
 
+def packPoint(z):
+    return tuple(packFQP(z_component) for z_component in z)
+
+def print_uint384(x):
+    parts = split(x)
+
+    print("Uint384(", "d0=", parts[0] , ", d1=", parts[1], ", d2= ", parts[2], ")", end='')
 
 # TODO: Not used?
 def pack12(z):
@@ -64,8 +69,25 @@ def packEnum(z):
         + z[5] * 2 ** (64 * 5)
     )
 
+def print_fq2(params):
+    print("FQ2(", "e0=", end='')
+    print_uint384(params[0])
+    print(", e1=", end='')
+    print_uint384(params[1])
+    print(")")
 
-T_Uint384 = TypeVar("T_Uint384", bound="Uint384")
+def neg_to_uint384(num):
+    return split(all_ones - num + 1)
+
+
+def bitwise_or_bytes(var, key):
+    return bytes(a ^ b for a, b in zip(var, key))
+
+bytes_to_int_little: Callable[[bytes], int] = lambda word: int.from_bytes(word, "little")
+
+bytes_32_to_uint_256_little : Callable[[bytes], tuple] = lambda word : split(bytes_to_int_little(word), 128, 2)
+
+T_Uint384 = TypeVar('T_Uint384', bound="Uint384")
 IntOrUint384 = Union[int, T_Uint384]
 IntOrTuple = Union[int, tuple]
 
@@ -105,3 +127,4 @@ class Uint384:
 
     def asTuple(self) -> tuple:
         return (self.d0, self.d1, self.d2)
+

@@ -1,10 +1,7 @@
-from turtle import xcor, ycor
-from numpy import right_shift
 import pytest
-from utils import split, packFQP, field_modulus, splitFQP
+from utils import  packFQP, field_modulus, splitFQP
 from math import sqrt
 from hypothesis import given, strategies as st, settings
-import py_ecc
 from py_ecc.fields import bls12_381_FQ12 as FQ12
 
 largest_factor = sqrt(2 ** (64 * 11))

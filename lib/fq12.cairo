@@ -1,10 +1,7 @@
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.BigInt6 import BigInt6, BigInt12
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq import fq_lib
-from lib.multi_precision import multi_precision as mp
-from lib.multi_precision_bigint12 import multi_precision_bigint12 as mp_12
 from lib.curve import fq2_c0, fq2_c1, get_modulus
 
 struct FQ12:
@@ -26,8 +23,7 @@ end
 
 namespace fq12:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-        sum_mod : FQ12
-    ):
+            sum_mod : FQ12):
         # TODO: check why alloc_locals seems to be needed here
         alloc_locals
         let (e0 : Uint384) = fq_lib.add(x.e0, y.e0)
@@ -47,8 +43,7 @@ namespace fq12:
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-        sum_mod : FQ12
-    ):
+            sum_mod : FQ12):
         alloc_locals
         let (e0 : Uint384) = fq_lib.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
@@ -67,8 +62,7 @@ namespace fq12:
     end
 
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ12) -> (
-        product : FQ12
-    ):
+            product : FQ12):
         alloc_locals
         let (e0 : Uint384) = fq_lib.scalar_mul(x, y.e0)
         let (e1 : Uint384) = fq_lib.scalar_mul(x, y.e1)
@@ -87,8 +81,7 @@ namespace fq12:
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12, b : FQ12) -> (
-        product : FQ12
-    ):
+            product : FQ12):
         alloc_locals
         # d0
         let (d0 : Uint384) = fq_lib.mul(a.e0, b.e0)
@@ -420,8 +413,8 @@ namespace fq12:
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(
-    coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384
-) -> (new_first_coef : Uint384, new_second_coef : Uint384):
+        coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384) -> (
+        new_first_coef : Uint384, new_second_coef : Uint384):
     # TODO: some way to avoid using local variables? (to improve efficiency)
     alloc_locals
     let (local twice_coeff_to_reduce : Uint384) = fq_lib.scalar_mul(2, coeff_to_reduce)
