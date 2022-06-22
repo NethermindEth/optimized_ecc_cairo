@@ -21,9 +21,10 @@ end
 
 # This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 
-namespace fq12:
+namespace fq12_lib:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-            sum_mod : FQ12):
+        sum_mod : FQ12
+    ):
         # TODO: check why alloc_locals seems to be needed here
         alloc_locals
         let (e0 : Uint384) = fq_lib.add(x.e0, y.e0)
@@ -43,7 +44,8 @@ namespace fq12:
     end
 
     func sub{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
-            sum_mod : FQ12):
+        sum_mod : FQ12
+    ):
         alloc_locals
         let (e0 : Uint384) = fq_lib.sub(x.e0, y.e0)
         let (e1 : Uint384) = fq_lib.sub(x.e1, y.e1)
@@ -62,7 +64,8 @@ namespace fq12:
     end
 
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : felt, y : FQ12) -> (
-            product : FQ12):
+        product : FQ12
+    ):
         alloc_locals
         let (e0 : Uint384) = fq_lib.scalar_mul(x, y.e0)
         let (e1 : Uint384) = fq_lib.scalar_mul(x, y.e1)
@@ -81,7 +84,8 @@ namespace fq12:
     end
 
     func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12, b : FQ12) -> (
-            product : FQ12):
+        product : FQ12
+    ):
         alloc_locals
         # d0
         let (d0 : Uint384) = fq_lib.mul(a.e0, b.e0)
@@ -477,7 +481,26 @@ namespace fq12:
             e8=Uint384(d0=0, d1=0, d2=0),
             e9=Uint384(d0=0, d1=0, d2=0),
             e10=Uint384(d0=0, d1=0, d2=0),
-            e11=Uint384(d0=0, d1=0, d2=0)))
+            e11=Uint384(d0=0, d1=0, d2=0)),
+        )
+    end
+
+    func one() -> (zero : FQ12):
+        return (
+            zero=FQ12(
+            e0=Uint384(d0=1, d1=0, d2=0),
+            e1=Uint384(d0=0, d1=0, d2=0),
+            e2=Uint384(d0=0, d1=0, d2=0),
+            e3=Uint384(d0=0, d1=0, d2=0),
+            e4=Uint384(d0=0, d1=0, d2=0),
+            e5=Uint384(d0=0, d1=0, d2=0),
+            e6=Uint384(d0=0, d1=0, d2=0),
+            e7=Uint384(d0=0, d1=0, d2=0),
+            e8=Uint384(d0=0, d1=0, d2=0),
+            e9=Uint384(d0=0, d1=0, d2=0),
+            e10=Uint384(d0=0, d1=0, d2=0),
+            e11=Uint384(d0=0, d1=0, d2=0)),
+        )
     end
 
     # small utility to turn 128 bit number to an fq12
@@ -496,13 +519,14 @@ namespace fq12:
             e8=Uint384(d0=0, d1=0, d2=0),
             e9=Uint384(d0=0, d1=0, d2=0),
             e10=Uint384(d0=0, d1=0, d2=0),
-            e11=Uint384(d0=0, d1=0, d2=0)))
+            e11=Uint384(d0=0, d1=0, d2=0)),
+        )
     end
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(
-        coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384) -> (
-        new_first_coef : Uint384, new_second_coef : Uint384):
+    coeff_to_reduce : Uint384, first_coef : Uint384, second_coef : Uint384
+) -> (new_first_coef : Uint384, new_second_coef : Uint384):
     # TODO: some way to avoid using local variables? (to improve efficiency)
     alloc_locals
     let (local twice_coeff_to_reduce : Uint384) = fq_lib.scalar_mul(2, coeff_to_reduce)

@@ -1,10 +1,11 @@
+from starkware.cairo.common.math import unsigned_div_rem
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
-from lib.fq12 import FQ12, fq12
-from lib.g1 import G1Point
-from lib.g2 import G2Point
 from lib.uint384 import Uint384, uint384_lib
 from lib.fq import fq_lib
-from lib.fq2 import FQ2
+from lib.fq2 import FQ2, fq2_lib
+from lib.fq12 import FQ12, fq12_lib
+from lib.g1 import g1_lib, G1Point
+from lib.g2 import g2_lib, G2Point
 
 # TODO rename this
 struct GTPoint:
@@ -13,17 +14,49 @@ struct GTPoint:
     member z : FQ12
 end
 
+namespace pairing_lib:
+    func pairing(Q : G2Point, P : G1Point) -> (res : FQ12):
+        let (is_Q_on_curve) = g2_lib.is_on_curve(Q)
+        assert is_Q_on_curve = 1
+        let (is_P_on_curve) = g1_lib.is_on_curve(P)
+        assert is_P_on_curve = 1
+
+        let (is_P_point_at_infinity : G1Point) = g1_lib.is_point_at_infinity(P)
+        if is_P_point_at_infinity == 1:
+            let (one : FQ12) = fq12_lib.one()
+            return (one)
+        end
+
+        let (is_Q_point_at_infinity : G1Point) = g1_lib.is_point_at_infinity(Q)
+        if is_Q_point_at_infinity == 1:
+            let (one : FQ12) = fq12_lib.one()
+            return (one)
+        end
+
+        let (twisted_Q : GTPoint) = twist(Q)
+        let (P_as_fq12 : GTPoint) = cast_point_to_fq12(P)
+        # let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
+        # return (res)
+    end
+
+    # func miller_loop(Q: FQ12, P: FQ12) -> (res: FQ12):
+    #
+    # end
+end
+
 func cast_point_to_fq12(pt : G1Point) -> (res : GTPoint):
     let zero = Uint384(d0=0, d1=0, d2=0)
 
     return (
         res=GTPoint(x=FQ12(e0=pt.x, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
         y=FQ12(e0=pt.y, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
-        z=FQ12(e0=pt.z, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero)))
+        z=FQ12(e0=pt.z, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero)),
+    )
 end
 
 func line_func_gt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        p1 : GTPoint, p2 : GTPoint, pt : GTPoint) -> (x : FQ12, y : FQ12):
+    p1 : GTPoint, p2 : GTPoint, pt : GTPoint
+) -> (x : FQ12, y : FQ12):
     alloc_locals
     let (zero : FQ12) = fq12.zero()
 
@@ -105,5 +138,6 @@ func twist{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(pt : G2Point) -> (res
     return (
         res=GTPoint(x=FQ12(e0=zero, e1=x_min_x_i, e2=zero, e3=zero, e4=zero, e5=zero, e6=zero, e7=pt.x.e1, e8=zero, e9=zero, e10=zero, e11=zero),
         y=FQ12(e0=y_min_y_i, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=pt.y.e1, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
-        z=FQ12(e0=zero, e1=zero, e2=zero, e3=z_min_z_i, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=pt.z.e1, e10=zero, e11=zero)))
+        z=FQ12(e0=zero, e1=zero, e2=zero, e3=z_min_z_i, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=pt.z.e1, e10=zero, e11=zero)),
+    )
 end
