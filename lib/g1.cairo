@@ -167,7 +167,7 @@ namespace g1_lib:
             return (point)
         end
         let (double_point : G1Point) = double(point)
-        let (quotient : Uint384, remainder : Uint384) = fq_lib.unsigned_div_rem(
+        let (quotient : Uint384, remainder : Uint384) = uint384_lib.unsigned_div_rem(
             scalar, Uint384(2, 0, 0)
         )
 
@@ -198,7 +198,7 @@ namespace g1_lib:
         alloc_locals
         let (bool) = is_point_at_infinity(point)
         assert bool = 0
-        let (z_inverse : Uint384) = fq_lib.inv(point.z)
+        let (z_inverse : Uint384) = fq_lib.inverse(point.z)
         let (normalized_x : Uint384) = fq_lib.mul(point.x, z_inverse)
         let (normalized_y : Uint384) = fq_lib.mul(point.y, z_inverse)
         return (normalized_x, normalized_y)
