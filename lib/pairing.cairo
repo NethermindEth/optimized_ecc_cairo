@@ -38,12 +38,13 @@ namespace pairing_lib:
         
         let (twisted_Q : GTPoint) = twist(Q)
         let (P_as_fq12: GTPoint) = cast_point_to_fq12(P)
-        let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
+        # let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
+        return (res)
     end
     
-    func miller_loop(Q: FQ12, P: FQ12) -> (res: FQ12):
-        
-    end
+    # func miller_loop(Q: FQ12, P: FQ12) -> (res: FQ12):
+    #     
+    # end
     
 end
 
