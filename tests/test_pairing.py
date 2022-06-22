@@ -1,5 +1,6 @@
 from hypothesis import given, strategies as st, settings
-from utils import field_modulus, get_g2_point_from_seed, pack, splitFQP, packFQP
+from utils import field_modulus, pack, splitFQP, packFQP
+from utils_g2 import get_g2_point_from_seed
 from py_ecc.optimized_bls12_381.optimized_pairing import linefunc, twist
 from py_ecc.fields import (
     optimized_bls12_381_FQ as FQ,
@@ -7,6 +8,7 @@ from py_ecc.fields import (
 )
 import pytest
 
+@pytest.mark.skip("we want to test the other one rn")
 @given(
     x=st.integers(min_value=0, max_value=(field_modulus)),
 )
@@ -39,21 +41,23 @@ async def test_twist(pairing_factory, x):
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_line_func_g1(pairing_factory, x1, y1, z1, x2, y2, z2, xt, yt, zt):
-
+async def test_line_func_gt(pairing_factory, x1, y1, z1, x2, y2, z2, xt, yt, zt):
     contract = pairing_factory
 
-    x = (FQ(x1), FQ(y1), FQ(z1))
-    y = (FQ(x2), FQ(y2), FQ(z2))
-    t = (FQ(xt), FQ(yt), FQ(zt))
+    def makefq12(num):
+        return FQ12((num,num,num,num,num,num,num,num,num,num,num,num))
+
+    x = (makefq12(x1), makefq12(y1), makefq12(z1))
+    y = (makefq12(x2), makefq12(y2), makefq12(z2))
+    t = (makefq12(xt), makefq12(yt), makefq12(zt))
     py_res = linefunc(x, y, t)
+    def makefq12(num):
+        return splitFQP((num, num,num,num,num,num,num,num,num,num,num,num))
 
-    p1 = splitFQP((x1, y1, z1))
-    p2 = splitFQP((x2, y2, z2))
-    pt = splitFQP((xt, yt, zt))
+    p1 = (makefq12(x1), makefq12(y1), makefq12(z1))
+    p2 = (makefq12(x2), makefq12(y2), makefq12(z2))
+    pt = (makefq12(xt), makefq12(yt), makefq12(zt))
     execution_info = await contract.line_func(p1, p2, pt).call()
-
-    res_x = pack(execution_info.result.x)
-    res_y = pack(execution_info.result.y)
-
+    res_x = FQ12(packFQP(execution_info.result.x))
+    res_y = FQ12(packFQP(execution_info.result.y))
     assert (res_x, res_y) == py_res
