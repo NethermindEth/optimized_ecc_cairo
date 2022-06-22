@@ -410,6 +410,94 @@ namespace fq12_lib:
 
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11))
     end
+
+    func eq{range_check_ptr}(x : FQ12, y : FQ12) -> (bool : felt):
+        let (is_e0_eq) = uint384_lib.eq(x.e0, y.e0)
+        if is_e0_eq == 0:
+            return (0)
+        end
+        let (is_e1_eq) = uint384_lib.eq(x.e1, y.e1)
+        if is_e1_eq == 0:
+            return (0)
+        end
+        let (is_e2_eq) = uint384_lib.eq(x.e2, y.e2)
+        if is_e2_eq == 0:
+            return (0)
+        end
+        let (is_e3_eq) = uint384_lib.eq(x.e3, y.e3)
+        if is_e3_eq == 0:
+            return (0)
+        end
+        let (is_e4_eq) = uint384_lib.eq(x.e4, y.e4)
+        if is_e4_eq == 0:
+            return (0)
+        end
+        let (is_e5_eq) = uint384_lib.eq(x.e5, y.e5)
+        if is_e5_eq == 0:
+            return (0)
+        end
+        let (is_e6_eq) = uint384_lib.eq(x.e6, y.e6)
+        if is_e6_eq == 0:
+            return (0)
+        end
+        let (is_e7_eq) = uint384_lib.eq(x.e7, y.e7)
+        if is_e7_eq == 0:
+            return (0)
+        end
+        let (is_e8_eq) = uint384_lib.eq(x.e8, y.e8)
+        if is_e8_eq == 0:
+            return (0)
+        end
+        let (is_e9_eq) = uint384_lib.eq(x.e9, y.e9)
+        if is_e9_eq == 0:
+            return (0)
+        end
+        let (is_e10_eq) = uint384_lib.eq(x.e10, y.e10)
+        if is_e10_eq == 0:
+            return (0)
+        end
+        let (is_e11_eq) = uint384_lib.eq(x.e11, y.e11)
+        if is_e11_eq == 0:
+            return (0)
+        end
+        return (1)
+    end
+
+    func zero() -> (zero : FQ12):
+        return (
+            zero=FQ12(
+            e0=Uint384(d0=0, d1=0, d2=0),
+            e1=Uint384(d0=0, d1=0, d2=0),
+            e2=Uint384(d0=0, d1=0, d2=0),
+            e3=Uint384(d0=0, d1=0, d2=0),
+            e4=Uint384(d0=0, d1=0, d2=0),
+            e5=Uint384(d0=0, d1=0, d2=0),
+            e6=Uint384(d0=0, d1=0, d2=0),
+            e7=Uint384(d0=0, d1=0, d2=0),
+            e8=Uint384(d0=0, d1=0, d2=0),
+            e9=Uint384(d0=0, d1=0, d2=0),
+            e10=Uint384(d0=0, d1=0, d2=0),
+            e11=Uint384(d0=0, d1=0, d2=0)))
+    end
+
+    # small utility to turn 128 bit number to an fq12
+    # do not input number >= 128 bits
+    func bit_128_to_fq12(input : felt) -> (res : FQ12):
+        return (
+            res=FQ12(
+            e0=Uint384(d0=input, d1=0, d2=0),
+            e1=Uint384(d0=0, d1=0, d2=0),
+            e2=Uint384(d0=0, d1=0, d2=0),
+            e3=Uint384(d0=0, d1=0, d2=0),
+            e4=Uint384(d0=0, d1=0, d2=0),
+            e5=Uint384(d0=0, d1=0, d2=0),
+            e6=Uint384(d0=0, d1=0, d2=0),
+            e7=Uint384(d0=0, d1=0, d2=0),
+            e8=Uint384(d0=0, d1=0, d2=0),
+            e9=Uint384(d0=0, d1=0, d2=0),
+            e10=Uint384(d0=0, d1=0, d2=0),
+            e11=Uint384(d0=0, d1=0, d2=0)))
+    end
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(

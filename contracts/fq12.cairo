@@ -1,7 +1,7 @@
 %lang starknet
 %builtins range_check bitwise
 
-from lib.fq12 import fq12, FQ12
+from lib.fq12 import fq12_lib, FQ12
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 @view
