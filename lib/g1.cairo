@@ -13,7 +13,7 @@ end
 
 namespace g1_lib:
     func is_point_at_infinity{range_check_ptr}(point : G1Point) -> (bool : felt):
-        let (is_z_coord_zero) = fq_lib.is_zero(point.z)
+        let (is_z_coord_zero) = uint384_lib.is_zero(point.z)
         return (is_z_coord_zero)
     end
 
@@ -42,11 +42,11 @@ namespace g1_lib:
         # None of the point is the point at infinity
         let (p1_x : Uint384, p1_y : Uint384) = normalize(p1)
         let (p2_x : Uint384, p2_y : Uint384) = normalize(p2)
-        let (is_x_coord_eq) = fq_lib.eq(p1_x, p2_x)
+        let (is_x_coord_eq) = uint384_lib.eq(p1_x, p2_x)
         if is_x_coord_eq == 0:
             return (0)
         end
-        let (is_y_coord_eq) = fq_lib.eq(p1_y, p2_y)
+        let (is_y_coord_eq) = uint384_lib.eq(p1_y, p2_y)
         if is_y_coord_eq == 0:
             return (0)
         end
@@ -58,11 +58,11 @@ namespace g1_lib:
         res : G1Point
     ):
         alloc_locals
-        let (is_p1_z_coord_zero) = fq_lib.is_zero(p1.z)
+        let (is_p1_z_coord_zero) = uint384_lib.is_zero(p1.z)
         if is_p1_z_coord_zero == 1:
             return (p2)
         end
-        let (is_p2_z_coord_zero) = fq_lib.is_zero(p2.z)
+        let (is_p2_z_coord_zero) = uint384_lib.is_zero(p2.z)
         if is_p2_z_coord_zero == 1:
             return (p1)
         end
@@ -73,16 +73,16 @@ namespace g1_lib:
         let (local V1 : Uint384) = fq_lib.mul(p2.x, p1.z)
         let (V2 : Uint384) = fq_lib.mul(p1.x, p2.z)
 
-        let (is_v1_eq_v2) = fq_lib.eq(V1, V2)
-        let (is_u1_eq_u2) = fq_lib.eq(U1, U2)
+        let (is_v1_eq_v2) = uint384_lib.eq(V1, V2)
+        let (is_u1_eq_u2) = uint384_lib.eq(U1, U2)
 
         if is_v1_eq_v2 == 1:
             if is_u1_eq_u2 == 1:
                 let (double_p1 : G1Point) = double(p1)
                 return (double_p1)
             else:
-                let (one : Uint384) = fq_lib.get_one()
-                let (zero : Uint384) = fq_lib.get_zero()
+                let one : Uint384 = Uint384(d0=1, d1=0, d2=0)
+                let zero : Uint384 = Uint384(d0=0, d1=0, d2=0)
                 # Point at infinity
                 let res = G1Point(one, one, zero)
                 return (res)
@@ -157,8 +157,8 @@ namespace g1_lib:
         alloc_locals
         
 
-        let (local is_scalar_zero) = fq_lib.eq(scalar, Uint384(0, 0, 0))
-        let (local is_scalar_one) = fq_lib.eq(scalar, Uint384(1, 0, 0))
+        let (local is_scalar_zero) = uint384_lib.eq(scalar, Uint384(0, 0, 0))
+        let (local is_scalar_one) = uint384_lib.eq(scalar, Uint384(1, 0, 0))
 
         if is_scalar_zero == 1:
             return get_zero()
@@ -167,11 +167,11 @@ namespace g1_lib:
             return (point)
         end
         let (double_point : G1Point) = double(point)
-        let (quotient : Uint384, remainder : Uint384) = fq_lib.unsigned_div_rem(
+        let (quotient : Uint384, remainder : Uint384) = uint384_lib.unsigned_div_rem(
             scalar, Uint384(2, 0, 0)
         )
 
-        let (is_remainder_zero) = fq_lib.eq(remainder, Uint384(0, 0, 0))
+        let (is_remainder_zero) = uint384_lib.eq(remainder, Uint384(0, 0, 0))
         if is_remainder_zero == 0:
             let (quotient_mul_double_point : G1Point) = scalar_mul(quotient, double_point)
             return (quotient_mul_double_point)
@@ -185,8 +185,8 @@ namespace g1_lib:
 
     # TODO: Not tested
     func get_zero{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}() -> (res : G1Point):
-        let (one : Uint384) = fq_lib.get_one()
-        let (zero : Uint384) = fq_lib.get_zero()
+        let one : Uint384 = Uint384(d0=1, d1=0, d2=0)
+        let zero : Uint384 = Uint384(d0=0, d1=0, d2=0)
         return (G1Point(x=one, y=one, z=zero))
     end
 
@@ -198,7 +198,7 @@ namespace g1_lib:
         alloc_locals
         let (bool) = is_point_at_infinity(point)
         assert bool = 0
-        let (z_inverse : Uint384) = fq_lib.inv(point.z)
+        let (z_inverse : Uint384) = fq_lib.inverse(point.z)
         let (normalized_x : Uint384) = fq_lib.mul(point.x, z_inverse)
         let (normalized_y : Uint384) = fq_lib.mul(point.y, z_inverse)
         return (normalized_x, normalized_y)
@@ -221,7 +221,7 @@ namespace g1_lib:
         let (x_cubed) = fq_lib.mul(x_normalized, x_square)
         let four = Uint384(Uint384(4, 0, 0), Uint384(0, 0, 0))
         let (res) = fq_lib.sub_three_terms(y_square, x_cubed, four)
-        let (is_res_zero) = fq_lib.is_zero(res)
+        let (is_res_zero) = uint384_lib.is_zero(res)
         return (is_res_zero)
     end
 end

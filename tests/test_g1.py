@@ -1,5 +1,4 @@
 from re import A
-from matplotlib.cm import register_cmap
 import pytest
 from hypothesis import given, strategies as st, settings
 from sympy import Segment2D
