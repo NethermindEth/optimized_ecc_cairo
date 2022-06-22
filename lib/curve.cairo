@@ -15,12 +15,11 @@ const P2_p_minus_one_div_2 = 17282741772707453034394598013407712875
 
 # @dev modify the returned value of this function to adjust the modulus
 # @dev modulus must be less than 2 ** (128 * 3)
-func get_modulus{range_check_ptr}() -> (mod : Uint384):
+func get_modulus() -> (mod : Uint384):
     return (mod=Uint384(d0=P0, d1=P1, d2=P2))
 end
 
-
-func get_p_minus_one_div_2()-> (res :Uint384):
+func get_p_minus_one_div_2() -> (res : Uint384):
     return (res=Uint384(d0=P0_p_minus_one_div_2, d1=P1_p_minus_one_div_2, d2=P2_p_minus_one_div_2))
 end
 
@@ -41,3 +40,19 @@ const fq12_c8 = 0
 const fq12_c9 = 0
 const fq12_c10 = 0
 const fq12_c11 = 0
+
+func get_r_squared() -> (r_squared : Uint384):
+    return (
+        r_squared=Uint384(
+        d0=13909649096278139578749890098095200070,
+        d1=138133445170552300919073500999554807509,
+        d2=23389023624093491168052924610514621741))
+end
+
+func get_r_mod_p() -> (r_mod_p : Uint384):
+    return (
+        r_mod_p=Uint384(
+        d0=313635500375121084810881640338032885757,
+        d1=159249536114007638540741953206796900538,
+        d2=29193015012204308844271843190429379693))
+end

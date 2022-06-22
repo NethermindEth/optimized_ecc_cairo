@@ -1,14 +1,59 @@
-from numpy import right_shift
 import pytest
-from utils import split, packFQP, field_modulus, max_limb, splitFQP
+from utils import split, packFQP, field_modulus, splitFQP, max_base_bigint12_sum
 from math import sqrt
 from hypothesis import given, strategies as st, settings
-import py_ecc
 from py_ecc.fields import bls12_381_FQ2 as FQ2
 from sqrt_in_fq2 import has_squareroot, has_squareroot_v2
 
 largest_factor = sqrt(2 ** (64 * 11))
 
+def sgn0(fq) -> int:
+    sign = 0
+    zero = 1
+    for x_i in fq.coeffs:
+        sign_i = x_i.n % 2
+        zero_i = x_i == 0
+        sign = sign or (zero and sign_i)
+        zero = zero and zero_i
+    return sign
+
+@given(
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_sgn0(fq2_factory, x1, y1):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.sgn0(splitFQP(x)).call()
+    cairo_result = execution_info.result[0]
+
+    x_fq2 = FQ2(x)
+    python_result = sgn0(x_fq2)
+
+    assert cairo_result == python_result
+
+
+@given(
+    x1=st.integers(min_value=0, max_value=(field_modulus)),
+    y1=st.integers(min_value=0, max_value=(field_modulus)),
+    exp=st.integers(min_value=0, max_value=(max_base_bigint12_sum))
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_pow(fq2_factory, x1, y1, exp):
+    x = (x1, y1)
+    
+    contract = fq2_factory
+    execution_info = await contract.pow(splitFQP(x), split(exp, 128, 6)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ2(x)
+    python_result = x_fq2 ** exp
+
+    assert cairo_result == python_result.coeffs
 
 @given(
     x1=st.integers(min_value=1, max_value=field_modulus - 1),
@@ -21,7 +66,7 @@ largest_factor = sqrt(2 ** (64 * 11))
 async def test_fq2_mul(fq2_factory, x1, x2, y1, y2):
     x = (x1, x2)
     y = (y1, y2)
-
+    
     contract = fq2_factory
     execution_info = await contract.mul(splitFQP(x), splitFQP(y)).call()
     cairo_result = packFQP(execution_info.result[0])
