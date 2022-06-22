@@ -24,7 +24,7 @@ end
 
 # This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 
-namespace fq12:
+namespace fq12_lib:
     func add{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> (
         sum_mod : FQ12
     ):
