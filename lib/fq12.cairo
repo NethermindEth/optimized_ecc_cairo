@@ -522,6 +522,48 @@ namespace fq12_lib:
             e11=Uint384(d0=0, d1=0, d2=0)),
         )
     end
+
+    # TODO: test
+    # Computes (a**exp). Uses the fast exponentiation algorithm
+    func pow{range_check_ptr}(a : FQ12, exp : Uint384) -> (res : FQ12):
+        alloc_locals
+        let (zero : FQ12) = zero()
+        let (is_exp_zero) = eq(exp, zero)
+
+        if is_exp_zero == 1:
+            let (zero : FQ12) = zero()
+            return (zero)
+        end
+
+        let (one : FQ12) = one()
+
+        let (is_exp_one) = eq(exp, one)
+        if is_exp_one == 1:
+            return (a)
+        end
+
+        let (exp_div_2, remainder) = uint384_lib.unsigned_div_rem(exp, Uint384(2, 0, 0))
+        let (is_remainder_zero) = uint384_lib.eq(remainder, Uint384(0, 0, 0))
+
+        if is_remainder_zero == 1:
+            # NOTE: Code is repeated in the if-else to avoid declaring a_squared as a local variable
+            let (a_squared : FQ12) = mul(a, a)
+            let (res : FQ12) = pow(a_squared, exp_div_2)
+            return (res)
+        else:
+            let (a_squared : FQ12) = mul(a, a)
+            let (res : FQ12) = pow(a_squared, exp_div_2)
+            let (res_mul : FQ12) = mul(a, res)
+            return (res_mul)
+        end
+    end
+    
+    # TODO: Write actual function. Right now it is a dummy for compilation purposes
+    # Finds and FQ12 x such that a * x = 1 
+    func inverse_DUMMY(a: FQ12) -> (res: FQ12):
+        let (zero: FQ12) = zero()
+        return (zero)
+    end
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(

@@ -14,7 +14,7 @@ max_limb = 2**128 - 1
 all_ones = 2**384 - 1
     
 
-def split(num: int, num_bits_shift: int = 128, length: int = 3) -> List[int]:
+def split(num: int, num_bits_shift: int = 128, length: int = 3):
     a = []
     for _ in range(length):
         a.append(num & ((1 << num_bits_shift) - 1))
