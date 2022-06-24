@@ -498,6 +498,13 @@ namespace fq12:
             e10=Uint384(d0=0, d1=0, d2=0),
             e11=Uint384(d0=0, d1=0, d2=0)))
     end
+
+    func mul_three_terms{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+            x : FQ12, y : FQ12, z : FQ12) -> (res : FQ12):
+        let (x_times_y : FQ12) = mul(x, y)
+        let (res : FQ12) = mul(x_times_y, z)
+        return (res)
+    end
 end
 
 func _aux_polynomial_reduction{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(
