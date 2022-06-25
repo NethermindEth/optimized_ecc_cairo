@@ -356,7 +356,7 @@ namespace pairing_lib:
 
         # Compute p3 / p2
         # TODO: Currently the inerse method of fq12_lib is a DUMMY just for compilation purposes
-        let (p2_inverse : FQ12) = fq12_lib.inverse_DUMMY(p2)
+        let (p2_inverse : FQ12) = fq12_lib.inverse(p2)
         let (p3 : FQ12) = fq12_lib.mul(p3, p2_inverse)
 
         # TODO: Since `cofactor` is fixed, we could "hardcode" this exponentiation

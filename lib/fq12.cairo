@@ -560,9 +560,101 @@ namespace fq12_lib:
     
     # TODO: Write actual function. Right now it is a dummy for compilation purposes
     # Finds and FQ12 x such that a * x = 1 
-    func inverse_DUMMY(a: FQ12) -> (res: FQ12):
-        let (zero: FQ12) = zero()
-        return (zero)
+    func inverse(a: FQ12) -> (res: FQ12):
+        
+        alloc_locals
+        local a_inverse : FQ2
+        let (field_modulus : Uint384) = get_modulus()
+    
+        %{
+        
+        # TODO: Do this with a loop?
+        e0 = pack(ids.a.e0)
+        e1 = pack(ids.a.e1)
+        e2 = pack(ids.a.e2)
+        e3 = pack(ids.a.e3)
+        e4 = pack(ids.a.e4)
+        e5 = pack(ids.a.e5)
+        e6 = pack(ids.a.e6)
+        e7 = pack(ids.a.e7)
+        e8 = pack(ids.a.e8)
+        e9 = pack(ids.a.e9)
+        e10 = pack(ids.a.e10)
+        e11 = pack(ids.a.e11)
+        coeffs_of_a = [e0, e1 , e2, e3, e4, e5, e6, e7, e8, e9,e10, e11]
+        
+        field_modulus = pack(ids.field_modulus)
+
+        def split(num: int, num_bits_shift : int = 128, length: int = 3):
+            a = []
+            for _ in range(length):
+                a.append( num & ((1 << num_bits_shift) - 1) )
+                num = num >> num_bits_shift 
+            return tuple(a)
+
+        def pack(z, num_bits_shift: int = 128) -> int:
+            limbs = (z.d0, z.d1, z.d2)
+            return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+            
+        # Adapted from py_ecc: TODO: add link
+        
+        
+        # Utility methods for polynomial math
+        # Given the list of the coefficients of a polynomial p, 
+        # finds the degree of p
+        def deg(list_of_polynomial_coefficients):
+            d = len(list_of_polynomial_coefficients) - 1
+            while list_of_polynomial_coefficients[d] == 0 and d:
+                d -= 1
+            return d
+            
+        # Computes the division without residue of a polynomial a by another polynomial b
+        # a and b are given as lists of coefficients
+        def optimized_poly_rounded_div(self,
+                                       a,
+                                       b):
+            dega = deg(a)
+            degb = deg(b)
+            temp = [x for x in a]
+            o = [0 for x in a]
+            for i in range(dega - degb, -1, -1):
+                o[i] = int(o[i] + temp[degb + i] * pow(int(b[degb]), -1, field_modulus))
+                for c in range(degb + 1):
+                    temp[c + i] = (temp[c + i] - o[c])
+            return [x % field_modulus for x in o[:deg(o) + 1]]
+
+
+        # Extended euclidean algorithm used to find the modular inverse
+        # of a polynomial given as a list of coefficients.
+        # Returns the inverse as a list of coefficients
+        def inv(coeffs_of_a):
+            lm, hm = [1] + [0] * 12, [0] * (12 + 1)
+            low, high = (
+                coeffs_of_a + [0],
+                [2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0] # modulus coefficients
+            )
+            while deg(low):
+                r = optimized_poly_rounded_div(high, low)
+                r += [0] * (12 + 1 - len(r))
+                nm = [x for x in hm]
+                new = [x for x in high]
+                for i in range(12 + 1):
+                    for j in range(12 + 1 - i):
+                        nm[i + j] -= lm[i] * int(r[j])
+                        new[i + j] -= low[i] * r[j]
+                nm = [x % field_modulus for x in nm]
+                new = [int(x) % field_modulus for x in new]
+                lm, low, hm, high = nm, new, lm, low
+            inverse_of_low0 = pow(low[0], -1, field_modulus)
+            return [(coeff*inverse_of_low0) % field_modulus for coeff in lm[:12]]
+        %}
+        
+        
+        let (a_inverse_times_a : FQ12) = mul(a_inverse, a)
+        let (one : FQ12) = one()
+        let (is_one) = eq(a_inverse_times_a, one)
+        assert is_one = 1
+        return (a_inverse)
     end
 end
 
