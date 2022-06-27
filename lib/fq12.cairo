@@ -558,7 +558,6 @@ namespace fq12_lib:
         end
     end
 
-    # TODO: Test
     # Finds and FQ12 x such that a * x = 1
     func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12) -> (res : FQ12):
         alloc_locals

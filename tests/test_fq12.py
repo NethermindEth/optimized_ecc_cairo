@@ -174,6 +174,26 @@ async def test_fq12_sub(fq12_factory, x0, y0):
 
 
 @given(
+    x0=st.integers(min_value=0, max_value=field_modulus - 1),
+    exp=st.integers(min_value=0, max_value=(2**768) - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq12_pow(fq12_factory, x0, exp):
+    x = [pow(x0, i, field_modulus) for i in range(1, 13)]
+    x = tuple(x)
+
+    contract = fq12_factory
+    execution_info = await contract.pow(splitFQP(x), split(exp, 128, 6)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ12(x)
+    python_result = x_fq2**exp
+
+    assert cairo_result == python_result.coeffs
+
+
+@given(
     x0=st.integers(min_value=1, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
@@ -183,12 +203,14 @@ async def test_fq12_inverse(fq12_factory, x0):
 
     x = [pow(x0, i, field_modulus) for i in range(1, 13)]
     x = tuple(x)
+
+    x_fq12 = FQ12(x)
+
     x_cairo_compatible = tuple([split(coeff) for coeff in x])
     execution_info = await contract.inverse(x_cairo_compatible).call()
 
     x_inv = packFQP(execution_info.result[0])
     x_inv_fq12 = FQ12(x_inv)
-    x_fq12 = FQ12(x)
 
     assert x_fq12 * x_inv_fq12 == FQ12.one()
 
@@ -205,10 +227,10 @@ async def test_fq12_inverse_specific(fq12_factory):
 
     x_fq12 = FQ12(x)
     print("findme++")
-    #python_x_fq12_inverse, low = inv_v2(x)
+    # python_x_fq12_inverse, low = inv_v2(x)
     python_x_fq12_inverse = x_fq12.inv()
     print("python inverse", python_x_fq12_inverse)
-    #print("python low", low)
+    # print("python low", low)
 
     x_cairo_compatible = tuple([split(coeff) for coeff in x])
     execution_info = await contract.inverse(x_cairo_compatible).call()
@@ -217,5 +239,3 @@ async def test_fq12_inverse_specific(fq12_factory):
     x_inv_fq12 = FQ12(x_inv)
 
     assert x_fq12 * x_inv_fq12 == FQ12.one()
-
-
