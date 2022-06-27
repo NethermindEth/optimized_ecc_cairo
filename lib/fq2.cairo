@@ -143,7 +143,7 @@ namespace fq2_lib:
 
         # TODO: create a dedicated eq function in fq.cairo (and probably use a FQ struct everywhere instead of Uint384)
 
-let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
+        let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
         let (local is_b_zero) = uint384_lib.eq(b, Uint384(0,0,0))
         
         %{
@@ -277,6 +277,7 @@ let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
         let (res : FQ2) = pow_inner(a, exp, o)
         return (res)
     end
+    
     func pow_inner{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
             a : FQ2, exp : Uint768, o : FQ2) -> (res : FQ2):
         alloc_locals
@@ -295,12 +296,13 @@ let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
             exp, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
         if and_one.d0 == 1:
             let (o_new : FQ2) = mul(a, o)
-            let (power : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+            let ( power : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+            return (res=power)
         else:
-            let (power : FQ2) = pow_inner(a_sqr, new_exp, o)
+            let ( power : FQ2) = pow_inner(a_sqr, new_exp, o)
+            return (res=power)
         end
 
-        return (res=power)
     end
 
     func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
