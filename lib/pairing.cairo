@@ -35,8 +35,8 @@ namespace pairing_lib:
 
         let (twisted_Q : GTPoint) = twist(Q)
         let (P_as_fq12 : GTPoint) = cast_point_to_fq12(P)
-        # let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
-        # return (res)
+        let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
+        return (res)
     end
 
     func cast_point_to_fq12(pt : G1Point) -> (res : GTPoint):
@@ -122,17 +122,13 @@ namespace pairing_lib:
     func miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
             f_num : FQ12, f_den : FQ12):
         alloc_locals
-        %{ print("start miller loop") %}
         let (cast_p : GTPoint) = cast_point_to_fq12(p)
         let (twist_r : GTPoint) = twist(q)
         let twist_q = twist_r
-        %{ print("done twisting") %}
         let r = q
         let (f_num : FQ12) = fq12_lib.bit_128_to_fq12(1)
         let (f_den : FQ12) = fq12_lib.bit_128_to_fq12(1)
-        %{ print("entering ate loop") %}
-        let (twist_r, f_num, f_den, r) = ate_loop(twist_r, twist_q, cast_p, f_num, f_den, r, q, 1)
-        %{ print("exiting ate loop") %}
+        let (twist_r, f_num, f_den, r) = ate_loop(twist_r, twist_q, cast_p, f_num, f_den, r, q, 62)
         return (f_num, f_den)
     end
 
@@ -212,16 +208,12 @@ namespace pairing_lib:
             twist_r : GTPoint, twist_q : GTPoint, cast_p : GTPoint, f_num : FQ12, f_den : FQ12,
             r : G2Point, q : G2Point, n : felt) -> (
             twist_r : GTPoint, f_num : FQ12, f_den : FQ12, r : G2Point):
-        %{ print("ate loop ", ids.n) %}
         if n == 0:
-            %{ print("ate loop finishing at 0 ") %}
             let (v) = get_loop_count_bits(n)
             let (twist_r, f_num, f_den, r) = ate_loop_inner(
                 twist_r, twist_q, cast_p, f_num, f_den, r, q, v)
-            %{ print("returning ate loop") %}
             return (twist_r, f_num, f_den, r)
         end
-        %{ print("ate loop continuing ") %}
         let (v) = get_loop_count_bits(n)
         let (twist_r, f_num, f_den, r) = ate_loop_inner(
             twist_r, twist_q, cast_p, f_num, f_den, r, q, v)
@@ -236,20 +228,15 @@ namespace pairing_lib:
             r : G2Point, q : G2Point, v : felt) -> (
             twist_r : GTPoint, f_num : FQ12, f_den : FQ12, r : G2Point):
         alloc_locals
-        %{ print("ate loop inner ") %}
         let (_n, _d) = line_func_gt(twist_r, twist_r, cast_p)
-        %{ print("finish gt line func ") %}
         let (f_num) = fq12_lib.mul(f_num, f_num)
         let (f_den) = fq12_lib.mul(f_den, f_den)
 
         let (r) = g2_lib.double(r)
 
         let (twist_r) = twist(r)
-        %{ print("entering v ", ids.v) %}
         if v == 1:
-            %{ print("entering gt line func 2 ") %}
             let (_n, _d) = line_func_gt(twist_r, twist_q, cast_p)
-            %{ print("finish gt line func 2 ") %}
             let (f_num) = fq12_lib.mul(f_num, _n)
             let (f_den) = fq12_lib.mul(f_den, _d)
 
@@ -258,7 +245,6 @@ namespace pairing_lib:
             let (twist_r) = twist(r)
             return (twist_r=twist_r, f_num=f_num, f_den=f_den, r=r)
         end
-        %{ print("returning " ) %}
         return (twist_r=twist_r, f_num=f_num, f_den=f_den, r=r)
     end
 
