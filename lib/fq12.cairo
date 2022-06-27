@@ -524,25 +524,26 @@ namespace fq12_lib:
     end
 
     # TODO: test
+    # TODO: Should the exponent go further than 768 bits?
     # Computes (a**exp). Uses the fast exponentiation algorithm
-    func pow{range_check_ptr}(a : FQ12, exp : Uint384) -> (res : FQ12):
+    func pow{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a : FQ12, exp : Uint768) -> (res : FQ12):
         alloc_locals
-        let (zero : FQ12) = zero()
-        let (is_exp_zero) = eq(exp, zero)
+        let (is_exp_zero) = uint384_extension_lib.eq(exp, Uint768(0,0,0,0,0,0))
 
         if is_exp_zero == 1:
-            let (zero : FQ12) = zero()
-            return (zero)
+            let (zero_fq12 : FQ12) = zero()
+            return (zero_fq12)
         end
 
-        let (one : FQ12) = one()
 
-        let (is_exp_one) = eq(exp, one)
+        let (is_exp_one) = uint384_extension_lib.eq(exp,  Uint768(1,0,0,0,0,0))
         if is_exp_one == 1:
             return (a)
         end
 
-        let (exp_div_2, remainder) = uint384_lib.unsigned_div_rem(exp, Uint384(2, 0, 0))
+        let (exp_div_2, remainder) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
+            exp, Uint384(2, 0, 0)
+        )
         let (is_remainder_zero) = uint384_lib.eq(remainder, Uint384(0, 0, 0))
 
         if is_remainder_zero == 1:
@@ -561,16 +562,16 @@ namespace fq12_lib:
     # Finds and FQ12 x such that a * x = 1
     func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : FQ12) -> (res : FQ12):
         alloc_locals
-        
-        let (one_fq12: FQ12) = one()
+
+        let (one_fq12 : FQ12) = one()
         let (is_a_one) = eq(a, one_fq12)
-        if is_a_one==1:
+        if is_a_one == 1:
             return (a)
         end
-        
+
         local a_inverse : FQ12
         let (field_modulus : Uint384) = get_modulus()
-        
+
         %{
             print("findme0")
             def split(num: int, num_bits_shift : int = 128, length: int = 3):
@@ -663,7 +664,7 @@ namespace fq12_lib:
             res = inv(coeffs_of_a)    
             print("findme3", res)
             res = [split(coeff) for coeff in res]
-            
+
             ids.a_inverse.e0.d0 = res[0][0]
             ids.a_inverse.e0.d1 = res[0][1]
             ids.a_inverse.e0.d2 = res[0][2]
