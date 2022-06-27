@@ -2,7 +2,6 @@
 %builtins range_check bitwise
 from lib.uint384 import Uint384
 from lib.fq2 import fq2_lib, FQ2
-from lib.uint384 import Uint384
 from lib.uint384_extension import Uint768
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 

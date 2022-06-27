@@ -39,3 +39,13 @@ func mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12, y : FQ12) -> 
 
     return (res)
 end
+
+
+@view
+func inverse{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ12) -> (res : FQ12):
+    alloc_locals
+
+    let (res : FQ12) = fq12_lib.inverse(x)
+
+    return (res)
+end

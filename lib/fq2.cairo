@@ -296,12 +296,13 @@ namespace fq2_lib:
             exp, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
         if and_one.d0 == 1:
             let (o_new : FQ2) = mul(a, o)
-            let (pow : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+            let ( power : FQ2) = pow_inner(a_sqr, new_exp, o_new)
+            return (res=power)
         else:
-            let (power : FQ2) = pow_inner(a_sqr, new_exp, o)
+            let ( power : FQ2) = pow_inner(a_sqr, new_exp, o)
+            return (res=power)
         end
 
-        return (res=power)
     end
 
     func check_is_not_zero{range_check_ptr}(a : FQ2) -> (is_zero : felt):
