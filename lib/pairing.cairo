@@ -36,6 +36,7 @@ namespace pairing_lib:
         let (twisted_Q : GTPoint) = twist(Q)
         let (P_as_fq12 : GTPoint) = cast_point_to_fq12(P)
         let (res : FQ12) = miller_loop(twisted_Q, P_as_fq12)
+
         return (res)
     end
 
@@ -120,7 +121,7 @@ namespace pairing_lib:
     end
 
     func miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
-            f_num : FQ12, f_den : FQ12):
+            f : FQ12):
         alloc_locals
         let (cast_p : GTPoint) = cast_point_to_fq12(p)
         let (twist_r : GTPoint) = twist(q)
@@ -129,7 +130,11 @@ namespace pairing_lib:
         let (f_num : FQ12) = fq12_lib.bit_128_to_fq12(1)
         let (f_den : FQ12) = fq12_lib.bit_128_to_fq12(1)
         let (twist_r, f_num, f_den, r) = ate_loop(twist_r, twist_q, cast_p, f_num, f_den, r, q, 62)
-        return (f_num, f_den)
+
+        let (inv_den) = fq12_lib.inverse(f_den)
+        let (f) = fq12_lib.mul(f_num, f_den)
+        let (final_exponent) = final_exponentiation(f)
+        return (final_exponent)
     end
 
     func get_loop_count_bits(index : felt) -> (bits : felt):
