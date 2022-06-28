@@ -8,13 +8,23 @@ from lib.g1 import G1Point
 from lib.fq12 import FQ12
 
 @view
-func _miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
-        f_num : FQ12, f_den : FQ12):
+func pairing{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
+        res : FQ12):
     alloc_locals
 
-    let (x, y) = pairing_lib.miller_loop(q, p)
+    let (res) = pairing_lib.pairing(q, p)
 
-    return (x, y)
+    return (res)
+end
+
+@view
+func _miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
+        res : FQ12):
+    alloc_locals
+
+    let (res) = pairing_lib.miller_loop(q, p)
+
+    return (res)
 end
 
 @view
