@@ -18,8 +18,7 @@ namespace field_arithmetic_lib:
 
         let (quotient : Uint768,
             remainder : Uint384) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
-            sum_with_carry, p
-        )
+            sum_with_carry, p)
         return (remainder)
     end
 
@@ -28,8 +27,7 @@ namespace field_arithmetic_lib:
     # NOTE: To reduce a, take the remainder of uint384_lin.unsigned_div_rem(a, p), and similarly for b.
     # @dev First it computes res =(a-b) mod p in a hint and then checks outside of the hint that res + b = a modulo p
     func sub_reduced_a_and_reduced_b{range_check_ptr}(a : Uint384, b : Uint384, p : Uint384) -> (
-        res : Uint384
-    ):
+            res : Uint384):
         alloc_locals
         local res : Uint384
         %{
@@ -64,12 +62,31 @@ namespace field_arithmetic_lib:
 
     # Computes a * b modulo p
     func mul{range_check_ptr}(a : Uint384, b : Uint384, p : Uint384) -> (res : Uint384):
-        let (low : Uint384, high : Uint384) = uint384_lib.mul(a, b)
-        let full_mul_result : Uint768 = Uint768(low.d0, low.d1, low.d2, high.d0, high.d1, high.d2)
-        let (quotient : Uint768,
-            remainder : Uint384) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
-            full_mul_result, p
-        )
+        alloc_locals
+        local remainder : Uint384
+        %{
+            from starkware.python.math_utils import isqrt
+
+            def split(num: int, num_bits_shift: int, length: int):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift 
+                return tuple(a)
+
+            def pack(z, num_bits_shift: int) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            a = pack(ids.a, num_bits_shift=128)
+            b = pack(ids.b, num_bits_shift=128)
+            p = pack(ids.p, num_bits_shift=128)
+            product = (a * b) % p
+            product_split = split(product, num_bits_shift=128, length=3)
+            ids.remainder.d0 = product_split[0]
+            ids.remainder.d1 = product_split[1]
+            ids.remainder.d2 = product_split[2]
+        %}
         return (remainder)
     end
 
@@ -146,14 +163,13 @@ namespace field_arithmetic_lib:
             return (res_mul)
         end
     end
-    
+
     # WARNING: Will be deprecated
     # Checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
     # `p_minus_one_div_2` is (p-1)/2. It is passed as an argument rather than computed, since for most applications
     # p (and thus (p-1)/2) will be hardcoded and this library wrapped around with p fixed to the hardcoded value
     func is_square_non_optimized{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        x : Uint384, p : Uint384, p_minus_one_div_2 : Uint384
-    ) -> (bool : felt):
+            x : Uint384, p : Uint384, p_minus_one_div_2 : Uint384) -> (bool : felt):
         alloc_locals
         let (is_x_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
         if is_x_zero == 1:
@@ -178,10 +194,9 @@ namespace field_arithmetic_lib:
 
     # NOTE: The function assumes that 0 <= x < p
     func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        x : Uint384, p : Uint384, generator : Uint384
-    ) -> (success : felt, res : Uint384):
+            x : Uint384, p : Uint384, generator : Uint384) -> (success : felt, res : Uint384):
         alloc_locals
-        
+
         let (is_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
         if is_zero == 1:
             return (1, Uint384(0, 0, 0))
@@ -301,10 +316,10 @@ namespace field_arithmetic_lib:
             generator = pack(ids.generator)
             x = pack(ids.x)
             p = pack(ids.p)
-            
+
             (success_x, root_x) = get_square_root_mod_p(x, p)
             (success_gx, root_gx) = get_square_root_mod_p(generator*x, p)
-            
+
             # Check that one is 0 and the other is 1
             if x != 0:
                 assert success_x + success_gx ==1
@@ -329,7 +344,7 @@ namespace field_arithmetic_lib:
         # Verify that the values computed in the hint are what they are supposed to be
         # 4 happens to be a
         let (gx : Uint384) = mul(generator, x, p)
-        if success_x==1:
+        if success_x == 1:
             let (sqrt_root_x_squared : Uint384) = mul(sqrt_root_x, sqrt_root_x, p)
             # Note these checks may fail if the input x does not satisfy 0<= x < p
             let (check_x) = uint384_lib.eq(x, sqrt_root_x_squared)
@@ -341,8 +356,6 @@ namespace field_arithmetic_lib:
             assert check_gx = 1
         end
 
-
-        
         # TODO: double check that nothing else needs to be checked
 
         # Return the appropriate values
@@ -354,9 +367,8 @@ namespace field_arithmetic_lib:
             return (1, sqrt_root_x)
         end
     end
-    
-    
-    func eq(a: Uint384, b: Uint384) -> (bool: felt):
+
+    func eq(a : Uint384, b : Uint384) -> (bool : felt):
         let (is_a_equal_b) = uint384_lib.eq(a, b)
         if is_a_equal_b == 1:
             return (1)
@@ -364,8 +376,8 @@ namespace field_arithmetic_lib:
             return (0)
         end
     end
-    
-    func is_zero(a: Uint384) -> (bool: felt):
+
+    func is_zero(a : Uint384) -> (bool : felt):
         let (is_a_zero) = uint384_lib.is_zero(a)
         if is_a_zero == 1:
             return (1)

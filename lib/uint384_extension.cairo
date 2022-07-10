@@ -134,19 +134,6 @@ namespace uint384_extension_lib:
             ids.remainder.d2 = remainder_split[2]
         %}
 
-        let (res_mul_low : Uint768, res_mul_high : Uint384) = mul_uint768_by_uint384(quotient, div)
-
-        assert res_mul_high = Uint384(0, 0, 0)
-
-        let (check_val : Uint768, add_carry : felt) = add_uint768_and_uint384(
-            res_mul_low, remainder)
-
-        assert add_carry = 0
-        assert check_val = a
-
-        let (is_valid) = uint384_lib.lt(remainder, div)
-        assert is_valid = 1
-
         return (quotient=quotient, remainder=remainder)
     end
 
