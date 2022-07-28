@@ -58,70 +58,70 @@ func line_func_gt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
     p1 : GTPoint, p2 : GTPoint, pt : GTPoint
 ) -> (x : FQ12, y : FQ12):
     alloc_locals
-    let (zero : FQ12) = fq12.zero()
+    let (zero : FQ12) = fq12_lib.zero()
 
-    let (y_2_z_1) = fq12.mul(p2.y, p1.z)
-    let (y_1_z_2) = fq12.mul(p1.y, p2.z)
-    let (m_numerator : FQ12) = fq12.sub(y_2_z_1, y_1_z_2)
+    let (y_2_z_1) = fq12_lib.mul(p2.y, p1.z)
+    let (y_1_z_2) = fq12_lib.mul(p1.y, p2.z)
+    let (m_numerator : FQ12) = fq12_lib.sub(y_2_z_1, y_1_z_2)
 
-    let (x_2_z_1) = fq12.mul(p2.x, p1.z)
-    let (x_1_z_2) = fq12.mul(p1.x, p2.z)
-    let (m_denominator : FQ12) = fq12.sub(x_2_z_1, x_1_z_2)
+    let (x_2_z_1) = fq12_lib.mul(p2.x, p1.z)
+    let (x_1_z_2) = fq12_lib.mul(p1.x, p2.z)
+    let (m_denominator : FQ12) = fq12_lib.sub(x_2_z_1, x_1_z_2)
 
-    let (denom_eq_zero : felt) = fq12.eq(m_denominator, zero)
+    let (denom_eq_zero : felt) = fq12_lib.eq(m_denominator, zero)
 
     if denom_eq_zero == 0:
-        let (x_t_z_1) = fq12.mul(pt.x, p1.z)
-        let (x_1_z_t) = fq12.mul(p1.x, pt.z)
-        let (temp) = fq12.sub(x_t_z_1, x_1_z_t)
-        let (numerator : FQ12) = fq12.mul(m_numerator, temp)
+        let (x_t_z_1) = fq12_lib.mul(pt.x, p1.z)
+        let (x_1_z_t) = fq12_lib.mul(p1.x, pt.z)
+        let (temp) = fq12_lib.sub(x_t_z_1, x_1_z_t)
+        let (numerator : FQ12) = fq12_lib.mul(m_numerator, temp)
 
-        let (y_t_z_1) = fq12.mul(pt.y, p1.z)
-        let (y_1_z_t) = fq12.mul(p1.y, pt.z)
-        let (temp) = fq12.sub(y_t_z_1, y_1_z_t)
-        let (denominator : FQ12) = fq12.mul(m_denominator, temp)
+        let (y_t_z_1) = fq12_lib.mul(pt.y, p1.z)
+        let (y_1_z_t) = fq12_lib.mul(p1.y, pt.z)
+        let (temp) = fq12_lib.sub(y_t_z_1, y_1_z_t)
+        let (denominator : FQ12) = fq12_lib.mul(m_denominator, temp)
 
-        let (x) = fq12.sub(numerator, denominator)
-        let (zt_z1) = fq12.mul(pt.z, p1.z)
-        let (y) = fq12.mul(m_denominator, zt_z1)
+        let (x) = fq12_lib.sub(numerator, denominator)
+        let (zt_z1) = fq12_lib.mul(pt.z, p1.z)
+        let (y) = fq12_lib.mul(m_denominator, zt_z1)
 
         return (x, y)
     end
 
-    let (num_eq_zero : felt) = fq12.eq(m_numerator, zero)
+    let (num_eq_zero : felt) = fq12_lib.eq(m_numerator, zero)
 
     if num_eq_zero == 1:
-        let (x_1_x_1) = fq12.mul(p1.x, p1.x)
-        let (three) = fq12.bit_128_to_fq12(3)
-        let (m_numerator) = fq12.mul(a=x_1_x_1, b=three)
+        let (x_1_x_1) = fq12_lib.mul(p1.x, p1.x)
+        let (three) = fq12_lib.bit_128_to_fq12(3)
+        let (m_numerator) = fq12_lib.mul(a=x_1_x_1, b=three)
 
-        let (y_1_z_1) = fq12.mul(p1.y, p1.z)
-        let (two) = fq12.bit_128_to_fq12(2)
-        let (m_denominator) = fq12.mul(a=y_1_z_1, b=two)
+        let (y_1_z_1) = fq12_lib.mul(p1.y, p1.z)
+        let (two) = fq12_lib.bit_128_to_fq12(2)
+        let (m_denominator) = fq12_lib.mul(a=y_1_z_1, b=two)
 
-        let (x_t_z_1) = fq12.mul(pt.x, p1.z)
-        let (x_1_z_t) = fq12.mul(p1.x, pt.z)
-        let (temp) = fq12.sub(x_t_z_1, x_1_z_t)
-        let (numerator : FQ12) = fq12.mul(m_numerator, temp)
+        let (x_t_z_1) = fq12_lib.mul(pt.x, p1.z)
+        let (x_1_z_t) = fq12_lib.mul(p1.x, pt.z)
+        let (temp) = fq12_lib.sub(x_t_z_1, x_1_z_t)
+        let (numerator : FQ12) = fq12_lib.mul(m_numerator, temp)
 
-        let (y_t_z_1) = fq12.mul(pt.y, p1.z)
-        let (y_1_z_t) = fq12.mul(p1.y, pt.z)
-        let (temp) = fq12.sub(y_t_z_1, y_1_z_t)
-        let (denominator : FQ12) = fq12.mul(m_denominator, temp)
+        let (y_t_z_1) = fq12_lib.mul(pt.y, p1.z)
+        let (y_1_z_t) = fq12_lib.mul(p1.y, pt.z)
+        let (temp) = fq12_lib.sub(y_t_z_1, y_1_z_t)
+        let (denominator : FQ12) = fq12_lib.mul(m_denominator, temp)
 
-        let (x) = fq12.sub(numerator, denominator)
-        let (zt_z1) = fq12.mul(pt.z, p1.z)
-        let (y) = fq12.mul(m_denominator, zt_z1)
+        let (x) = fq12_lib.sub(numerator, denominator)
+        let (zt_z1) = fq12_lib.mul(pt.z, p1.z)
+        let (y) = fq12_lib.mul(m_denominator, zt_z1)
 
         return (x, y)
     end
 
-    let (x_t_z_1) = fq12.mul(pt.x, p1.z)
-    let (x_1_z_t) = fq12.mul(p1.x, pt.z)
+    let (x_t_z_1) = fq12_lib.mul(pt.x, p1.z)
+    let (x_1_z_t) = fq12_lib.mul(p1.x, pt.z)
 
-    let (x) = fq12.sub(x_t_z_1, x_1_z_t)
+    let (x) = fq12_lib.sub(x_t_z_1, x_1_z_t)
 
-    let (y) = fq12.mul(p1.z, pt.z)
+    let (y) = fq12_lib.mul(p1.z, pt.z)
 
     return (x, y)
 end
