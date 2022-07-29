@@ -291,7 +291,7 @@ let (local is_a_zero) = uint384_lib.eq(a, Uint384(0,0,0))
             a=exp, div=Uint384(d0=2, d1=0, d2=0))
 
         let (a_sqr : FQ2) = mul(a, a)
-        let (and_one : Uint768) = uint384_extension_lib.and(
+        let (and_one : Uint768) = uint384_extension_lib.bit_and(
             exp, Uint768(d0=1, d1=0, d2=0, d3=0, d4=0, d5=0))
         if and_one.d0 == 1:
             let (o_new : FQ2) = mul(a, o)

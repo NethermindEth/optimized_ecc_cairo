@@ -10,7 +10,7 @@ from lib.uint384_extension import uint384_extension_lib, Uint768
 
 # Functions for operating elements in a finite field F_p (i.e. modulo a prime p), with p of at most 384 bits
 
-namespace field_arithmetic_lib:
+namespace field_arithmetic:
     # Computes (a + b) modulo p .
     func add{range_check_ptr}(a : Uint384, b : Uint384, p : Uint384) -> (res : Uint384):
         let (sum : Uint384, carry) = uint384_lib.add(a, b)
@@ -37,7 +37,7 @@ namespace field_arithmetic_lib:
                 a = []
                 for _ in range(length):
                     a.append( num & ((1 << num_bits_shift) - 1) )
-                    num = num >> num_bits_shift 
+                    num = num >> num_bits_shift
                 return tuple(a)
 
             def pack(z, num_bits_shift: int) -> int:
@@ -79,11 +79,13 @@ namespace field_arithmetic_lib:
         alloc_locals
         local b_inverse_mod_p : Uint384
         %{
+            from starkware.python.math_utils import div_mod
+
             def split(num: int, num_bits_shift: int, length: int):
                 a = []
                 for _ in range(length):
                     a.append( num & ((1 << num_bits_shift) - 1) )
-                    num = num >> num_bits_shift 
+                    num = num >> num_bits_shift
                 return tuple(a)
 
             def pack(z, num_bits_shift: int) -> int:
@@ -93,8 +95,11 @@ namespace field_arithmetic_lib:
             a = pack(ids.a, num_bits_shift = 128)
             b = pack(ids.b, num_bits_shift = 128)
             p = pack(ids.p, num_bits_shift = 128)
-            b_inverse_mod_p = pow(b, -1, p)
-            a_div_b = (a* b_inverse_mod_p) % p
+            # For python3.8 and above the modular inverse can be computed as follows:
+            # b_inverse_mod_p = pow(b, -1, p)
+            # Instead we use the python3.7-friendly function div_mod from starkware.python.math_utils
+            b_inverse_mod_p = div_mod(1, b, p)
+
 
             b_inverse_mod_p_split = split(b_inverse_mod_p, num_bits_shift=128, length=3)
 
@@ -146,7 +151,7 @@ namespace field_arithmetic_lib:
             return (res_mul)
         end
     end
-    
+
     # WARNING: Will be deprecated
     # Checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
     # `p_minus_one_div_2` is (p-1)/2. It is passed as an argument rather than computed, since for most applications
@@ -172,16 +177,17 @@ namespace field_arithmetic_lib:
 
     # Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
     # To do so, the following is done in a hint:
+    # 0. Assume x is not  0 mod p
     # 1. Check if x is a square, if yes, find a square root r of it
-    # 2. If no, then gx *is* a square (for g a generator of F_p^*), so find a square root r of it
+    # 2. If (and only if not), then gx *is* a square (for g a generator of F_p^*), so find a square root r of it
     # 3. Check in Cairo that r**2 = x (mod p) or r**2 = gx (mod p), respectively
-
     # NOTE: The function assumes that 0 <= x < p
     func get_square_root{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         x : Uint384, p : Uint384, generator : Uint384
     ) -> (success : felt, res : Uint384):
         alloc_locals
-        
+
+        # TODO: Create an equality function within field_arithmetic to avoid overflow bugs
         let (is_zero) = uint384_lib.eq(x, Uint384(0, 0, 0))
         if is_zero == 1:
             return (1, Uint384(0, 0, 0))
@@ -189,122 +195,35 @@ namespace field_arithmetic_lib:
 
         local success_x : felt
         local success_gx : felt
-        local sqrt_root_x : Uint384
-        local sqrt_root_gx : Uint384
+        local sqrt_x : Uint384
+        local sqrt_gx : Uint384
 
         # Compute square roots in a hint
         %{
+            from starkware.python.math_utils import is_quad_residue, sqrt
+
             def split(num: int, num_bits_shift: int = 128, length: int = 3):
                 a = []
                 for _ in range(length):
                     a.append( num & ((1 << num_bits_shift) - 1) )
-                    num = num >> num_bits_shift 
+                    num = num >> num_bits_shift
                 return tuple(a)
 
             def pack(z, num_bits_shift: int = 128) -> int:
                 limbs = (z.d0, z.d1, z.d2)
                 return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
-                
-            def get_square_root_mod_p(a, p):
-                """ Find a quadratic residue (mod p) of 'a'. p
-                    must be an odd prime.
 
-                    Solve the congruence of the form:
-                        x^2 = a (mod p)
-                    And returns (success, x). Note that p - x is also a root.
-
-                    success = 0, 1 depending on whether a solution was found or not
-
-                    The Tonelli-Shanks algorithm is used (except
-                    for some simple cases in which the solution
-                    is known from an identity). This algorithm
-                    runs in polynomial time (unless the
-                    generalized Riemann hypothesis is false).
-                """
-                # Simple cases
-                #
-                if a == 0:
-                    return 1, 0
-                if legendre_symbol(a, p) != 1:
-                    return 0, None
-                elif p == 2:
-                    return 0, None
-                elif p % 4 == 3:
-                    return 1, pow(a, (p+1)//4, p)
-
-                # Partition p-1 to s * 2^e for an odd s (i.e.
-                # reduce all the powers of 2 from p-1)
-                #
-                s = p - 1
-                e = 0
-                while s % 2 == 0:
-                    s /= 2
-                    e += 1
-
-                # Find some 'n' with a legendre symbol n|p = -1.
-                # Shouldn't take long.
-                #
-                n = 2
-                while legendre_symbol(n, p) != -1:
-                    n += 1
-
-                # Here be dragons!
-                # Read the paper "Square roots from 1; 24, 51,
-                # 10 to Dan Shanks" by Ezra Brown for more
-                # information
-                #
-
-                # x is a guess of the square root that gets better
-                # with each iteration.
-                # b is the "fudge factor" - by how much we're off
-                # with the guess. The invariant x^2 = ab (mod p)
-                # is maintained throughout the loop.
-                # g is used for successive powers of n to update
-                # both a and b
-                # r is the exponent - decreases with each update
-                #
-                x = pow(a, (s+1)//2, p)
-                b = pow(a, s, p)
-                g = pow(n, s, p)
-                r = e
-
-                while True:
-                    t = b
-                    m = 0
-                    for m in range(r):
-                        if t == 1:
-                            break
-                        t = pow(t, 2, p)
-
-                    if m == 0:
-                        return 1, x
-
-                    gs = pow(g, 2 ** (r - m - 1), p)
-                    g = (gs * gs) % p
-                    x = (x * gs) % p
-                    b = (b * g) % p
-                    r = m
-
-
-            def legendre_symbol(a, p):
-                """ Compute the Legendre symbol a|p using
-                    Euler's criterion. p is a prime, a is
-                    relatively prime to p (if p divides
-                    a, then a|p = 0)
-
-                    Returns 1 if a has a square root modulo
-                    p, -1 otherwise.
-                """
-                ls = pow(a, (p-1)//2, p)
-                return -1 if ls == p - 1 else ls
 
             generator = pack(ids.generator)
             x = pack(ids.x)
             p = pack(ids.p)
-            
-            (success_x, root_x) = get_square_root_mod_p(x, p)
-            (success_gx, root_gx) = get_square_root_mod_p(generator*x, p)
-            
+
+            success_x = is_quad_residue(x, p)
+            root_x = sqrt(x, p) if success_x else None
+
+            success_gx = is_quad_residue(generator*x, p)
+            root_gx = sqrt(generator*x, p) if success_gx else None
+
             # Check that one is 0 and the other is 1
             if x != 0:
                 assert success_x + success_gx ==1
@@ -314,36 +233,32 @@ namespace field_arithmetic_lib:
                 root_x = 0
             if root_gx == None:
                 root_gx = 0
-            ids.success_x = success_x
-            ids.success_gx =success_gx
+            ids.success_x = int(success_x)
+            ids.success_gx = int(success_gx)
             split_root_x = split(root_x)
             split_root_gx = split(root_gx)
-            ids.sqrt_root_x.d0 = split_root_x[0]
-            ids.sqrt_root_x.d1 = split_root_x[1]
-            ids.sqrt_root_x.d2 = split_root_x[2]
-            ids.sqrt_root_gx.d0 = split_root_gx[0]
-            ids.sqrt_root_gx.d1 = split_root_gx[1]
-            ids.sqrt_root_gx.d2 = split_root_gx[2]
+            ids.sqrt_x.d0 = split_root_x[0]
+            ids.sqrt_x.d1 = split_root_x[1]
+            ids.sqrt_x.d2 = split_root_x[2]
+            ids.sqrt_gx.d0 = split_root_gx[0]
+            ids.sqrt_gx.d1 = split_root_gx[1]
+            ids.sqrt_gx.d2 = split_root_gx[2]
         %}
 
         # Verify that the values computed in the hint are what they are supposed to be
-        # 4 happens to be a
         let (gx : Uint384) = mul(generator, x, p)
-        if success_x==1:
-            let (sqrt_root_x_squared : Uint384) = mul(sqrt_root_x, sqrt_root_x, p)
+        if success_x == 1:
+            let (sqrt_x_squared : Uint384) = mul(sqrt_x, sqrt_x, p)
             # Note these checks may fail if the input x does not satisfy 0<= x < p
-            let (check_x) = uint384_lib.eq(x, sqrt_root_x_squared)
+            # TODO: Create a equality function within field_arithmetic to avoid overflow bugs
+            let (check_x) = uint384_lib.eq(x, sqrt_x_squared)
             assert check_x = 1
         else:
-            # In this case success_gx = 1 (TODO: should we check this here?)
-            let (sqrt_root_gx_squared : Uint384) = mul(sqrt_root_gx, sqrt_root_gx, p)
-            let (check_gx) = uint384_lib.eq(gx, sqrt_root_gx_squared)
+            # In this case success_gx = 1
+            let (sqrt_gx_squared : Uint384) = mul(sqrt_gx, sqrt_gx, p)
+            let (check_gx) = uint384_lib.eq(gx, sqrt_gx_squared)
             assert check_gx = 1
         end
-
-
-        
-        # TODO: double check that nothing else needs to be checked
 
         # Return the appropriate values
         if success_x == 0:
@@ -351,21 +266,20 @@ namespace field_arithmetic_lib:
             # Note that Uint384(0, 0, 0) is not a square root here, but something needs to be returned
             return (0, Uint384(0, 0, 0))
         else:
-            return (1, sqrt_root_x)
+            return (1, sqrt_x)
         end
     end
-    
-    
-    func eq(a: Uint384, b: Uint384) -> (bool: felt):
-        let (is_a_equal_b) = uint384_lib.eq(a, b)
-        if is_a_equal_b == 1:
-            return (1)
-        else:
-            return (0)
-        end
+
+    # TODO: not tested
+    # TODO: We should create a struct `FQ` to represent Uint384's reduced modulo p
+    # RIght now thid function expects a and be to be between 0 and p-1
+    func eq{range_check_ptr}(a : Uint384, b : Uint384) -> (res : felt):
+        let (is_a_eq_b) = uint384_lib.eq(a, b)
+        return (is_a_eq_b)
     end
-    
-    func is_zero(a: Uint384) -> (bool: felt):
+
+    # TODO: not tested
+    func is_zero{range_check_ptr}(a : Uint384) -> (bool : felt):
         let (is_a_zero) = uint384_lib.is_zero(a)
         if is_a_zero == 1:
             return (1)
