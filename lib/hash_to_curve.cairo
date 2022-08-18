@@ -84,7 +84,7 @@ func clear_cofactor_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Poi
     alloc_locals
 
     let (eff : Uint768) = get_eff()
-    let (res : G2Point) = g2_lib.multiply(p, eff)
+    let (res : G2Point) = g2_lib.scalar_mul(p, eff)
 
     return (res)
 end
