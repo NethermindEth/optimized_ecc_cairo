@@ -14,6 +14,7 @@ FQ2_CONTRACT = os.path.join("contracts", "fq2.cairo")
 FQ12_CONTRACT = os.path.join("contracts", "fq12.cairo")
 PAIRING_CONTRACT = os.path.join("contracts", "pairing.cairo")
 HASH_TO_CURVE_CONTRACT = os.path.join("contracts", "hash_to_curve.cairo")
+KARATSUBA_CONTRACT =  os.path.join("contracts", "karatsuba.cairo")
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -145,3 +146,15 @@ async def hash_to_curve_factory(starknet_factory):
     hash_to_curve_contract = await starknet.deploy(contract_class=contract_class)
 
     return hash_to_curve_contract
+
+@pytest.fixture(scope="module")        
+async def karatsuba_factory(starknet_factory):
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_class = compile_starknet_files(
+        files=[KARATSUBA_CONTRACT], disable_hint_validation=True
+    )
+    kar_contract = await starknet.deploy(contract_class=contract_class)
+
+    return kar_contract
