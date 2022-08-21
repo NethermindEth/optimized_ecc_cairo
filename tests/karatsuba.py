@@ -11,8 +11,6 @@ async def test_karatsuba(karatsuba_factory):
     b = (num, num)
 
     contract = karatsuba_factory
-    execution_info = await contract.kar_a(a, b).call()
-
     print("\n")
     print(
     "%20s" % "function",
@@ -21,6 +19,29 @@ async def test_karatsuba(karatsuba_factory):
     "|",
     "%-10s" % "builtins",
     )
+
+    execution_info = await contract.mul_a(a, b).call()
+
+    print(  
+    "%20s" % "mul a",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    execution_info = await contract.mul_b(a, b).call()
+
+    print(
+    "%20s" % "mul b",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    execution_info = await contract.kar_a(a, b).call()
+
     print(  
     "%20s" % "kar a",
     "|",

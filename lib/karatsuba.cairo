@@ -27,6 +27,28 @@ from starkware.cairo.common.uint256 import Uint256, split_64, uint256_mul, HALF_
 
 namespace karatsuba:
 
+    func uint256_mul{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
+        alloc_locals
+        let (a0, a1) = split_64(a.low)
+        let (a2, a3) = split_64(a.high)
+        let (b0, b1) = split_64(b.low)
+        let (b2, b3) = split_64(b.high)
+
+        let (res0, carry) = split_64(a0 * b0)
+        let (res1, carry) = split_64(a1 * b0 + a0 * b1 + carry)
+        let (res2, carry) = split_64(a2 * b0 + a1 * b1 + a0 * b2 + carry)
+        let (res3, carry) = split_64(a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3 + carry)
+        let (res4, carry) = split_64(a3 * b1 + a2 * b2 + a1 * b3 + carry)
+        let (res5, carry) = split_64(a3 * b2 + a2 * b3 + carry)
+        #let (res6, carry) = split_64(a3 * b3 + carry)
+
+        return (
+            low=Uint256(low=res0 + HALF_SHIFT * res1, high=res2 + HALF_SHIFT * res3),
+            #high=Uint256(low=res4 + HALF_SHIFT * res5, high=res6 + HALF_SHIFT * carry),
+            high=Uint256(low=res4 + HALF_SHIFT * res5, high=a3 * b3 + carry),
+        )
+    end
+
     func assert_160_bit{range_check_ptr}(value):
         const UPPER_BOUND = 2 ** 160
         const SHIFT = 2 ** 128
@@ -125,11 +147,12 @@ namespace karatsuba:
         let (res3, carry) = split_64(w3 - z1 - z5 + carry)
         let (res4, carry) = split_64(z4 + w4 - z2 - z6 + carry)
         let (res5, carry) = split_64(z5 + carry)
-        let (res6, carry) = split_64(z6 + carry)
+        #let (res6, carry) = split_64(z6 + carry)
 
         return (
             low=Uint256(low=res0 + HALF_SHIFT * res1, high=res2 + HALF_SHIFT * res3),
-            high=Uint256(low=res4 + HALF_SHIFT * res5, high=res6 + HALF_SHIFT * carry),
+            #high=Uint256(low=res4 + HALF_SHIFT * res5, high=res6 + HALF_SHIFT * carry),
+            high=Uint256(low=res4 + HALF_SHIFT * res5, high=z6 + carry),
         )
     end
 
