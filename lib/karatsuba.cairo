@@ -176,7 +176,7 @@ namespace karatsuba:
         let (res3, carry) = split_64b(w3 - z1 - z5 + carry)
         let (res4, carry) = split_64b(z4 + carry)
         let (res5, carry) = split_64(z5 + carry)
-        #let (res6, carry) = split_64(z6 + carry)
+        #let (res6, carry) = split_64(carry)
 
         return (
             low=Uint256(low=res0 + HALF_SHIFT * res1, high=res2 + HALF_SHIFT * res3),
