@@ -3,12 +3,21 @@ from utils import (
     pack,
 )
 
+NUM=2 ** 128
+
+def result_to_int(result):
+    return result.low.low + NUM*result.low.high + NUM**2*result.high.low + NUM**3*result.high.high
+
 @pytest.mark.asyncio
 async def test_karatsuba(karatsuba_factory):
 
-    num = 2 ** 96
+    #num = 2 ** 96
+    num = 2 ** 128 - 1
     a = (num, num)
+    aint = a[0] + NUM*a[1]
     b = (num, num)
+    bint = b[0] + NUM*b[1]
+    prod = aint*bint
 
     contract = karatsuba_factory
     print("\n")
@@ -30,6 +39,8 @@ async def test_karatsuba(karatsuba_factory):
     "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
     )
 
+    assert result_to_int(execution_info.result) == prod
+
     execution_info = await contract.mul_b(a, b).call()
 
     print(
@@ -40,6 +51,8 @@ async def test_karatsuba(karatsuba_factory):
     "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
     )
 
+    assert result_to_int(execution_info.result) == prod
+    
     execution_info = await contract.kar_a(a, b).call()
 
     print(  
@@ -49,7 +62,9 @@ async def test_karatsuba(karatsuba_factory):
     "|",
     "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
     )
-
+    
+    assert result_to_int(execution_info.result) == prod
+    
     execution_info = await contract.kar_b(a, b).call()
 
     print(
@@ -60,7 +75,4 @@ async def test_karatsuba(karatsuba_factory):
     "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
     )
 
-    #Todo check result
-    #result = pack(execution_info.result, 2)
-
-    #assert result == (x + y) % field_modulus
+    assert result_to_int(execution_info.result) == prod
