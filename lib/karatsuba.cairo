@@ -124,8 +124,8 @@ namespace karatsuba:
     # Multiplies two integers. Returns the result as two 256-bit integers (low and high parts).
     func uint256_mul_b{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
         alloc_locals
-        local a0 = a.low
-        local a2 = a.high
+        let a0 = a.low
+        let a2 = a.high
         let (b0, b1) = split_64(b.low)
         let (b2, b3) = split_64(b.high)
 
