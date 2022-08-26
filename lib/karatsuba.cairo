@@ -1,5 +1,6 @@
+#%builtins range_check
 
-from starkware.cairo.common.uint256 import Uint256, split_64, uint256_mul, HALF_SHIFT
+from starkware.cairo.common.uint256 import Uint256, split_64, uint256_mul, HALF_SHIFT, SHIFT
 
 # Multiplies two integers. Returns the result as two 256-bit integers (low and high parts).
 #func uint256_mul{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
@@ -78,7 +79,7 @@ namespace karatsuba:
         let range_check_ptr = range_check_ptr + 3
         return ()
     end
-
+    
 
     # Splits a field element in the range [0, 2^224) to its low 64-bit and high 160-bit parts.
     func split_64b{range_check_ptr}(a : felt) -> (low : felt, high : felt):
@@ -95,6 +96,27 @@ namespace karatsuba:
         assert [range_check_ptr + 1] = HALF_SHIFT - 1 - low
         let range_check_ptr = range_check_ptr + 2
         assert_160_bit(high)
+        return (low, high)
+    end
+
+
+    # Splits a field element in the range [0, 2^224) to its low 128-bit and high 96-bit parts.
+    func split_128{range_check_ptr}(a : felt) -> (low : felt, high : felt):
+        alloc_locals
+        const UPPER_BOUND = 2 ** 224
+        const HIGH_BOUND = UPPER_BOUND / SHIFT
+        local low : felt
+        local high : felt
+
+        %{
+            ids.low = ids.a & ((1<<128) - 1)
+            ids.high = ids.a >> 128
+        %}
+        assert a = low + high * SHIFT
+        assert [range_check_ptr + 0] = high
+        assert [range_check_ptr + 1] = HIGH_BOUND - 1 - high
+        assert [range_check_ptr + 2] = low
+        let range_check_ptr = range_check_ptr + 3
         return (low, high)
     end
 
@@ -121,6 +143,26 @@ namespace karatsuba:
         )
     end
 
+    func uint256_mul_c{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
+        alloc_locals
+        let (a0, a1) = split_64(a.low)
+        let (a2, a3) = split_64(a.high)
+        let (b0, b1) = split_64(b.low)
+        let (b2, b3) = split_64(b.high)
+
+        let (res0, carry) = split_128(a0 * b0 + (a1 * b0 + a0 * b1)*HALF_SHIFT)
+        let (res2, carry) = split_128(
+            a2 * b0 + a1 * b1 + a0 * b2 + (a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3)*HALF_SHIFT + carry
+        )
+        let (res4, carry) = split_128(a3 * b1 + a2 * b2 + a1 * b3 + (a3 * b2 + a2 * b3)*HALF_SHIFT + carry)
+        #let (res6, carry) = split_64(a3 * b3 + carry)
+
+        return (
+            low=Uint256(low=res0, high=res2),
+            #high=Uint256(low=res4 + HALF_SHIFT * res5, high=res6 + HALF_SHIFT * carry),
+            high=Uint256(low=res4, high=a3 * b3 + carry),
+        )
+    end
 
     func unit128_mul_kar_split(x0 : felt, x1 : felt, y0 : felt, y1 : felt) -> (z0 : felt, z1 : felt, z2 : felt):
         alloc_locals
@@ -130,6 +172,10 @@ namespace karatsuba:
         return (z0,z1,z2)
     end
 
+    func unit128_mul_split(x0 : felt, x1 : felt, y0 : felt, y1 : felt) -> (z0 : felt, z1 : felt, z2 : felt):
+        return (x0*y0, x1*y0+y1*x0, x1*y1)
+    end
+
     func uint256_mul_kar{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
         alloc_locals
         let (a0, a1) = split_64(a.low)
@@ -137,9 +183,9 @@ namespace karatsuba:
         let (b0, b1) = split_64(b.low)
         let (b2, b3) = split_64(b.high)
 
-        let (z0, z1, z2) = unit128_mul_kar_split(a0,a1,b0,b1)
-        let (z4, z5, z6) = unit128_mul_kar_split(a2,a3,b2,b3)
-        let (w2, w3, w4) = unit128_mul_kar_split(a0 + a2,a1 + a3,b0 + b2,b1 + b3)
+        let (z0, z1, z2) = unit128_mul_split(a0,a1,b0,b1)
+        let (z4, z5, z6) = unit128_mul_split(a2,a3,b2,b3)
+        let (w2, w3, w4) = unit128_mul_split(a0 + a2,a1 + a3,b0 + b2,b1 + b3)
 
         let (res0, carry) = split_64(z0)
         let (res1, carry) = split_64(z1 + carry)
@@ -184,6 +230,33 @@ namespace karatsuba:
         )
     end
 
+    func uint256_mul_kar_c{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
+        alloc_locals
+        let (a0, a1) = split_64(a.low)
+        let (a2, a3) = split_64(a.high)
+        let (b0, b1) = split_64(b.low)
+        let (b2, b3) = split_64(b.high)
+
+        let (z0, z1, z2) = unit128_mul_split(a0,a1,b0,b1)
+        let Z0 = z0 + HALF_SHIFT * z1
+        let (z4, z5, z6) = unit128_mul_split(a2,a3,b2,b3)
+        let Z4 = z4 + HALF_SHIFT * z5
+        let (w2, w3, w4) = unit128_mul_split(a0 + a2,a1 + a3,b0 + b2,b1 + b3)
+        let W2 = w2 + HALF_SHIFT * w3
+
+        let (res0, carry) = split_128(Z0)
+        let (res2, carry) = split_128(z2 + W2 - Z0 - Z4 + carry)
+        let (res4, carry) = split_128(Z4 + w4 - z2 - z6 + carry)
+        #let (res6, carry) = split_64(z6 + carry)
+
+        return (
+            low=Uint256(low=res0, high=res2),
+            #high=Uint256(low=res4 + HALF_SHIFT * res5, high=res6 + HALF_SHIFT * carry),
+            high=Uint256(low=res4, high=z6 + carry),
+        )
+    end
+
+
 end
 
 func main{range_check_ptr}():
@@ -220,10 +293,12 @@ func main{range_check_ptr}():
         ids.ab_h.high=ab
     %}
 
-    #let (z0,z1) = uint256_mul(a,b)
-    #let (z0,z1) = uint256_mul_b(a,b)
-    #let (z0,z1) = uint256_mul_kar(a,b)
-    let (z0,z1) = karatsuba.uint256_mul_kar_b(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul_b(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul_c(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul_kar(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul_kar_b(a,b)
+    let (z0,z1) = karatsuba.uint256_mul_kar_c(a,b)
 
     assert z0=ab_l
     assert z1=ab_h
