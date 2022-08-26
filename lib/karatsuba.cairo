@@ -124,8 +124,8 @@ namespace karatsuba:
     # Multiplies two integers. Returns the result as two 256-bit integers (low and high parts).
     func uint256_mul_b{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
         alloc_locals
-        let a0 = a.low
-        let a2 = a.high
+        local a0 = a.low
+        local a2 = a.high
         let (b0, b1) = split_64(b.low)
         let (b2, b3) = split_64(b.high)
 
@@ -166,9 +166,9 @@ namespace karatsuba:
 
     func unit128_mul_kar_split(x0 : felt, x1 : felt, y0 : felt, y1 : felt) -> (z0 : felt, z1 : felt, z2 : felt):
         alloc_locals
-        let z0 = x0*y0
-        let z2 = x1*y1
-        let z1 = (x1 + x0)*(y1 + y0) - z2 - z0
+        local z0 = x0*y0
+        local z2 = x1*y1
+        local z1 = (x1 + x0)*(y1 + y0) - z2 - z0
         return (z0,z1,z2)
     end
 
@@ -204,17 +204,17 @@ namespace karatsuba:
 
     func uint256_mul_kar_b{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
         alloc_locals
-        let a0 = a.low
-        let a2 = a.high
+        local a0 = a.low
+        local a2 = a.high
         let (b0, b1) = split_64(b.low)
         let (b2, b3) = split_64(b.high)
 
-        let z0 = a0*b0
-        let z1 = a0*b1
-        let z4 = a2*b2
-        let z5 = a2*b3
-        let w2 = (a0 + a2)*(b0 + b2)
-        let w3 = (a0 + a2)*(b1 + b3)
+        local z0 = a0*b0
+        local z1 = a0*b1
+        local z4 = a2*b2
+        local z5 = a2*b3
+        local w2 = (a0 + a2)*(b0 + b2)
+        local w3 = (a0 + a2)*(b1 + b3)
 
         let (res0, carry) = split_64(z0)
         let (res1, carry) = split_64(z1 + carry)
@@ -238,11 +238,11 @@ namespace karatsuba:
         let (b2, b3) = split_64(b.high)
 
         let (z0, z1, z2) = unit128_mul_split(a0,a1,b0,b1)
-        let Z0 = z0 + HALF_SHIFT * z1
+        local Z0 = z0 + HALF_SHIFT * z1
         let (z4, z5, z6) = unit128_mul_split(a2,a3,b2,b3)
-        let Z4 = z4 + HALF_SHIFT * z5
+        local Z4 = z4 + HALF_SHIFT * z5
         let (w2, w3, w4) = unit128_mul_split(a0 + a2,a1 + a3,b0 + b2,b1 + b3)
-        let W2 = w2 + HALF_SHIFT * w3
+        local W2 = w2 + HALF_SHIFT * w3
 
         let (res0, carry) = split_128(Z0)
         let (res2, carry) = split_128(z2 + W2 - Z0 - Z4 + carry)
@@ -305,3 +305,6 @@ func main{range_check_ptr}():
 
     return ()
 end
+
+#cairo-compile lib/karatsuba.cairo --output kar_compiled.json
+#cairo-run   --program=kar_compiled.json --print_output   --print_info --relocate_prints --layout=small
