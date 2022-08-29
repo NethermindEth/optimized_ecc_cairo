@@ -1,6 +1,7 @@
 #%builtins range_check
 
-from starkware.cairo.common.uint256 import Uint256, split_64, uint256_mul, HALF_SHIFT, SHIFT
+from starkware.cairo.common.uint256 import Uint256, split_64, uint256_mul, uint256_check, HALF_SHIFT, SHIFT
+from starkware.cairo.common.math import unsigned_div_rem as frem
 
 # Multiplies two integers. Returns the result as two 256-bit integers (low and high parts).
 #func uint256_mul{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
@@ -255,6 +256,77 @@ namespace karatsuba:
             high=Uint256(low=res4, high=z6 + carry),
         )
     end
+    
+    func assert_div{range_check_ptr}(value, div) -> ():
+        let q = [range_check_ptr]
+        let range_check_ptr = range_check_ptr + 1
+        %{
+            from starkware.cairo.common.math_utils import assert_integer
+            assert_integer(ids.div)
+            assert 0 < ids.div <= PRIME // range_check_builtin.bound, \
+               f'div={hex(ids.div)} is out of the valid range.'
+            ids.q, r = divmod(ids.value, ids.div)
+            assert r == 0
+        %}
+
+        assert value = q * div
+        return ()
+    end
+
+    func uint256_mul_mont{range_check_ptr}(a : Uint256, b : Uint256) -> (low : Uint256, high : Uint256):
+        alloc_locals
+        const B0_1 = SHIFT
+        const B0_2 = SHIFT**2
+        const B0_3 = SHIFT**3
+
+        const FAC1 = 2**118
+        const B1_1 = 0
+        const B1_2 = 0
+        const B1_3 = 0
+        
+        const FAC2 = 332306998946228968225951765070086143
+        #apparantly we can't create arrays of consts for some reason
+        const B2_1 = 1024
+        const B2_2 = 1048576
+        const B2_3 = 1073741824
+        
+        const FAC3 = 332306998946228968225951765070086141
+        const B3_1 = 3072
+        const B3_2 = 9437184
+        const B3_3 = 28991029248
+        
+        local low : Uint256
+        local high : Uint256
+        %{
+            from utils import split, pack
+            #exec(open('utils.py').read()) #horible kludge, fix when we have a good name space
+            #a=pack(ids.a) #that this doesn't work is a flaw in Cairo
+            a=pack((ids.a.low,ids.a.high))
+            #b=pack(ids.b) #that this doesn't work is a flaw in Cairo
+            b=pack((ids.b.low,ids.b.high))
+
+            (ids.low.low,ids.low.high,ids.high.low,ids.high.high) = split(a*b, length=4)
+        %}
+
+        uint256_check(low)
+        uint256_check(high)
+
+        assert (a.low + a.high*B0_1)*(b.low + b.high*B0_1) = (low.low + low.high*B0_1 + high.low*B0_2 + high.high*B0_3)
+
+        let (_,va) = frem(a.low,FAC1)
+        let (_,vb) = frem(b.low,FAC1)
+        assert_div(low.low + FAC1**2 - va*vb,FAC1)
+        
+        let (_,va) = frem(a.low + a.high*B2_1,FAC2)
+        let (_,vb) = frem(b.low + b.high*B2_1,FAC2)
+        assert_div(low.low + low.high*B2_1 + high.low*B2_2 + high.high*B2_3 + FAC2**2 - va*vb,FAC2)
+
+        let (_,va) = frem(a.low + a.high*B3_1,FAC3)
+        let (_,vb) = frem(b.low + b.high*B3_1,FAC3)
+        assert_div(low.low + low.high*B3_1 + high.low*B3_2 + high.high*B3_3 + FAC3**2 - va*vb,FAC3)
+
+        return(low,high)
+    end
 
 
 end
@@ -298,7 +370,8 @@ func main{range_check_ptr}():
     #let (z0,z1) = karatsuba.uint256_mul_c(a,b)
     #let (z0,z1) = karatsuba.uint256_mul_kar(a,b)
     #let (z0,z1) = karatsuba.uint256_mul_kar_b(a,b)
-    let (z0,z1) = karatsuba.uint256_mul_kar_c(a,b)
+    #let (z0,z1) = karatsuba.uint256_mul_kar_c(a,b)
+    let (z0,z1) = karatsuba.uint256_mul_mont(a,b)
 
     assert z0=ab_l
     assert z1=ab_h
