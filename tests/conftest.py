@@ -122,18 +122,6 @@ async def pairing_factory(starknet_factory):
 
     return pairing_contract
 
-@pytest.fixture(scope="module")
-async def pairing_factory(starknet_factory):
-    starknet = starknet_factory
-
-    # Deploy the account contract
-    contract_class = compile_starknet_files(
-        files=[PAIRING_CONTRACT], disable_hint_validation=True
-    )
-    pairing_contract = await starknet.deploy(contract_class=contract_class)
-
-    return pairing_contract
-
 @pytest.fixture(scope="module")        
 async def hash_to_curve_factory(starknet_factory):
     starknet = starknet_factory
