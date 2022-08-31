@@ -97,9 +97,7 @@ namespace g1_lib:
         let (W : Uint384) = fq_lib.mul(p1.z, p2.z)
 
         let (U_squared_times_W : Uint384) = fq_lib.mul_three_terms(U, U, W)
-        let (twice_V_squared_times_V2 : Uint384) = fq_lib.scalar_mul(
-            Uint384(2, 0, 0), V_squared_times_V2
-        )
+        let (twice_V_squared_times_V2 : Uint384) = fq_lib.scalar_mul(2, V_squared_times_V2)
         let (A : Uint384) = fq_lib.sub_three_terms(
             U_squared_times_W, V_cubed, twice_V_squared_times_V2
         )
@@ -121,41 +119,39 @@ namespace g1_lib:
     func double{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(point : G1Point) -> (res : G1Point):
         alloc_locals
         let (W : Uint384) = fq_lib.mul(point.x, point.x)
-        let (W : Uint384) = fq_lib.scalar_mul(Uint384(3, 0, 0), W)
+        let (W : Uint384) = fq_lib.scalar_mul(3, W)
         let (S : Uint384) = fq_lib.mul(point.y, point.z)
         let (B : Uint384) = fq_lib.mul_three_terms(point.x, point.y, S)
 
         let (W_squared : Uint384) = fq_lib.mul(W, W)
-        let (eight_times_B : Uint384) = fq_lib.scalar_mul(Uint384(8, 0, 0), B)
+        let (eight_times_B : Uint384) = fq_lib.scalar_mul(8, B)
         let (H : Uint384) = fq_lib.sub(W_squared, eight_times_B)
 
         # Compute new_x
         let (H_times_S : Uint384) = fq_lib.mul(H, S)
-        let (new_x : Uint384) = fq_lib.scalar_mul(Uint384(2, 0, 0), H_times_S)
+        let (new_x : Uint384) = fq_lib.scalar_mul(2, H_times_S)
 
         # Compute new_y
         let (S_squared : Uint384) = fq_lib.mul(S, S)
         let (aux_inner_term_2 : Uint384) = fq_lib.mul_three_terms(point.y, point.y, S_squared)
-        let (inner_term_2 : Uint384) = fq_lib.scalar_mul(Uint384(8, 0, 0), aux_inner_term_2)
-        let (four_times_B : Uint384) = fq_lib.scalar_mul(Uint384(4, 0, 0), B)
+        let (inner_term_2 : Uint384) = fq_lib.scalar_mul(8, aux_inner_term_2)
+        let (four_times_B : Uint384) = fq_lib.scalar_mul(4, B)
         let (four_times_B_sub_H : Uint384) = fq_lib.sub(four_times_B, H)
         let (inner_term_1 : Uint384) = fq_lib.mul(W, four_times_B_sub_H)
         let (new_y : Uint384) = fq_lib.sub(inner_term_1, inner_term_2)
 
         # Compute new_z
         let (S_cubed : Uint384) = fq_lib.mul(S, S_squared)
-        let (new_z : Uint384) = fq_lib.scalar_mul(Uint384(8, 0, 0), S_cubed)
+        let (new_z : Uint384) = fq_lib.scalar_mul(8, S_cubed)
 
         return (G1Point(new_x, new_y, new_z))
     end
-
 
     # Computes scalar * point, which means point added with itself `scalar` times
     func scalar_mul{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
         scalar : Uint384, point : G1Point
     ) -> (res : G1Point):
         alloc_locals
-        
 
         let (local is_scalar_zero) = uint384_lib.eq(scalar, Uint384(0, 0, 0))
         let (local is_scalar_one) = uint384_lib.eq(scalar, Uint384(1, 0, 0))

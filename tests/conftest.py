@@ -36,10 +36,10 @@ async def fq_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[FQ_CONTRACT], disable_hint_validation=True
     )
-    fq_contract = await starknet.deploy(contract_def=contract_def)
+    fq_contract = await starknet.deploy(contract_class=contract_class)
 
     return fq_contract
 
@@ -50,10 +50,10 @@ async def g1_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[G1_CONTRACT], disable_hint_validation=True
     )
-    g1_contract = await starknet.deploy(contract_def=contract_def)
+    g1_contract = await starknet.deploy(contract_class=contract_class)
 
     return g1_contract
 
@@ -64,10 +64,10 @@ async def g2_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[G2_CONTRACT], disable_hint_validation=True
     )
-    g2_contract = await starknet.deploy(contract_def=contract_def)
+    g2_contract = await starknet.deploy(contract_class=contract_class)
 
     return g2_contract
 
@@ -78,8 +78,8 @@ async def g2_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def= compile_starknet_files(files=[G2_CONTRACT], disable_hint_validation=True)
-    g2_contract = await starknet.deploy(contract_def=contract_def)
+    contract_class= compile_starknet_files(files=[G2_CONTRACT], disable_hint_validation=True)
+    g2_contract = await starknet.deploy(contract_class=contract_class)
 
     return g2_contract
 
@@ -89,10 +89,10 @@ async def fq2_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[FQ2_CONTRACT], disable_hint_validation=True
     )
-    fq_contract = await starknet.deploy(contract_def=contract_def)
+    fq_contract = await starknet.deploy(contract_class=contract_class)
 
     return fq_contract
 
@@ -103,10 +103,10 @@ async def fq12_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[FQ12_CONTRACT], disable_hint_validation=True
     )
-    fq_contract = await starknet.deploy(contract_def=contract_def)
+    fq_contract = await starknet.deploy(contract_class=contract_class)
 
     return fq_contract
 
@@ -115,10 +115,10 @@ async def pairing_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[PAIRING_CONTRACT], disable_hint_validation=True
     )
-    pairing_contract = await starknet.deploy(contract_def=contract_def)
+    pairing_contract = await starknet.deploy(contract_class=contract_class)
 
     return pairing_contract
 
@@ -127,9 +127,9 @@ async def hash_to_curve_factory(starknet_factory):
     starknet = starknet_factory
 
     # Deploy the account contract
-    contract_def = compile_starknet_files(
+    contract_class = compile_starknet_files(
         files=[HASH_TO_CURVE_CONTRACT], disable_hint_validation=True
     )
-    hash_to_curve_contract = await starknet.deploy(contract_def=contract_def)
+    hash_to_curve_contract = await starknet.deploy(contract_class=contract_class)
 
     return hash_to_curve_contract

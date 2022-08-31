@@ -23,7 +23,8 @@ end
 namespace uint384_extension_lib:
     # Adds a 768-bit integer and a 384-bit integer. Returns the result as a 768-bit integer and the (1-bit) carry.
     func add_uint768_and_uint384{range_check_ptr}(a : Uint768, b : Uint384) -> (
-            res : Uint768, carry : felt):
+        res : Uint768, carry : felt
+    ):
         alloc_locals
 
         let a_low = Uint384(d0=a.d0, d1=a.d1, d2=a.d2)
@@ -50,7 +51,8 @@ namespace uint384_extension_lib:
     # Returns the result (1152 bits) as a 768-bit integer (the lower bits of the result) and
     # a 384-bit integer (the higher bits of the result)
     func mul_uint768_by_uint384{range_check_ptr}(a : Uint768, b : Uint384) -> (
-            low : Uint768, high : Uint384):
+        low : Uint768, high : Uint384
+    ):
         alloc_locals
         let a_low = Uint384(d0=a.d0, d1=a.d1, d2=a.d2)
         let a_high = Uint384(d0=a.d3, d1=a.d4, d2=a.d5)
@@ -59,12 +61,14 @@ namespace uint384_extension_lib:
         let (high_low, high_high) = uint384_lib.mul(a_high, b)
 
         let (sum_low_high_and_high_low : Uint384, carry0 : felt) = uint384_lib.add(
-            low_high, high_low)
+            low_high, high_low
+        )
 
         assert_le(carry0, 2)
 
         let (high_high_with_carry : Uint384, carry1 : felt) = uint384_lib.add(
-            high_high, Uint384(carry0, 0, 0))
+            high_high, Uint384(carry0, 0, 0)
+        )
         assert carry1 = 0
 
         local res_low : Uint768
@@ -88,7 +92,8 @@ namespace uint384_extension_lib:
     # Unsigned integer division between a 768-bit integer and a 384-bit integer. Returns the quotient (768 bits) and the remainder (384 bits).
     # Conforms to EVM specifications: division by 0 yields 0.
     func unsigned_div_rem_uint768_by_uint384{range_check_ptr}(a : Uint768, div : Uint384) -> (
-            quotient : Uint768, remainder : Uint384):
+        quotient : Uint768, remainder : Uint384
+    ):
         alloc_locals
         local quotient : Uint768
         local remainder : Uint384
@@ -139,7 +144,8 @@ namespace uint384_extension_lib:
         assert res_mul_high = Uint384(0, 0, 0)
 
         let (check_val : Uint768, add_carry : felt) = add_uint768_and_uint384(
-            res_mul_low, remainder)
+            res_mul_low, remainder
+        )
 
         assert add_carry = 0
         assert check_val = a
@@ -149,7 +155,7 @@ namespace uint384_extension_lib:
 
         return (quotient=quotient, remainder=remainder)
     end
-
+    
     func eq{range_check_ptr}(a : Uint768, b : Uint768) -> (res : felt):
         if a.d5 != b.d5:
             return (0)
@@ -172,7 +178,7 @@ namespace uint384_extension_lib:
         return (1)
     end
 
-    func and{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : Uint768, b : Uint768) -> (
+    func bit_and{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(a : Uint768, b : Uint768) -> (
             res : Uint768):
         let (d0) = bitwise_and(a.d0, b.d0)
         let (d1) = bitwise_and(a.d1, b.d1)
@@ -182,4 +188,5 @@ namespace uint384_extension_lib:
         let (d5) = bitwise_and(a.d5, b.d5)
         return (Uint768(d0, d1, d2, d3, d4, d5))
     end
+
 end

@@ -64,6 +64,23 @@ namespace pairing_lib:
 
         let (denom_eq_zero : felt) = fq12_lib.eq(m_denominator, zero)
 
+
+    func line_func_gt{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
+        p1 : GTPoint, p2 : GTPoint, pt : GTPoint
+    ) -> (x : FQ12, y : FQ12):
+        alloc_locals
+        let (zero : FQ12) = fq12_lib.zero()
+
+        let (y_2_z_1) = fq12_lib.mul(p2.y, p1.z)
+        let (y_1_z_2) = fq12_lib.mul(p1.y, p2.z)
+        let (m_numerator : FQ12) = fq12_lib.sub(y_2_z_1, y_1_z_2)
+
+        let (x_2_z_1) = fq12_lib.mul(p2.x, p1.z)
+        let (x_1_z_2) = fq12_lib.mul(p1.x, p2.z)
+        let (m_denominator : FQ12) = fq12_lib.sub(x_2_z_1, x_1_z_2)
+
+        let (denom_eq_zero : felt) = fq12_lib.eq(m_denominator, zero)
+
         if denom_eq_zero == 0:
             let (x_t_z_1) = fq12_lib.mul(pt.x, p1.z)
             let (x_1_z_t) = fq12_lib.mul(p1.x, pt.z)
@@ -117,8 +134,10 @@ namespace pairing_lib:
 
         let (y) = fq12_lib.mul(p1.z, pt.z)
 
+
         return (x, y)
     end
+
 
     func miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p : G1Point) -> (
             f : FQ12):
@@ -253,6 +272,7 @@ namespace pairing_lib:
         return (twist_r=twist_r, f_num=f_num, f_den=f_den, r=r)
     end
 
+
     func twist{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(pt : G2Point) -> (res : GTPoint):
         alloc_locals
 
@@ -266,6 +286,7 @@ namespace pairing_lib:
             y=FQ12(e0=y_min_y_i, e1=zero, e2=zero, e3=zero, e4=zero, e5=zero, e6=pt.y.e1, e7=zero, e8=zero, e9=zero, e10=zero, e11=zero),
             z=FQ12(e0=zero, e1=zero, e2=zero, e3=z_min_z_i, e4=zero, e5=zero, e6=zero, e7=zero, e8=zero, e9=pt.z.e1, e10=zero, e11=zero)))
     end
+
 
     # `exptable` from py_ecc is a list with the following 12 FQ12 elements:
     let e0 = FQ12(
