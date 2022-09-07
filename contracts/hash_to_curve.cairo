@@ -11,62 +11,66 @@ from lib.hash_to_field import expand_msg_sha_xmd
 from lib.swu import optimized_sswu, sqrt_div
 
 @view
-func exp_hash_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(
-        one : Uint256, two : Uint256, three : Uint256, four : Uint256) -> (
-        point_on_curve : G2Point):
-    let (res : G2Point) = expanded_hash_to_curve(one, two, three, four)
+func exp_hash_to_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    one: Uint256, two: Uint256, three: Uint256, four: Uint256
+) -> (point_on_curve: G2Point) {
+    let (res: G2Point) = expanded_hash_to_curve(one, two, three, four);
 
-    return (res)
-end
-
-@view
-func sqrt_div_fq2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2, v : FQ2) -> (
-        success : felt, sqrt_candidate : FQ2):
-    alloc_locals
-    let (success : felt, sqrt_candidate) = sqrt_div(u, v)
-
-    return (success, sqrt_candidate)
-end
+    return (res,);
+}
 
 @view
-func sswu{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(t : FQ2) -> (x : FQ2, y : FQ2, z : FQ2):
-    alloc_locals
-    let (x, y, z) = optimized_sswu(t)
+func sqrt_div_fq2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(u: FQ2, v: FQ2) -> (
+    success: felt, sqrt_candidate: FQ2
+) {
+    alloc_locals;
+    let (success: felt, sqrt_candidate) = sqrt_div(u, v);
 
-    return (x, y, z)
-end
-
-@view
-func fq2_to_curve{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(u : FQ2) -> (
-        x : FQ2, y : FQ2, z : FQ2):
-    let (x, y, z) = map_to_curve_g2(u)
-
-    return (x, y, z)
-end
+    return (success, sqrt_candidate);
+}
 
 @view
-func isogeny_g2{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x : FQ2, y : FQ2, z : FQ2) -> (
-        x_res : FQ2, y_res : FQ2, z_res : FQ2):
-    alloc_locals
+func sswu{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(t: FQ2) -> (x: FQ2, y: FQ2, z: FQ2) {
+    alloc_locals;
+    let (x, y, z) = optimized_sswu(t);
 
-    let (x_res, y_res, z_res) = isogeny_map_g2(x, y, z)
-
-    return (x_res, y_res, z_res)
-end
+    return (x, y, z);
+}
 
 @view
-func clear_cofactor{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(p : G2Point) -> (res : G2Point):
-    alloc_locals
+func fq2_to_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(u: FQ2) -> (
+    x: FQ2, y: FQ2, z: FQ2
+) {
+    let (x, y, z) = map_to_curve_g2(u);
 
-    let (res) = clear_cofactor_g2(p)
-
-    return (res)
-end
+    return (x, y, z);
+}
 
 @view
-func hash_to_field{bitwise_ptr : BitwiseBuiltin*, range_check_ptr}(msg : Uint256) -> (
-        one : Uint256, two : Uint256, three : Uint256, four : Uint256):
-    let (one, two, three, four) = expand_msg_sha_xmd(msg)
+func isogeny_g2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2, z: FQ2) -> (
+    x_res: FQ2, y_res: FQ2, z_res: FQ2
+) {
+    alloc_locals;
 
-    return (one, two, three, four)
-end
+    let (x_res, y_res, z_res) = isogeny_map_g2(x, y, z);
+
+    return (x_res, y_res, z_res);
+}
+
+@view
+func clear_cofactor{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(p: G2Point) -> (res: G2Point) {
+    alloc_locals;
+
+    let (res) = clear_cofactor_g2(p);
+
+    return (res,);
+}
+
+@view
+func hash_to_field{bitwise_ptr: BitwiseBuiltin*, range_check_ptr}(msg: Uint256) -> (
+    one: Uint256, two: Uint256, three: Uint256, four: Uint256
+) {
+    let (one, two, three, four) = expand_msg_sha_xmd(msg);
+
+    return (one, two, three, four);
+}
