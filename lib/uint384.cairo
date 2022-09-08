@@ -84,6 +84,25 @@ namespace uint384_lib {
         return (low, high);
     }
 
+    func split_128{range_check_ptr}(a: felt) -> (low: felt, high: felt) {
+        alloc_locals;
+        const UPPER_BOUND = 2 ** 224;
+        const HIGH_BOUND = UPPER_BOUND / SHIFT;
+        local low: felt;
+        local high: felt;
+
+        %{
+            ids.low = ids.a & ((1<<128) - 1)
+            ids.high = ids.a >> 128
+        %}
+        assert a = low + high * SHIFT;
+        assert [range_check_ptr + 0] = high;
+        assert [range_check_ptr + 1] = HIGH_BOUND - 1 - high;
+        assert [range_check_ptr + 2] = low;
+        let range_check_ptr = range_check_ptr + 3;
+        return (low, high);
+    }
+
     // Multiplies two integers. Returns the result as two 384-bit integers: the result has 2*384 bits,
     // the returned integers represent the lower 384-bits and the higher 384-bits, respectively.
     func mul{range_check_ptr}(a: Uint384, b: Uint384) -> (low: Uint384, high: Uint384) {
@@ -95,24 +114,24 @@ namespace uint384_lib {
         let (b2, b3) = split_64(b.d1);
         let (b4, b5) = split_64(b.d2);
 
-        let (res0, carry) = split_64(a0 * b0);
-        let (res1, carry) = split_64(a1 * b0 + a0 * b1 + carry);
-        let (res2, carry) = split_64(a2 * b0 + a1 * b1 + a0 * b2 + carry);
-        let (res3, carry) = split_64(a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3 + carry);
-        let (res4, carry) = split_64(a4 * b0 + a3 * b1 + a2 * b2 + a1 * b3 + a0 * b4 + carry);
-        let (res5, carry) = split_64(
-            a5 * b0 + a4 * b1 + a3 * b2 + a2 * b3 + a1 * b4 + a0 * b5 + carry
+        let (res0, carry) = split_128(a0 * b0 + (a1 * b0 + a0 * b1) * HALF_SHIFT);
+        let (res2, carry) = split_128(
+            a2 * b0 + a1 * b1 + a0 * b2 + (a3 * b0 + a2 * b1 + a1 * b2 + a0 * b3) * HALF_SHIFT + carry,
         );
-        let (res6, carry) = split_64(a5 * b1 + a4 * b2 + a3 * b3 + a2 * b4 + a1 * b5 + carry);
-        let (res7, carry) = split_64(a5 * b2 + a4 * b3 + a3 * b4 + a2 * b5 + carry);
-        let (res8, carry) = split_64(a5 * b3 + a4 * b4 + a3 * b5 + carry);
-        let (res9, carry) = split_64(a5 * b4 + a4 * b5 + carry);
-        let (res10, carry) = split_64(a5 * b5 + carry);
+        let (res4, carry) = split_128(
+            a4 * b0 + a3 * b1 + a2 * b2 + a1 * b3 + a0 * b4 + (a5 * b0 + a4 * b1 + a3 * b2 + a2 * b3 + a1 * b4 + a0 * b5) * HALF_SHIFT + carry,
+        );
+        let (res6, carry) = split_128(
+            a5 * b1 + a4 * b2 + a3 * b3 + a2 * b4 + a1 * b5 + (a5 * b2 + a4 * b3 + a3 * b4 + a2 * b5) * HALF_SHIFT + carry,
+        );
+        let (res8, carry) = split_128(
+            a5 * b3 + a4 * b4 + a3 * b5 + (a5 * b4 + a4 * b5) * HALF_SHIFT + carry
+        );
 
         return (
-            low=Uint384(d0=res0 + HALF_SHIFT * res1, d1=res2 + HALF_SHIFT * res3, d2=res4 + HALF_SHIFT * res5),
-            high=Uint384(d0=res6 + HALF_SHIFT * res7, d1=res8 + HALF_SHIFT * res9, d2=res10 + HALF_SHIFT * carry),
-        );
+            low=Uint384(d0=res0, d1=res2, d2=res4),
+            high=Uint384(d0=res6, d1=res8, d2=a5 * b5 + carry),
+        );    
     }
 
     // Multiplies two integers. Returns the result as two 256-bit integers (low and high parts).
