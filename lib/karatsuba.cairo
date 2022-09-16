@@ -162,6 +162,28 @@ namespace karatsuba {
         return (low=Uint256(low=res0, high=res2), high=Uint256(low=res4, high=a3 * b3 + carry),);
     }
 
+    func uint256_mul_d{range_check_ptr}(a: Uint256, b: Uint256) -> (low: Uint256, high: Uint256) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.low);
+        let (a2, a3) = split_64(a.high);
+        let (b0, b1) = split_64(b.low);
+        let (b2, b3) = split_64(b.high);
+
+	local B0 = b0*HALF_SHIFT;
+	local b12 = b1 + b2*HALF_SHIFT;
+
+        let (res0, carry) = split_128(a1 * B0 + a0 * b.low);
+        let (res2, carry) = split_128(
+            a3 * B0 + a2 * b.low + a1 * b12 + a0 * b.high + carry,
+        );
+        let (res4, carry) = split_128(
+            a3 * b12 + a2 * b.high + a1 * b3 + carry
+        );
+        // let (res6, carry) = split_64(a3 * b3 + carry);
+
+        return (low=Uint256(low=res0, high=res2), high=Uint256(low=res4, high=a3 * b3 + carry),);
+    }
+
     func unit128_mul_kar_split(x0: felt, x1: felt, y0: felt, y1: felt) -> (
         z0: felt, z1: felt, z2: felt
     ) {

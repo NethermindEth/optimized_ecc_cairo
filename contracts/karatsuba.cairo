@@ -29,6 +29,14 @@ func mul_c{range_check_ptr}(a: Uint256, b: Uint256) -> (low: Uint256, high: Uint
 }
 
 @view
+func mul_d{range_check_ptr}(a: Uint256, b: Uint256) -> (low: Uint256, high: Uint256) {
+    alloc_locals;
+    let (low: Uint256, high: Uint256) = karatsuba.uint256_mul_d(a, b);
+
+    return (low, high);
+}
+
+@view
 func kar_a{range_check_ptr}(a: Uint256, b: Uint256) -> (low: Uint256, high: Uint256) {
     alloc_locals;
     let (low: Uint256, high: Uint256) = karatsuba.uint256_mul_kar(a, b);

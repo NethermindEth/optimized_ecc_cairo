@@ -65,6 +65,18 @@ async def test_karatsuba(karatsuba_factory):
 
     assert result_to_int(execution_info.result) == prod
 
+    execution_info = await contract.mul_d(a, b).call()
+
+    print(
+    "%20s" % "mul d",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    assert result_to_int(execution_info.result) == prod
+
     execution_info = await contract.kar_a(a, b).call()
 
     print(  
