@@ -67,3 +67,27 @@ func mul_mont{range_check_ptr}(a: Uint256, b: Uint256) -> (low: Uint256, high: U
 
     return (low, high);
 }
+
+@view
+func square_c{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+    alloc_locals;
+    let (low: Uint256, high: Uint256) = karatsuba.uint256_square_c(a);
+
+    return (low, high);
+}
+
+@view
+func square_d{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+    alloc_locals;
+    let (low: Uint256, high: Uint256) = karatsuba.uint256_square_d(a);
+
+    return (low, high);
+}
+
+@view
+func square_e{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+    alloc_locals;
+    let (low: Uint256, high: Uint256) = karatsuba.uint256_square_e(a);
+
+    return (low, high);
+}

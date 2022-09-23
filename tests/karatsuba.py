@@ -18,6 +18,7 @@ async def test_karatsuba(karatsuba_factory):
     b = (num, num)
     bint = b[0] + NUM*b[1]
     prod = aint*bint
+    sq = aint*aint
 
     contract = karatsuba_factory
     print("\n")
@@ -124,4 +125,39 @@ async def test_karatsuba(karatsuba_factory):
     )
 
     assert result_to_int(execution_info.result) == prod
+    
+    execution_info = await contract.square_c(a).call()
 
+    print(
+    "%20s" % "square c",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    assert result_to_int(execution_info.result) == sq
+    
+    execution_info = await contract.square_d(a).call()
+
+    print(
+    "%20s" % "square d",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    assert result_to_int(execution_info.result) == sq
+
+    execution_info = await contract.square_e(a).call()
+
+    print(
+    "%20s" % "square e",
+    "|",
+    "%20s" % execution_info.call_info.execution_resources.n_steps,
+    "|",
+    "%-10s" % execution_info.call_info.execution_resources.builtin_instance_counter,
+    )
+
+    assert result_to_int(execution_info.result) == sq

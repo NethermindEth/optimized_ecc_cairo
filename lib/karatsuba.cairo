@@ -356,4 +356,67 @@ namespace karatsuba {
 
         return (low, high);
     }
+
+    func uint256_square_c{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.low);
+        let (a2, a3) = split_64(a.high);
+
+	const HALF_SHIFT2 = 2*HALF_SHIFT;
+
+        let (res0, carry) = split_128(a0 * a0 + (a1 * a0) * HALF_SHIFT2);
+        let (res2, carry) = split_128(
+            a2 * a0 * 2 + a1 * a1 + (a3 * a0 + a2 * a1) * HALF_SHIFT2 + carry,
+        );
+        let (res4, carry) = split_128(
+            a3 * a1 * 2 + a2 * a2 + (a3 * a2) * HALF_SHIFT2 + carry
+        );
+        // let (res6, carry) = split_64(a3 * a3 + carry);
+
+        return (low=Uint256(low=res0, high=res2), high=Uint256(low=res4, high=a3 * a3 + carry),);
+    }
+    
+    func uint256_square_d{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.low);
+        let (a2, a3) = split_64(a.high);
+
+	const HALF_SHIFT2 = 2*HALF_SHIFT;
+
+	local al2 = a.low*2;
+	local A3=a3*HALF_SHIFT2;
+
+        let (res0, carry) = split_128(a0*(al2 - a0));
+        let (res2, carry) = split_128(
+            a2*al2 + a1*a1 + A3*a0 + carry,
+        );
+        let (res4, carry) = split_128(
+	    a3*a1*2 + a2*(a2 + A3) + carry
+        );
+        // let (res6, carry) = split_64(a3*a3 + carry);
+
+        return (low=Uint256(low=res0, high=res2), high=Uint256(low=res4, high=a3*a3 + carry),);
+    }
+    
+    func uint256_square_e{range_check_ptr}(a: Uint256) -> (low: Uint256, high: Uint256) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.low);
+        let (a2, a3) = split_64(a.high);
+
+	const HALF_SHIFT2 = 2*HALF_SHIFT;
+
+	local a12=a1 + a2*HALF_SHIFT2;
+
+        let (res0, carry) = split_128(a0*(a0 + a1*HALF_SHIFT2));
+        let (res2, carry) = split_128(
+	    a0*a.high*2 + a1*a12 + carry,
+        );
+        let (res4, carry) = split_128(
+	   a3*(a1 + a12) + a2*a2 + carry
+        );
+        // let (res6, carry) = split_64(a3*a3 + carry);
+
+        return (low=Uint256(low=res0, high=res2), high=Uint256(low=res4, high=a3*a3 + carry),);
+    }
+
 }
