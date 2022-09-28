@@ -449,25 +449,26 @@ func miller_loop{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(q : G2Point, p 
 
     let (inv_den) = fq12_lib.inverse(f_den);
     let (f) = fq12_lib.mul(f_num, f_den);
-    let (final_exponent) = final_exponentiation(f);
-    return (final_exponent,);
+    //let (final_exponent) = final_exponentiation(f);
+    return (f,);
 }
 
 
 
-func pairing(Q: G2Point, P: G1Point) -> (res: FQ12) {
+func pairing{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(Q: G2Point, P: G1Point) -> (res: FQ12) {
+    alloc_locals;
     let (is_Q_on_curve) = g2_lib.is_on_curve(Q);
     assert is_Q_on_curve = 1;
     let (is_P_on_curve) = g1_lib.is_on_curve(P);
     assert is_P_on_curve = 1;
 
-    let (is_P_point_at_infinity: G1Point) = g1_lib.is_point_at_infinity(P);
+    let (is_P_point_at_infinity: felt) = g1_lib.is_point_at_infinity(P);
     if (is_P_point_at_infinity == 1) {
         let (one: FQ12) = fq12_lib.one();
         return (one,);
     }
 
-    let (is_Q_point_at_infinity: G1Point) = g1_lib.is_point_at_infinity(Q);
+    let (is_Q_point_at_infinity: felt) = g2_lib.is_point_at_infinity(Q);
     if (is_Q_point_at_infinity == 1) {
         let (one: FQ12) = fq12_lib.one();
         return (one,);

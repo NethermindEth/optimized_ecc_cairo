@@ -204,7 +204,7 @@ namespace g1_lib {
     // Check that a point is on the curve defined by y**2 = x**3 + 4
     // TODO: check that this is the correct equation
     // TODO: Can be done without normalizing, avoiding making divisions
-    func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G1Point, b) -> (
+    func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G1Point) -> (
         bool: felt
     ) {
         alloc_locals;
