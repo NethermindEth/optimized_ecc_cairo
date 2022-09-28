@@ -213,8 +213,9 @@ namespace g2_lib {
     func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G2Point, b) -> (
         bool: felt
     ) {
-        let (is_point_at_infinity) = is_point_at_infinity(point);
-        if (is_point_at_infinity == 1) {
+        alloc_locals;
+        let (_is_point_at_infinity) = is_point_at_infinity(point);
+        if (_is_point_at_infinity == 1) {
             return (1,);
         }
         let (x_normalized: FQ2, y_normalized: FQ2) = normalize(point);

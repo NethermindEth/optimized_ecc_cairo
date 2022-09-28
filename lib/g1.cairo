@@ -207,15 +207,16 @@ namespace g1_lib {
     func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G1Point, b) -> (
         bool: felt
     ) {
-        let (is_point_at_infinity) = is_point_at_infinity(point);
-        if (is_point_at_infinity == 1) {
+        alloc_locals;
+        let (_is_point_at_infinity) = is_point_at_infinity(point);
+        if (_is_point_at_infinity == 1) {
             return (1,);
         }
         let (x_normalized: Uint384, y_normalized: Uint384) = normalize(point);
         let (x_square) = fq_lib.mul(x_normalized, x_normalized);
         let (y_square) = fq_lib.mul(y_normalized, y_normalized);
         let (x_cubed) = fq_lib.mul(x_normalized, x_square);
-        let four = Uint384(Uint384(4, 0, 0), Uint384(0, 0, 0));
+        let four = Uint384(4, 0, 0);
         let (res) = fq_lib.sub_three_terms(y_square, x_cubed, four);
         let (is_res_zero) = uint384_lib.is_zero(res);
         return (is_res_zero,);

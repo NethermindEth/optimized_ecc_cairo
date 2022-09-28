@@ -1,12 +1,52 @@
 from hypothesis import given, strategies as st, settings
-from utils import field_modulus, pack, splitFQP, packFQP
+from utils import field_modulus, split, splitFQP, packFQP
 from utils_g2 import get_g2_point_from_seed
-from py_ecc.optimized_bls12_381.optimized_pairing import linefunc, twist
+from py_ecc.optimized_bls12_381.optimized_pairing import linefunc, twist, miller_loop, pairing
 from py_ecc.fields import (
     optimized_bls12_381_FQ as FQ,
+    optimized_bls12_381_FQ2 as FQ2,
     optimized_bls12_381_FQ12 as FQ12
 )
 import pytest
+
+
+@pytest.mark.asyncio
+async def test_pairing(pairing_factory):
+    contract = pairing_factory
+
+    x1,xi1, y1, yi1, z1, zi1 = 522,51234124,11251525, 621414265,12612645,6126412645
+    x2, y2, z2 = 125125,field_modulus - 512551, 125152
+
+    python_res = pairing((FQ2(( x1, xi1 )), FQ2(( y1, yi1 )), FQ2(( z1, zi1 ))), (FQ(x2), FQ(y2), FQ(z2)), False )
+    Q = (splitFQP(( x1, xi1 )), splitFQP(( y1, yi1 )), splitFQP(( z1, zi1 )))
+    P = (split(x1), split(y1), split(z1))
+    execution_info = await contract._pairing(Q, P).call()
+    print(execution_info)
+    res = FQ12(packFQP(execution_info.result[0]))
+    
+    assert python_res == res
+
+
+@pytest.mark.asyncio
+async def test_miller_loop(pairing_factory):
+    contract = pairing_factory
+
+    x1,xi1, y1, yi1, z1, zi1 = field_modulus- 522,51234124,11251525, field_modulus - 621414265,12612645,6126412645
+    x2, y2, z2 = 125125,field_modulus - 512551, 125152
+    print("miller loop python")
+    x,y = miller_loop((FQ2(( x1, xi1 )), FQ2(( y1, yi1 )), FQ2(( z1, zi1 ))), (FQ(x2), FQ(y2), FQ(z2)), False )
+    print((x, y))
+
+    Q = (splitFQP(( x1, xi1 )), splitFQP(( y1, yi1 )), splitFQP(( z1, zi1 )))
+    P = (split(x1), split(y1), split(z1))
+    print("miller loop cairo")
+    execution_info = await contract._miller_loop(Q, P).call()
+    print(execution_info)
+    res_x = FQ12(packFQP(execution_info.result.f_num))
+    res_y = FQ12(packFQP(execution_info.result.f_den))
+    print((res_x, res_y))
+    print((x, y))
+    assert (res_x, res_y) == (x, y)
 
 @pytest.mark.skip("we want to test the other one rn")
 @given(
