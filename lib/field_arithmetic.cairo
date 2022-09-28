@@ -63,7 +63,7 @@ namespace field_arithmetic {
 
     // Computes a * b modulo p
     func mul{range_check_ptr}(a: Uint384, b: Uint384, p: Uint384) -> (res: Uint384) {
-        let (low: Uint384, high: Uint384) = uint384_lib.mul(a, b);
+        let (low: Uint384, high: Uint384) = uint384_lib.mul_d(a, b);
         let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high.d0, high.d1, high.d2);
         let (
             quotient: Uint768, remainder: Uint384
