@@ -6,7 +6,9 @@ from lib.g2 import G2Point, g2_lib
 from lib.uint384 import Uint384, uint384_lib
 from lib.fq import fq_lib
 from lib.fq2 import FQ2, fq2_lib
+from lib.uint384_extension import Uint768
 from starkware.cairo.common.registers import get_label_location
+
 
 struct GTPoint {
     x: FQ12,
@@ -15,32 +17,31 @@ struct GTPoint {
 }
 
 namespace pairing_lib {
-    func pairing(Q: G2Point, P: G1Point) -> (res: FQ12) {
+    func pairing{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(Q: G2Point, P: G1Point) -> (res: FQ12) {
+        alloc_locals;
         let (is_Q_on_curve) = g2_lib.is_on_curve(Q);
         assert is_Q_on_curve = 1;
         let (is_P_on_curve) = g1_lib.is_on_curve(P);
         assert is_P_on_curve = 1;
 
-        let (is_P_point_at_infinity: G1Point) = g1_lib.is_point_at_infinity(P);
+        let (is_P_point_at_infinity) = g1_lib.is_point_at_infinity(P);
         if (is_P_point_at_infinity == 1) {
             let (one: FQ12) = fq12_lib.one();
             return (one,);
         }
 
-        let (is_Q_point_at_infinity: G1Point) = g1_lib.is_point_at_infinity(Q);
+        let (is_Q_point_at_infinity) = g2_lib.is_point_at_infinity(Q);
         if (is_Q_point_at_infinity == 1) {
             let (one: FQ12) = fq12_lib.one();
             return (one,);
         }
 
-        let (twisted_Q: GTPoint) = twist(Q);
-        let (P_as_fq12: GTPoint) = cast_point_to_fq12(P);
-        let (res: FQ12) = miller_loop(twisted_Q, P_as_fq12);
+        let (res: FQ12) = miller_loop(Q, P);
 
         return (res,);
     }
 
-    func cast_point_to_fq12(pt: G1Point) -> (res: GTPoint) {
+    func cast_point_to_fq12{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(pt: G1Point) -> (res: GTPoint) {
         let zero = Uint384(d0=0, d1=0, d2=0);
 
         return (
@@ -140,7 +141,7 @@ namespace pairing_lib {
         return (final_exponent,);
     }
 
-    func get_loop_count_bits(index: felt) -> (bits: felt) {
+    func get_loop_count_bits{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(index: felt) -> (bits: felt) {
         let (data) = get_label_location(bits);
         let bit_array = cast(data, felt*);
         return (bit_array[index],);
@@ -286,7 +287,10 @@ namespace pairing_lib {
         );
     }
 
-    // `exptable` from py_ecc is a list with the following 12 FQ12 elements:
+    func exp_by_p{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: FQ12) -> (res: FQ12) {
+        alloc_locals;
+
+            // `exptable` from py_ecc is a list with the following 12 FQ12 elements:
     let e0 = FQ12(
         Uint384(1, 0, 0),
         Uint384(0, 0, 0),
@@ -456,36 +460,29 @@ namespace pairing_lib {
         Uint384(0, 0, 0),
         Uint384(194355523432902898528581066543403673727, 166522786126368057984828711662347938646, 19416314602568795056194859708885494859),
     );
-
-    func exp_by_p(x: FQ12) -> (res: FQ12) {
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e0, e0);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e1, e1);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e0, e0);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e1, e1);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e2, e2);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e3, e3);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e2, e2);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e3, e3);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e4, e4);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e5, e5);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e4, e4);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e5, e5);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e6, e6);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e7, e7);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e6, e6);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e7, e7);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e8, e8);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e9, e9);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e8, e8);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e9, e9);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
-        let (aux0: FQ12) = fq12_lib.scalar_mul(x.e10, e10);
-        let (aux1: FQ12) = fq12_lib.scalar_mul(x.e11, e11);
+        let (aux0: FQ12) = fq12_lib.scalar_mul_uint384(x.e10, e10);
+        let (aux1: FQ12) = fq12_lib.scalar_mul_uint384(x.e11, e11);
         let (res: FQ12) = fq12_lib.add(aux0, aux1);
         return (res,);
     }
 
-    let cofactor = Uint384(
-        333101798987699541459238279636142242425,
-        264652144914178275364921379528999000936,
-        44951674857880233365469211788470342856,
-    );
-
-    func final_exponentiation(x: FQ12) -> (res: FQ12) {
+    func final_exponentiation{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(x: FQ12) -> (res: FQ12) {
+        alloc_locals;
         // Compute p2 (in py_ecc's notation)
         let (first_exp_by_p: FQ12) = exp_by_p(x);
         let (second_exp_by_p: FQ12) = exp_by_p(first_exp_by_p);
@@ -497,14 +494,22 @@ namespace pairing_lib {
         let (fifth_exp_by_p: FQ12) = exp_by_p(fourth_exp_by_p);
         let (sixth_exp_by_p: FQ12) = exp_by_p(fifth_exp_by_p);
         let (seventh_exp_by_p: FQ12) = exp_by_p(sixth_exp_by_p);
-        let (eight_exp_by_p: FQ12) = exp_by_p(seventh_exp_by_p);
+        let (p3: FQ12) = exp_by_p(seventh_exp_by_p);
 
         // Compute p3 / p2
-        // TODO: Currently the inerse method of fq12_lib is a DUMMY just for compilation purposes
+        // TODO: Currently the ivnerse method of fq12_lib is a DUMMY just for compilation purposes
         let (p2_inverse: FQ12) = fq12_lib.inverse(p2);
         let (p3: FQ12) = fq12_lib.mul(p3, p2_inverse);
 
         // TODO: Since `cofactor` is fixed, we could "hardcode" this exponentiation
+
+        let cofactor = Uint768(
+            333101798987699541459238279636142242425,
+            264652144914178275364921379528999000936,
+            44951674857880233365469211788470342856,
+            0,0,0
+        );
+
         let (res: FQ12) = fq12_lib.pow(p3, cofactor);
         return (res,);
     }
