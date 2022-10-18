@@ -430,4 +430,13 @@ namespace karatsuba {
         return (result=Uint256(low=res0, high=a1 * b1 + carry));
     }
 
+    func uint128_square{range_check_ptr}(a: felt) -> (result: Uint256) {
+        let (a0, a1) = split_64(a);
+
+        let (res0, carry) = split_128(a0*(a + a1*HALF_SHIFT));
+        // let (res2, carry) = split_64(a1 * a1 + carry);
+
+        return (result=Uint256(low=res0, high=a1 * a1 + carry));
+    }
+
 }
