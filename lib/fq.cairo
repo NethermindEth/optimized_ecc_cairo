@@ -59,6 +59,19 @@ namespace fq_lib {
         return (reduced,);
     }
 
+    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(scalar: Uint384, x: Uint384) -> (
+        product: Uint384
+    ) {
+        // TODO: I want to check that scalar is at most 2**128
+        // But I get an error if I do, even fi the scalar is less than 2**128. I think [range_check_ptr] is already filled?
+
+        // assert [range_check_ptr] = scalar
+
+        let (reduced: Uint384) = mul(scalar, x);
+
+        return (reduced,);
+    }
+
     // TODO: in field_arithmetic we implement first the function a/x mod p. Make consistent
     // finds x in a x ≅ 1 (mod q)
     func inverse{range_check_ptr}(a: Uint384) -> (res: Uint384) {

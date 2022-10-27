@@ -79,6 +79,26 @@ namespace fq12_lib {
         return (res,);
     }
 
+    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ12) -> (
+        product: FQ12
+    ) {
+        alloc_locals;
+        let (e0: Uint384) = fq_lib.scalar_mul_uint384(x, y.e0);
+        let (e1: Uint384) = fq_lib.scalar_mul_uint384(x, y.e1);
+        let (e2: Uint384) = fq_lib.scalar_mul_uint384(x, y.e2);
+        let (e3: Uint384) = fq_lib.scalar_mul_uint384(x, y.e3);
+        let (e4: Uint384) = fq_lib.scalar_mul_uint384(x, y.e4);
+        let (e5: Uint384) = fq_lib.scalar_mul_uint384(x, y.e5);
+        let (e6: Uint384) = fq_lib.scalar_mul_uint384(x, y.e6);
+        let (e7: Uint384) = fq_lib.scalar_mul_uint384(x, y.e7);
+        let (e8: Uint384) = fq_lib.scalar_mul_uint384(x, y.e8);
+        let (e9: Uint384) = fq_lib.scalar_mul_uint384(x, y.e9);
+        let (e10: Uint384) = fq_lib.scalar_mul_uint384(x, y.e10);
+        let (e11: Uint384) = fq_lib.scalar_mul_uint384(x, y.e11);
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
+        return (res,);
+    }
+
     func mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         // d0
@@ -515,6 +535,212 @@ namespace fq12_lib {
             e10=Uint384(d0=0, d1=0, d2=0),
             e11=Uint384(d0=0, d1=0, d2=0)),
         );
+    }
+
+    // TODO: test
+    // TODO: Should the exponent go further than 768 bits?
+    // Computes (a**exp). Uses the fast exponentiation algorithm
+    func pow{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12, exp: Uint768) -> (res: FQ12) {
+        alloc_locals;
+        let (is_exp_zero) = uint384_extension_lib.eq(exp, Uint768(0, 0, 0, 0, 0, 0));
+
+        if (is_exp_zero == 1) {
+            let (zero_fq12: FQ12) = zero();
+            return (zero_fq12,);
+        }
+
+        let (is_exp_one) = uint384_extension_lib.eq(exp, Uint768(1, 0, 0, 0, 0, 0));
+        if (is_exp_one == 1) {
+            return (a,);
+        }
+
+        let (exp_div_2, remainder) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384(
+            exp, Uint384(2, 0, 0)
+        );
+        let (is_remainder_zero) = uint384_lib.eq(remainder, Uint384(0, 0, 0));
+
+        if (is_remainder_zero == 1) {
+            // NOTE: Code is repeated in the if-else to avoid declaring a_squared as a local variable
+            let (a_squared: FQ12) = mul(a, a);
+            let (res: FQ12) = pow(a_squared, exp_div_2);
+            return (res,);
+        } else {
+            let (a_squared: FQ12) = mul(a, a);
+            let (res: FQ12) = pow(a_squared, exp_div_2);
+            let (res_mul: FQ12) = mul(a, res);
+            return (res_mul,);
+        }
+    }
+
+    // Finds and FQ12 x such that a * x = 1
+    func inverse{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12) -> (res: FQ12) {
+        alloc_locals;
+
+        let (one_fq12: FQ12) = one();
+        let (is_a_one) = eq(a, one_fq12);
+        if (is_a_one == 1) {
+            return (a,);
+        }
+
+        local a_inverse: FQ12;
+        let (field_modulus: Uint384) = get_modulus();
+
+        %{
+            print("findme0")
+            def split(num: int, num_bits_shift : int = 128, length: int = 3):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift 
+                return tuple(a)
+
+            def pack(z, num_bits_shift: int = 128) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            # TODO: Do this with a loop?
+            e0 = pack(ids.a.e0)
+            e1 = pack(ids.a.e1)
+            e2 = pack(ids.a.e2)
+            e3 = pack(ids.a.e3)
+            e4 = pack(ids.a.e4)
+            e5 = pack(ids.a.e5)
+            e6 = pack(ids.a.e6)
+            e7 = pack(ids.a.e7)
+            e8 = pack(ids.a.e8)
+            e9 = pack(ids.a.e9)
+            e10 = pack(ids.a.e10)
+            e11 = pack(ids.a.e11)
+            coeffs_of_a = [e0, e1 , e2, e3, e4, e5, e6, e7, e8, e9,e10, e11]
+            print("findme1")
+            field_modulus = pack(ids.field_modulus)
+
+            print("findme2")
+            # Adapted from py_ecc: TODO: add link
+
+
+            # Utility methods for polynomial math
+            # Given the list of the coefficients of a polynomial p, 
+            # finds the degree of p
+            def deg(list_of_polynomial_coefficients):
+                d = len(list_of_polynomial_coefficients) - 1
+                while list_of_polynomial_coefficients[d] == 0 and d:
+                    d -= 1
+                return d
+                
+            # Computes the division without residue of a polynomial a by another polynomial b
+            # a and b are given as lists of coefficients
+            def optimized_poly_rounded_div(a, b):
+                dega = deg(a)
+                degb = deg(b)
+                temp = [x for x in a]
+                o = [0 for x in a]
+                for i in range(dega - degb, -1, -1):
+                    o[i] = int(o[i] + temp[degb + i] * pow(int(b[degb]), -1, field_modulus))
+                    for c in range(degb + 1):
+                        temp[c + i] = (temp[c + i] - o[c])
+                return [x % field_modulus for x in o[:deg(o) + 1]]
+
+
+            # Extended euclidean algorithm used to find the modular inverse
+            # of a polynomial given as a list of coefficients.
+            # Returns the inverse as a list of coefficients
+            def inv(coeffs_of_a):
+                lm, hm = [1] + [0] * 12, [0] * 13
+                low, high = (
+                    coeffs_of_a + [0],
+                    [2, 0, 0, 0, 0, 0, -2, 0, 0, 0, 0, 0] + [1] # modulus coefficients
+                )
+                print("findme21")
+
+                while deg(low):
+                    print("findme22")
+                    r = optimized_poly_rounded_div(high, low)
+                    r += [0] * (13 - len(r))
+                    nm = [x for x in hm]
+                    new = [x for x in high]
+                    for i in range(13):
+                        for j in range(13 - i):
+                            nm[i + j] -= lm[i] * int(r[j])
+                            new[i + j] -= low[i] * r[j]
+                    nm = [x % field_modulus for x in nm]
+                    new = [int(x) % field_modulus for x in new]
+                    lm, low, hm, high = nm, new, lm, low
+                print("findme23", low)
+                if low[0] % field_modulus == 0:
+                    inverse_of_low0 = 1
+                else:
+                    inverse_of_low0 = pow(low[0], -1, field_modulus) 
+                print("findme24")
+                return [(coeff*inverse_of_low0) % field_modulus for coeff in lm[:12]]
+                
+            res = inv(coeffs_of_a)    
+            print("findme3", res)
+            res = [split(coeff) for coeff in res]
+
+            ids.a_inverse.e0.d0 = res[0][0]
+            ids.a_inverse.e0.d1 = res[0][1]
+            ids.a_inverse.e0.d2 = res[0][2]
+
+            ids.a_inverse.e1.d0 = res[1][0]
+            ids.a_inverse.e1.d1 = res[1][1]
+            ids.a_inverse.e1.d2 = res[1][2]
+
+            ids.a_inverse.e2.d0 = res[2][0]
+            ids.a_inverse.e2.d1 = res[2][1]
+            ids.a_inverse.e2.d2 = res[2][2]
+
+            ids.a_inverse.e3.d0 = res[3][0]
+            ids.a_inverse.e3.d1 = res[3][1]
+            ids.a_inverse.e3.d2 = res[3][2]
+
+            ids.a_inverse.e4.d0 = res[4][0]
+            ids.a_inverse.e4.d1 = res[4][1]
+            ids.a_inverse.e4.d2 = res[4][2]
+
+            ids.a_inverse.e5.d0 = res[5][0]
+            ids.a_inverse.e5.d1 = res[5][1]
+            ids.a_inverse.e5.d2 = res[5][2]
+
+            ids.a_inverse.e6.d0 = res[6][0]
+            ids.a_inverse.e6.d1 = res[6][1]
+            ids.a_inverse.e6.d2 = res[6][2]
+
+            ids.a_inverse.e7.d0 = res[7][0]
+            ids.a_inverse.e7.d1 = res[7][1]
+            ids.a_inverse.e7.d2 = res[7][2]
+
+            ids.a_inverse.e8.d0 = res[8][0]
+            ids.a_inverse.e8.d1 = res[8][1]
+            ids.a_inverse.e8.d2 = res[8][2]
+
+            ids.a_inverse.e9.d0 = res[9][0]
+            ids.a_inverse.e9.d1 = res[9][1]
+            ids.a_inverse.e9.d2 = res[9][2]
+
+            ids.a_inverse.e10.d0 = res[10][0]
+            ids.a_inverse.e10.d1 = res[10][1]
+            ids.a_inverse.e10.d2 = res[10][2]
+
+            ids.a_inverse.e11.d0 = res[11][0]
+            ids.a_inverse.e11.d1 = res[11][1]
+            ids.a_inverse.e11.d2 = res[11][2]
+            print("findme4")
+        %}
+
+        let (a_inverse_times_a: FQ12) = mul(a_inverse, a);
+        let (one_fq12: FQ12) = one();
+        let (is_one) = eq(a_inverse_times_a, one_fq12);
+        assert is_one = 1;
+        return (a_inverse,);
+    }
+
+    func mul_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+        x: FQ12, y: FQ12, z: FQ12
+    ) -> (res: FQ12) {
+        let (x_times_y: FQ12) = mul(x, y);
+        let (res: FQ12) = mul(x_times_y, z);
+        return (res,);
     }
 }
 

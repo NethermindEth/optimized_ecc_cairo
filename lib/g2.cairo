@@ -210,11 +210,12 @@ namespace g2_lib {
     // Check that a point is on the curve defined by y**2 = x**3 + 4
     // TODO: check that this is the correct equation
     // TODO: Can be done without normalizing, avoiding making divisions
-    func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G2Point, b) -> (
+    func is_on_curve{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(point: G2Point) -> (
         bool: felt
     ) {
-        let (is_point_at_infinity) = is_point_at_infinity(point);
-        if (is_point_at_infinity == 1) {
+        alloc_locals;
+        let (_is_point_at_infinity) = is_point_at_infinity(point);
+        if (_is_point_at_infinity == 1) {
             return (1,);
         }
         let (x_normalized: FQ2, y_normalized: FQ2) = normalize(point);
