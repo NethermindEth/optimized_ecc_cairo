@@ -11,7 +11,7 @@ const ALL_ONES = 2 ** 128 - 1;
 const HALF_SHIFT = 2 ** 64;
 
 namespace fq_lib {
-    func add{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func add{range_check_ptr}(x: Uint384, y: Uint384) -> (
         sum_mod: Uint384
     ) {
         let(p_expand:Uint384_expand)= get_modulus_expand();
@@ -20,7 +20,7 @@ namespace fq_lib {
     }
 
     //s:1145 rc:108
-    func sub{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         alloc_locals;
@@ -35,7 +35,7 @@ namespace fq_lib {
     }
 
     //This function does not work, the range_check reference gets revoked. Why?
-    func sub1{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         alloc_locals;
@@ -59,7 +59,7 @@ namespace fq_lib {
     }
 
     //s:415, rc:34. Much better, even though we are not checking whether x and y are already reduced. 
-    func sub2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func sub2{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
@@ -68,7 +68,7 @@ namespace fq_lib {
         return(res,);
     }
 
-    func mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func mul{range_check_ptr}(x: Uint384, y: Uint384) -> (
         product: Uint384
     ) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
@@ -77,13 +77,13 @@ namespace fq_lib {
     }
 
     //762 steps, 82 range_checks
-    func square{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384) -> (product: Uint384) {
+    func square{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (res: Uint384) = mul(x, x);
         return (res,);
     }
 
     // Best square: 690 steps, 73 range_checks
-    func square2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384) -> (product: Uint384) {
+    func square2{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (p_expand:Uint384_expand) = get_modulus_expand();
         let (res:Uint384) = field_arithmetic.square(x, p_expand);
         return (res,);
@@ -91,7 +91,7 @@ namespace fq_lib {
 
     // NOTE: Scalar has to be at most than 2**128 - 1
     // 768 steps and 82 range_checks
-    func scalar_mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(scalar: felt, x: Uint384) -> (
+    func scalar_mul{range_check_ptr}(scalar: felt, x: Uint384) -> (
         product: Uint384
     ) {
         // TODO: I want to check that scalar is at most 2**128
@@ -106,7 +106,7 @@ namespace fq_lib {
     }
 
     //Actually a bit worse than scalar_mul: 772 steps, 82 range_checks
-    func scalar_mul2{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(scalar: felt, x:Uint384) -> (
+    func scalar_mul2{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
         let p_expand:Uint384_expand= get_modulus_expand();
@@ -118,7 +118,7 @@ namespace fq_lib {
 
     //Best version of scalar mul: 727 steps, 76 range_checks
     // Managed to add the check scalar<2**128
-    func scalar_mul3{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(scalar: felt, x:Uint384) -> (
+    func scalar_mul3{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
         assert [range_check_ptr] = scalar;
@@ -145,7 +145,7 @@ namespace fq_lib {
     }
 
     
-    func pow{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, exponent: Uint384) -> (
+    func pow{range_check_ptr}(x: Uint384, exponent: Uint384) -> (
         res: Uint384
     ) {
         //alloc_locals; is this alloc needed? I got it to work without
@@ -155,7 +155,7 @@ namespace fq_lib {
     }
 
     
-    func pow_expanded{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:Uint384, exponent: Uint384) -> (
+    func pow_expanded{range_check_ptr}(x:Uint384, exponent: Uint384) -> (
         res:Uint384
     ) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
@@ -165,7 +165,7 @@ namespace fq_lib {
     }
 
     // checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
-    func is_square_non_optimized{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384) -> (
+    func is_square_non_optimized{range_check_ptr}(x: Uint384) -> (
         bool: felt
     ) {
         //alloc_locals; Is this needed? Got it to work without
@@ -177,7 +177,7 @@ namespace fq_lib {
 
     // Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
     // WARNING: Expects x to satisy 0 <= x < p-1
-    func get_square_root{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384) -> (
+    func get_square_root{range_check_ptr}(x: Uint384) -> (
         success: felt, res: Uint384
     ) {
         //alloc_locals; Is this needed? Got it to work without
@@ -188,7 +188,7 @@ namespace fq_lib {
         return (success, res);
     }
 
-    func from_256_bits{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(input: Uint256) -> (
+    func from_256_bits{range_check_ptr}(input: Uint256) -> (
         res: Uint384
     ) {
         alloc_locals;
@@ -198,7 +198,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    func toMont{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(input: Uint384) -> (res: Uint384) {
+    func toMont{range_check_ptr}(input: Uint384) -> (res: Uint384) {
         alloc_locals;
 
         let (r_squared: Uint384) = get_r_squared();
@@ -208,7 +208,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    func from_64_bytes{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a0: Uint256, a1: Uint256) -> (
+    func from_64_bytes{range_check_ptr}(a0: Uint256, a1: Uint256) -> (
         res: Uint384
     ) {
         alloc_locals;
@@ -229,7 +229,7 @@ namespace fq_lib {
 
 
     //This function seems incomplete.
-    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: Uint384) -> (
+    func is_quadratic_nonresidue{range_check_ptr}(a: Uint384) -> (
         is_quad_nonresidue: felt
     ) {
         let is_n_zero: felt = is_not_zero(a.d0 + a.d1 + a.d2);
@@ -258,13 +258,13 @@ namespace fq_lib {
             d2=0));
     }
 
-    func neg{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(input: Uint384) -> (res: Uint384) {
+    func neg{range_check_ptr}(input: Uint384) -> (res: Uint384) {
         let (p_expand: Uint384) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(Uint384(0,0,0), input, p_expand);
         return (res,);
     }
 
-    func mul_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func mul_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -274,7 +274,7 @@ namespace fq_lib {
     }
 
     //s:2279, rc:216
-    func sub_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func sub_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         let (x_sub_y: Uint384) = sub(x, y);
@@ -283,7 +283,7 @@ namespace fq_lib {
     }
 
     //better, s:1971, rc:188
-    func sub_three_terms_new{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func sub_three_terms_new{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         alloc_locals;
@@ -297,7 +297,7 @@ namespace fq_lib {
     }
 
     //s:982, rc:86, though we run in the same problems as sub2.
-    func sub_three_terms2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         let (y_plus_z:Uint384) = add(y,z);
@@ -306,7 +306,7 @@ namespace fq_lib {
     }
 
     //s:819, rc:68, though we run in the same problems as sub2.
-    func sub_three_terms3{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         let (x_sub_y: Uint384) = sub2(x, y);

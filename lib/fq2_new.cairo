@@ -13,7 +13,7 @@ struct FQ2 {
 }
 
 namespace fq2_lib {
-    func add{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
+    func add{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         // TODO: check why these alloc_locals need to be used
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -23,7 +23,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    func sub{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
+    func sub{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (_, x_e0_red: Uint384) = uint384_lib.unsigned_div_rem_expanded(x.e0, p_expand);
@@ -36,7 +36,7 @@ namespace fq2_lib {
     }
 
     // Multiplies an element of FQ2 by an element of FQ
-    func scalar_mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ2) -> (
+    func scalar_mul{range_check_ptr}(x: Uint384, y: FQ2) -> (
         product: FQ2
     ) {
         alloc_locals;
@@ -47,7 +47,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    func mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2, b: FQ2) -> (product: FQ2) {
+    func mul{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (first_term: Uint384) = field_arithmetic.mul(a.e0, b.e0 , p_expand);
@@ -73,7 +73,7 @@ namespace fq2_lib {
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
     //s: rc: mh:
-    func inv{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (inverse: FQ2) {
+    func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
         let (field_modulus: Uint384) = get_modulus();
@@ -150,7 +150,7 @@ namespace fq2_lib {
 
     //NOTE: This function is wrong. It says that if a=0 but b is non zero, then there are no square roots. 
     //But (1+X)^2=2X in F_p[X]/(X^2+1). 
-    func get_square_root{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(element: FQ2) -> (
+    func get_square_root{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
         alloc_locals;
@@ -260,7 +260,7 @@ namespace fq2_lib {
     //TODO write a function that uses a hint instead.
 
     
-    func get_square_root_new{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(element: FQ2) -> (
+    func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
         alloc_locals;
@@ -359,13 +359,13 @@ namespace fq2_lib {
     }
 
     // steps=4685, memory_holes=160, range_check_builtin=488
-    func square{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2) -> (res: FQ2) {
+    func square{range_check_ptr}(x: FQ2) -> (res: FQ2) {
         let (res) = mul(x, x);
         return (res,);
     }
 
     //best square :  steps=3868, memory_holes=140, range_check_builtin=409
-    func square_new{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ2) -> (res:FQ2) {
+    func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (r0_squared: Uint384) = field_arithmetic.square(x.e0, p_expand);
@@ -395,7 +395,7 @@ namespace fq2_lib {
     }
 
     // Not tested
-    func mul_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2, z: FQ2) -> (
+    func mul_three_terms{range_check_ptr}(x: FQ2, y: FQ2, z: FQ2) -> (
         res: FQ2
     ) {
         let (x_times_y: FQ2) = mul(x, y);
@@ -405,7 +405,7 @@ namespace fq2_lib {
 
     // Not tested
     // Computes x - y - z
-    func sub_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2, z: FQ2) -> (
+    func sub_three_terms{range_check_ptr}(x: FQ2, y: FQ2, z: FQ2) -> (
         res: FQ2
     ) {
         let (x_sub_y: FQ2) = sub(x, y);
@@ -415,7 +415,7 @@ namespace fq2_lib {
 
     // TODO: test
     // Computes x - y - z
-    func add_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ2, y: FQ2, z: FQ2) -> (
+    func add_three_terms{range_check_ptr}(x: FQ2, y: FQ2, z: FQ2) -> (
         res: FQ2
     ) {
         let (x_times_y: FQ2) = add(x, y);
@@ -423,14 +423,14 @@ namespace fq2_lib {
         return (res,);
     }
 
-    func pow{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2, exp: Uint768) -> (res: FQ2) {
+    func pow{range_check_ptr}(a: FQ2, exp: Uint768) -> (res: FQ2) {
         let o: FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0));
         let (res: FQ2) = pow_inner(a, exp, o);
         return (res,);
     }
 
     //I think this is assuming that a is a valid element of F^{p^2}
-    func pow_inner{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2, exp: Uint768, o: FQ2) -> (
+    func pow_inner{range_check_ptr}(a: FQ2, exp: Uint768, o: FQ2) -> (
         res: FQ2
     ) {
         alloc_locals;
@@ -477,7 +477,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    func is_quadratic_nonresidue{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (
+    func is_quadratic_nonresidue{range_check_ptr}(a: FQ2) -> (
         is_quad_nonresidue: felt
     ) {
         alloc_locals;
@@ -492,7 +492,7 @@ namespace fq2_lib {
     }
 
 
-    func one{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}() -> (res: FQ2) {
+    func one() -> (res: FQ2) {
         return (
             res=FQ2(e0=Uint384(
                 d0=1,
@@ -505,7 +505,7 @@ namespace fq2_lib {
         );
     }
 
-    func neg{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (res: FQ2) {
+    func neg{range_check_ptr}(a: FQ2) -> (res: FQ2) {
         alloc_locals;
 
         let (neg_e0: Uint384) = fq_lib.neg(a.e0);
@@ -515,7 +515,7 @@ namespace fq2_lib {
     }
 
     // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-09#section-4.1
-    func sgn0{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (sign: felt) {
+    func sgn0{range_check_ptr}(a: FQ2) -> (sign: felt) {
         alloc_locals;
 
         let sign = 0;
@@ -539,7 +539,7 @@ namespace fq2_lib {
         return (sign=sign);
     }
 
-    func conjugate{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (res: FQ2) {
+    func conjugate{range_check_ptr}(a: FQ2) -> (res: FQ2) {
         let (neg_x_i) = uint384_lib.neg(a.e1);
         return (res=FQ2(e0=a.e0, e1=neg_x_i));
     }

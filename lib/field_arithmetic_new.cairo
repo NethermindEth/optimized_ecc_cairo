@@ -2,7 +2,7 @@ from starkware.cairo.common.bitwise import bitwise_and, bitwise_or, bitwise_xor
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.math import assert_in_range, assert_le, assert_nn_le, assert_not_zero
 from starkware.cairo.common.math_cmp import is_le
-  //from starkware.cairo.common.pow import pow
+//from starkware.cairo.common.pow import pow
 from starkware.cairo.common.registers import get_ap, get_fp_and_pc
 // Import uint384 files (path may change in the future)
 from lib.uint384 import uint384_lib, Uint384, Uint384_expand, SHIFT, HALF_SHIFT
