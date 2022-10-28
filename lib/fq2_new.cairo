@@ -72,7 +72,7 @@ namespace fq2_lib {
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
-    //s: rc: mh:
+    //s: 4076 rc: 432 mh: 120
     func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
@@ -358,13 +358,13 @@ namespace fq2_lib {
         }
     }
 
-    // steps=4685, memory_holes=160, range_check_builtin=488
+    // steps=3998, memory_holes=120, range_check_builtin=432
     func square{range_check_ptr}(x: FQ2) -> (res: FQ2) {
         let (res) = mul(x, x);
         return (res,);
     }
 
-    //best square :  steps=3868, memory_holes=140, range_check_builtin=409
+    //best square :  steps=3829, memory_holes=140, range_check_builtin=403
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();

@@ -10,6 +10,7 @@ const ALL_ONES = 2 ** 128 - 1;
 const HALF_SHIFT = 2 ** 64;
 
 namespace fq_lib {
+    //s:563 rc:52
     func add{range_check_ptr}(x: Uint384, y: Uint384) -> (
         sum_mod: Uint384
     ) {
@@ -18,13 +19,13 @@ namespace fq_lib {
         return (sum,);
     }
 
-    //s:1145 rc:108
+    //s:1114 rc:102
     func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         alloc_locals;
         let (p_expand: Uint384_expand) = get_modulus_expand();
-        local range_check_ptr = range_check_ptr;
+
         // x and y need to be reduced modulo p
         // TODO: check that they are not already reduced before (more efficiency?)
         let (_, x1: Uint384) = uint384_lib.unsigned_div_rem_expanded(x, p_expand);
@@ -46,18 +47,26 @@ namespace fq_lib {
         // New: added the check that x and y are indeed already reduced mod p, this reduces the number of steps greatly when x and y are smaller than p
         let (res1)= uint384_lib.lt(x, p);
         let (res2)= uint384_lib.lt(y, p);
+	local xx: Uint384;
         if (res1==0){
             let (_, x1: Uint384) = uint384_lib.unsigned_div_rem_expanded(x, p_expand);
-        }
+	    assert xx = x1;
+        }else{
+	    assert xx = x;
+	}
 
+	local yy:Uint384;
         if (res2==0){
             let (_, y1: Uint384) = uint384_lib.unsigned_div_rem_expanded(y, p_expand);
-        }
-        let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(x1, y1, p_expand);
+	    assert yy = y1;
+        }else{
+	    assert yy = y;
+	}
+        let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(xx, yy, p_expand);
         return (res,);
     }
 
-    //s:415, rc:34. Much better, even though we are not checking whether x and y are already reduced. 
+    //s:353, rc:28. Much better, even though we are not checking whether x and y are already reduced. 
     func sub2{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
@@ -67,6 +76,7 @@ namespace fq_lib {
         return(res,);
     }
 
+    //s:745 rc:82
     func mul{range_check_ptr}(x: Uint384, y: Uint384) -> (
         product: Uint384
     ) {
@@ -75,13 +85,13 @@ namespace fq_lib {
         return (res,);
     }
 
-    //762 steps, 82 range_checks
+    //751 steps, 82 range_checks
     func square{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (res: Uint384) = mul(x, x);
         return (res,);
     }
 
-    // Best square: 690 steps, 73 range_checks
+    // Best square: 680 steps, 73 range_checks
     func square2{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (p_expand:Uint384_expand) = get_modulus_expand();
         let (res:Uint384) = field_arithmetic.square(x, p_expand);
@@ -89,7 +99,7 @@ namespace fq_lib {
     }
 
     // NOTE: Scalar has to be at most than 2**128 - 1
-    // 768 steps and 82 range_checks
+    // 752 steps and 82 range_checks
     func scalar_mul{range_check_ptr}(scalar: felt, x: Uint384) -> (
         product: Uint384
     ) {
@@ -104,7 +114,7 @@ namespace fq_lib {
         return (reduced,);
     }
 
-    //Actually a bit worse than scalar_mul: 772 steps, 82 range_checks
+    //Actually a bit worse than scalar_mul: 761 steps, 82 range_checks
     func scalar_mul2{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
@@ -115,7 +125,7 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    //Best version of scalar mul: 727 steps, 76 range_checks
+    //Best version of scalar mul: 716 steps, 76 range_checks
     // Managed to add the check scalar<2**128
     func scalar_mul3{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
@@ -128,7 +138,7 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    // Computes x*y^{-1}mod p. s:799, rc:83
+    // Computes x*y^{-1}mod p. s:795, rc:83
     func div{range_check_ptr}(x:Uint384, y:Uint384) -> (
         division : Uint384
     ) {
@@ -137,7 +147,7 @@ namespace fq_lib {
         return (result,);
     } 
 
-    // finds x in a x ≅ 1 (mod q). s:805, rc:83
+    // finds x in a x ≅ 1 (mod q). s:806, rc:83
     func inverse{range_check_ptr}(a:Uint384) -> (res: Uint384) {
         let (res:Uint384) = div(Uint384(1,0,0), a);    
         return (res,);
@@ -262,7 +272,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:2279, rc:216
+    //s:2220, rc:204
     func sub_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -271,7 +281,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //better, s:1971, rc:188
+    //better, s:1930, rc:179
     func sub_three_terms_new{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -285,7 +295,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:982, rc:86, though we run in the same problems as sub2.
+    //s:912, rc:80, though we run in the same problems as sub2.
     func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -294,7 +304,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:819, rc:68, though we run in the same problems as sub2.
+    //s:698, rc:56, though we run in the same problems as sub2.
     func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
