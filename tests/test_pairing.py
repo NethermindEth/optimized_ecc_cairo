@@ -9,6 +9,7 @@ from py_ecc.fields import (
 )
 import pytest
 
+@pytest.mark.skip("we want to test the other one rn")
 @pytest.mark.asyncio
 async def test_ate_loop_iteration(pairing_factory):
     contract = pairing_factory
@@ -22,7 +23,7 @@ async def test_ate_loop_iteration(pairing_factory):
     execution_info = await contract._ate_loop_iter(Q, P).call()
     print(execution_info)
 
-@pytest.mark.skip("we want to test the other one rn")
+
 @pytest.mark.asyncio
 async def test_pairing(pairing_factory):
     contract = pairing_factory
