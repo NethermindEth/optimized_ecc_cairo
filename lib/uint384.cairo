@@ -228,6 +228,54 @@ namespace uint384_lib {
         );
     }
  
+    //assumes b < 2**128
+    func mul_by_uint128{range_check_ptr}(a: Uint384, b: felt) -> (low: Uint384, high: felt) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.d0);
+        let (a2, a3) = split_64(a.d1);
+        let (a4, a5) = split_64(a.d2);
+        let (b0, b1) = split_64(b);
+
+	local B0 = b0*HALF_SHIFT;
+
+        let (res0, carry) = split_128(a1 * B0 + a0 * b);
+        let (res2, carry) = split_128(
+	    a3 * B0 + a2 * b + a1 * b1 + carry,
+        );
+        let (res4, carry) = split_128(
+            a5 * B0 + a4 * b + a3 * b1 + carry,
+        );
+        // let (res6, carry) = split_64(a5 * b1 + carry)
+
+        return (
+            low=Uint384(d0=res0, d1=res2, d2=res4),
+            high=a5 * b1 + carry,
+        );
+    }
+    
+    //assumes b < 2**64
+    func mul_by_uint64{range_check_ptr}(a: Uint384, b: felt) -> (low: Uint384, high: felt) {
+        alloc_locals;
+        let (a0, a1) = split_64(a.d0);
+        let (a2, a3) = split_64(a.d1);
+        let (a4, a5) = split_64(a.d2);
+
+	local B0 = b*HALF_SHIFT;
+
+        let (res0, carry) = split_128(a1 * B0 + a0 * b);
+        let (res2, carry) = split_128(
+	    a3 * B0 + a2 * b + carry,
+        );
+        let (res4, carry) = split_128(
+            a5 * B0 + a4 * b + carry,
+        );
+
+        return (
+            low=Uint384(d0=res0, d1=res2, d2=res4),
+            high=carry,
+        );
+    }
+
     func square{range_check_ptr}(a: Uint384) -> (low: Uint384, high: Uint384) {
         alloc_locals;
         let (a0, a1) = split_64(a.d0);
