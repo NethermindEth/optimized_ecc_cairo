@@ -1,8 +1,7 @@
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic_new import field_arithmetic
-from lib.curve import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2
-from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
+from lib.curve_new import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero, is_nn, is_le
 
@@ -63,7 +62,7 @@ namespace fq_lib {
         difference: Uint384
     ) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
-        let (diff:Uint384) = uint384_lib.sub(x, y);
+        let (diff:Uint384,_) = uint384_lib.sub(x, y);
         let (_, res:Uint384) = uint384_lib.unsigned_div_rem_expanded(diff, p_expand);
         return(res,);
     }
@@ -134,7 +133,7 @@ namespace fq_lib {
         division : Uint384
     ) {
         let p_expand:Uint384_expand = get_modulus_expand();
-        let (result:Uint384) = field_arithmetic.div_b(x, y, p_expand);
+        let (result:Uint384) = field_arithmetic.div(x, y, p_expand);
         return (result,);
     } 
 
@@ -161,17 +160,6 @@ namespace fq_lib {
         let (p_expand: Uint384_expand) = get_modulus_expand();
         let (x_expand:Uint384_expand) = uint384_lib.expand(x);
         let (res:Uint384) = field_arithmetic.pow_expanded(x_expand, exponent, p_expand);
-        return (res,);
-    }
-
-    // checks if x is a square in F_q, i.e. x ≅ y**2 (mod q) for some y
-    func is_square_non_optimized{range_check_ptr}(x: Uint384) -> (
-        bool: felt
-    ) {
-        //alloc_locals; Is this needed? Got it to work without
-        let (p_expand: Uint384_expand) = get_modulus_expand();
-        let (p_minus_one_div_2: Uint384) = get_p_minus_one_div_2();
-        let (res) = field_arithmetic.is_square_non_optimized(x, p_expand, p_minus_one_div_2);
         return (res,);
     }
 
@@ -259,7 +247,7 @@ namespace fq_lib {
     }
 
     func neg{range_check_ptr}(input: Uint384) -> (res: Uint384) {
-        let (p_expand: Uint384) = get_modulus_expand();
+        let (p_expand: Uint384_expand) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(Uint384(0,0,0), input, p_expand);
         return (res,);
     }
@@ -267,6 +255,7 @@ namespace fq_lib {
     func mul_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
+        alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (x_times_y: Uint384) = field_arithmetic.mul(x, y,p_expand);
         let (res: Uint384) = field_arithmetic.mul(x_times_y, z,p_expand);

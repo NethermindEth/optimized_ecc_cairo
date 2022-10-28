@@ -4,8 +4,8 @@ from starkware.cairo.common.bitwise import bitwise_and, bitwise_or
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic_new import field_arithmetic
-from lib.fq import fq_lib
-from lib.curve import fq2_c0, fq2_c1, get_modulus, get_modulus_expand, get_2_inverse, get_2_inverse_exp
+from lib.fq_new import fq_lib
+from lib.curve_new import fq2_c0, fq2_c1, get_modulus, get_modulus_expand, get_2_inverse, get_2_inverse_exp
 
 struct FQ2 {
     e0: Uint384,
@@ -30,8 +30,8 @@ namespace fq2_lib {
         let (_, x_e1_red: Uint384) = uint384_lib.unsigned_div_rem_expanded(x.e1, p_expand);
         let (_, y_e0_red: Uint384) = uint384_lib.unsigned_div_rem_expanded(y.e0, p_expand);
         let (_, y_e1_red: Uint384) = uint384_lib.unsigned_div_rem_expanded(y.e1, p_expand);
-        let (e0: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(x_e0_red, y_e0_red);
-        let (e1: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(x_e1_red, y_e1_red);
+        let (e0: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(x_e0_red, y_e0_red, p_expand);
+        let (e1: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(x_e1_red, y_e1_red, p_expand);
         return (FQ2(e0=e0, e1=e1),);
     }
 
@@ -62,7 +62,7 @@ namespace fq2_lib {
         // the multiplicaiton is `a.e0 * b.e0 - a.e1 * b.e1`
         
         //here I think we can assume first_term and third_term are reduced
-        let (first_term) = field_arithmetic.sub_reduced_a_and_reduced_b(first_term, third_term);
+        let (first_term) = field_arithmetic.sub_reduced_a_and_reduced_b(first_term, third_term, p_expand);
 
         return (FQ2(e0=first_term, e1=second_term),);
     }
@@ -175,7 +175,7 @@ namespace fq2_lib {
         %}
 
         if (is_a_zero == 1) {
-            if (is_b_zero == 1) {
+	    if (is_b_zero == 1) {
                 let (zero: FQ2) = get_zero();
                 return (1, zero);
             } else {
@@ -184,7 +184,7 @@ namespace fq2_lib {
                 return (0, zero);
             }
         } else {
-            if (is_b_zero == 1) {
+	    if (is_b_zero == 1) {
                 let (bool, res: Uint384) = fq_lib.get_square_root(a);
                 let sqrt = FQ2(res, Uint384(0, 0, 0));
                 %{
@@ -285,7 +285,7 @@ namespace fq2_lib {
         %}
 
         if (is_a_zero == 1) {
-            if (is_b_zero == 1) {
+	    if (is_b_zero == 1) {
                 let (zero: FQ2) = get_zero();
                 return (1, zero);
             } else {
@@ -486,7 +486,7 @@ namespace fq2_lib {
         let (c1: Uint384) = fq_lib.mul(a.e1, a.e1);
         let (c3: Uint384) = fq_lib.add(c0, c1);
 
-        let (is_quad_nonresidue: felt) = fq_lib.is_square_non_optimized(c3);
+        let (is_quad_nonresidue: felt,_) = fq_lib.get_square_root(c3);
 
         return (is_quad_nonresidue,);
     }

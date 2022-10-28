@@ -264,6 +264,28 @@ namespace uint384_extension_lib {
 
         return (quotient=quotient, remainder=remainder);
     }
+
+    func eq{range_check_ptr}(a: Uint768, b: Uint768) -> (res: felt) {
+        if (a.d5 != b.d5) {
+            return (0,);
+        }
+        if (a.d4 != b.d4) {
+            return (0,);
+        }
+        if (a.d3 != b.d3) {
+            return (0,);
+        }
+        if (a.d2 != b.d2) {
+            return (0,);
+        }
+        if (a.d1 != b.d1) {
+            return (0,);
+        }
+        if (a.d0 != b.d0) {
+            return (0,);
+        }
+        return (1,);
+    }
     
     func bit_and{bitwise_ptr: BitwiseBuiltin*}(a: Uint768, b: Uint768) -> (
         res: Uint768
