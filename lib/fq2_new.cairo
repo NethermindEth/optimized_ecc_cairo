@@ -382,13 +382,13 @@ namespace fq2_lib {
         return (is_x_zero,);
     }
 
-    // Not tested
+    
     func get_zero() -> (zero: FQ2) {
         let zero_fq2 = FQ2(Uint384(0, 0, 0), Uint384(0, 0, 0));
         return (zero_fq2,);
     }
 
-    // Not tested
+    
     func get_one() -> (one: FQ2) {
         let one_fq1 = FQ2(Uint384(1, 0, 0), Uint384(0, 0, 0));
         return (one_fq1,);

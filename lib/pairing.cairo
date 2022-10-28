@@ -19,10 +19,10 @@ struct GTPoint {
 namespace pairing_lib {
     func pairing{range_check_ptr, bitwise_ptr : BitwiseBuiltin*}(Q: G2Point, P: G1Point) -> (res: FQ12) {
         alloc_locals;
-        let (is_Q_on_curve) = g2_lib.is_on_curve(Q);
-        assert is_Q_on_curve = 1;
-        let (is_P_on_curve) = g1_lib.is_on_curve(P);
-        assert is_P_on_curve = 1;
+        //let (is_Q_on_curve) = g2_lib.is_on_curve(Q);
+        //assert is_Q_on_curve = 1;
+        //let (is_P_on_curve) = g1_lib.is_on_curve(P);
+        //assert is_P_on_curve = 1;
 
         let (is_P_point_at_infinity) = g1_lib.is_point_at_infinity(P);
         if (is_P_point_at_infinity == 1) {
