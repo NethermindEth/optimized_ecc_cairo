@@ -13,6 +13,7 @@ struct FQ2 {
 }
 
 namespace fq2_lib {
+    // steps=1119, memory_holes=40, range_check_builtin=104
     func add{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         // TODO: check why these alloc_locals need to be used
         alloc_locals;
@@ -23,6 +24,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
+    // steps=2211, memory_holes=120, range_check_builtin=204
     func sub{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -36,6 +38,7 @@ namespace fq2_lib {
     }
 
     // Multiplies an element of FQ2 by an element of FQ
+    // steps=1480, memory_holes=40, range_check_builtin=164
     func scalar_mul{range_check_ptr}(x: Uint384, y: FQ2) -> (
         product: FQ2
     ) {
@@ -47,6 +50,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
+    // steps=3989, memory_holes=120, range_check_builtin=432
     func mul{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -260,6 +264,7 @@ namespace fq2_lib {
     //TODO write a function that uses a hint instead.
 
     
+    // steps=2195, memory_holes=102, range_check_builtin=228
     func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
@@ -423,6 +428,7 @@ namespace fq2_lib {
         return (res,);
     }
 
+    // steps=12901, memory_holes=459, range_check_builtin=1354
     func pow{range_check_ptr}(a: FQ2, exp: Uint768) -> (res: FQ2) {
         let o: FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0));
         let (res: FQ2) = pow_inner(a, exp, o);
