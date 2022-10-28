@@ -90,6 +90,24 @@ func test_scalar_mul3{syscall_ptr: felt*, range_check_ptr}(
 }
 
 @external
+func test_scalar_mul4{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mult:Uint384) = fq_lib.scalar_mul4(10,Uint384(11,0,0));
+    assert mult = Uint384(110,0,0);
+    return();
+}
+
+@external
+func test_scalar64_mul{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mult:Uint384) = fq_lib.scalar64_mul(10,Uint384(11,0,0));
+    assert mult = Uint384(110,0,0);
+    return();
+}
+
+@external
 func test_div{syscall_ptr: felt*, range_check_ptr}(
     
 ) {

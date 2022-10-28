@@ -125,17 +125,43 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    //Best version of scalar mul: 716 steps, 76 range_checks
-    // Managed to add the check scalar<2**128
+    //Better version of scalar mul: 715 steps, 76 range_checks
     func scalar_mul3{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
-        assert [range_check_ptr] = scalar;
+        //assert [range_check_ptr] = scalar;
         let p_expand:Uint384_expand= get_modulus_expand();
         let (low, high)=uint384_lib.split_64(scalar);
         let packed_expand: Uint384_expand = Uint384_expand(low*HALF_SHIFT, scalar, high, 0, 0, 0, 0);
         let (reduced:Uint384) = field_arithmetic.mul_expanded(x, packed_expand, p_expand);
         return(reduced,);
+    }
+
+    //Best version: uses mul_by_uint128: 639 steps, 70 range_checks
+    func scalar_mul4{range_check_ptr}(scalar: felt, x:Uint384) -> (
+        product: Uint384
+    ) {
+        let p_expand:Uint384_expand= get_modulus_expand();
+        let (low: Uint384, high: felt) = uint384_lib.mul_by_uint128(x,scalar);
+	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let (
+            quotient: Uint768, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p_expand);
+        return(remainder,);
+    }
+
+    //assumes scalar < 2**64
+    //619 steps, 67 range_checks
+    func scalar64_mul{range_check_ptr}(scalar: felt, x:Uint384) -> (
+        product: Uint384
+    ) {
+        let p_expand:Uint384_expand= get_modulus_expand();
+        let (low: Uint384, high: felt) = uint384_lib.mul_by_uint64(x,scalar);
+	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let (
+            quotient: Uint768, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p_expand);
+        return(remainder,);
     }
 
     // Computes x*y^{-1}mod p. s:795, rc:83
