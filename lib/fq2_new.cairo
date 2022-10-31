@@ -545,7 +545,7 @@ namespace fq2_lib {
     }
 
     func conjugate{range_check_ptr}(a: FQ2) -> (res: FQ2) {
-        let (neg_x_i) = uint384_lib.neg(a.e1);
+        let (neg_x_i) = fq_lib.neg(a.e1);
         return (res=FQ2(e0=a.e0, e1=neg_x_i));
     }
 }
