@@ -76,7 +76,7 @@ namespace fq2_lib {
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
-    //s: 4076 rc: 432 mh: 120
+    //s: 4026 rc: 432 mh: 120
     func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
@@ -119,8 +119,7 @@ namespace fq2_lib {
 
         let (a_inverse_times_a: FQ2) = mul(a_inverse, a);
         let (one: FQ2) = get_one();
-        let (is_one) = eq(a_inverse_times_a, one);
-        assert is_one = 1;
+	assert a_inverse_times_a = one;
         return (a_inverse,);
     }
 
@@ -369,15 +368,15 @@ namespace fq2_lib {
         return (res,);
     }
 
-    //best square :  steps=3829, memory_holes=140, range_check_builtin=403
+    //best square :  steps=3145, memory_holes=100, range_check_builtin=332
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (r0_squared: Uint384) = field_arithmetic.square(x.e0, p_expand);
         let (r1_squared: Uint384) = field_arithmetic.square(x.e1, p_expand);
-        let (first_term:Uint384)=fq_lib.sub(r0_squared, r1_squared);
+        let (first_term:Uint384)=field_arithmetic.sub_reduced_a_and_reduced_b(r0_squared,r1_squared,p_expand);
         let (r0r1:Uint384)=field_arithmetic.mul(x.e0, x.e1, p_expand);
-        let (second_term:Uint384)=field_arithmetic.mul_expanded(r0r1, Uint384_expand(340282366920938463463374607431768211456, 2, 0, 0, 0, 0, 0), p_expand);
+        let (second_term:Uint384)=field_arithmetic.add(r0r1,r0r1,p_expand);
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
