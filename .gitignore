@@ -4,3 +4,4 @@
 /.pytest_cache/
 .gitignore
 node.json
+.DS_Store
