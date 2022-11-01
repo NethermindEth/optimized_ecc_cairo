@@ -27,10 +27,10 @@ func test_sub{syscall_ptr: felt*, range_check_ptr}(
 
 
 @external
-func test_sub2{syscall_ptr: felt*, range_check_ptr}(
+func test_sub1{syscall_ptr: felt*, range_check_ptr}(
     
 ) {
-    let (minus:Uint384) = fq_lib.sub2(Uint384(11,0,0),Uint384(7,0,0));
+    let (minus:Uint384) = fq_lib.sub1(Uint384(11,0,0),Uint384(7,0,0));
     assert minus = Uint384(4,0,0);
     return();
 }

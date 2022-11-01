@@ -126,22 +126,22 @@ async def test_fq_sub(fq_new_factory, x, y):
 
     assert result == (x - y) % field_modulus
 
-"""
+
 @given(
     x=st.integers(min_value=1, max_value=(field_modulus)),
     y=st.integers(min_value=1, max_value=(field_modulus)),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
-async def test_fq_sub2(fq_new_factory, x, y):
+async def test_fq_sub1(fq_new_factory, x, y):
     contract = fq_new_factory
 
-    execution_info = await contract.sub2(split(x), split(y)).call()
+    execution_info = await contract.sub1(split(x), split(y)).call()
 
     result = pack(execution_info.result[0])
 
     assert result == (x - y) % field_modulus
-"""
+
 
 @given(
     x=st.integers(min_value=0, max_value=field_modulus-1),

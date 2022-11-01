@@ -38,7 +38,7 @@ namespace fq_lib {
     //range_check_builtin=μ: 64.36, Md: 54, min: 54, max: 110
     //This function checks whether unsigned x and y are already reduced modulo p.
 
-    func sub1{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
+    func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         alloc_locals;
@@ -315,21 +315,21 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:912, rc:80, though we run in the same problems as sub2.
+    //s:1217, rc:106
     func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
         let (y_plus_z:Uint384) = add(y,z);
-        let (res:Uint384) = sub2(x, y_plus_z);
+        let (res:Uint384) = sub1(x, y_plus_z);
         return (res,);
     }
 
-    //s:698, rc:56, though we run in the same problems as sub2.
+    //s:1308, rc:108
     func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
-        let (x_sub_y: Uint384) = sub2(x, y);
-        let (res: Uint384) = sub2(x_sub_y, z);
+        let (x_sub_y: Uint384) = sub1(x, y);
+        let (res: Uint384) = sub1(x_sub_y, z);
         return (res,);
     }
 

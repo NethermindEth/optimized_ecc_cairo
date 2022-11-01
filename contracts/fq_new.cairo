@@ -25,10 +25,10 @@ func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
 }
 
 @view
-func sub2{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
+func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
     alloc_locals;
 
-    let (res: Uint384) = fq_lib.sub2(x, y);
+    let (res: Uint384) = fq_lib.sub1(x, y);
 
     return (res,);
 }
