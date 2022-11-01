@@ -263,8 +263,8 @@ namespace fq2_lib {
     //This function assumes a and b are already reduced modulo p.
     //TODO write a function that uses a hint instead.
 
-    
-    func get_square_root_new{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(element: FQ2) -> (
+    // steps=2193, memory_holes=94, range_check_builtin=228
+    func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
         alloc_locals;
@@ -369,14 +369,14 @@ namespace fq2_lib {
     }
 
     //best square :  steps=3145, memory_holes=100, range_check_builtin=332
-    func square_new{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ2) -> (res:FQ2) {
+    func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (r0_squared: Uint384) = field_arithmetic.square(x.e0, p_expand);
         let (r1_squared: Uint384) = field_arithmetic.square(x.e1, p_expand);
-        let (first_term:Uint384)=fq_lib.sub(r0_squared, r1_squared);
+        let (first_term:Uint384)=field_arithmetic.sub_reduced_a_and_reduced_b(r0_squared,r1_squared,p_expand);
         let (r0r1:Uint384)=field_arithmetic.mul(x.e0, x.e1, p_expand);
-        let (second_term:Uint384)=field_arithmetic.mul_expanded(r0r1, Uint384_expand(36893488147419103232, 2, 0, 0, 0, 0, 0), p_expand);
+        let (second_term:Uint384)=field_arithmetic.add(r0r1,r0r1,p_expand);
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
