@@ -520,7 +520,7 @@ namespace fq2_lib {
     }
 
     // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-09#section-4.1
-    func sgn0{range_check_ptr}(a: FQ2) -> (sign: felt) {
+    func sgn0{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (sign: felt) {
         alloc_locals;
 
         let sign = 0;
