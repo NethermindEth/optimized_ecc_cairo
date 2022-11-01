@@ -264,8 +264,7 @@ namespace fq2_lib {
     //TODO write a function that uses a hint instead.
 
     
-    // steps=2193, memory_holes=102, range_check_builtin=228
-    func get_square_root_new{range_check_ptr}(element: FQ2) -> (
+    func get_square_root_new{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
         alloc_locals;
@@ -290,7 +289,7 @@ namespace fq2_lib {
         %}
 
         if (is_a_zero == 1) {
-	    if (is_b_zero == 1) {
+            if (is_b_zero == 1) {
                 let (zero: FQ2) = get_zero();
                 return (1, zero);
             } else {
@@ -300,7 +299,7 @@ namespace fq2_lib {
                 let (bool:felt, sqrt_b_div_2:Uint384)=field_arithmetic.get_square_root(b_div_2, p_expand, Uint384(2,0,0));
                 if (bool==1){
                     return(bool=1, sqrt=FQ2(sqrt_b_div_2,sqrt_b_div_2));
-                }else{
+                } else {
                     let (minus_b_div_2) = fq_lib.sub(Uint384(0,0,0), b_div_2);
                     let (_, sqrt_minus_b_div_2:Uint384)=field_arithmetic.get_square_root(minus_b_div_2, p_expand, Uint384(2,0,0));
                     let (minus_sqrt_minus_b_div_2:Uint384)=fq_lib.sub(Uint384(0,0,0), sqrt_minus_b_div_2);
@@ -329,34 +328,34 @@ namespace fq2_lib {
                     let (zero: FQ2) = get_zero();
                     // In this case there is no sqrt but we need to return an FQ2 as the second component regardless
                     return (0, zero);
-                }
-                let p_expand:Uint384_expand = get_modulus_expand();
-                let (minus_a_plus_sqrt: Uint384) = fq_lib.sub(sqrt_a_squared_plus_b_squared, a);
-                let (local two_inverse: Uint384_expand) = get_2_inverse_exp();
-                let (minus_a_plus_sqrt_div_2: Uint384) = field_arithmetic.mul_expanded(minus_a_plus_sqrt, two_inverse, p_expand);
-                let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_plus_sqrt_div_2, p_expand, Uint384(2,0,0));
-                if (bool == 1) {
-                    let (twice_r1: Uint384) = field_arithmetic.mul_expanded(r1, Uint384_expand(340282366920938463463374607431768211456, 2, 0, 0, 0, 0, 0),p_expand);
-                    let (twice_r1_inverse: Uint384) = fq_lib.inverse(twice_r1);
-                    let (r0: Uint384) = field_arithmetic.mul(b, twice_r1_inverse, p_expand);
-                    return (1, FQ2(r0, r1));
                 } else {
-                    let (minus_sqrt: Uint384) = fq_lib.sub(
-                        Uint384(0, 0, 0), sqrt_a_squared_plus_b_squared
-                    );
-                    let (minus_a_minus_sqrt: Uint384) = fq_lib.sub(minus_sqrt, a);
-                    let (minus_a_minus_sqrt_div_2: Uint384) = field_arithmetic.mul_expanded(
-                        minus_a_minus_sqrt, two_inverse, p_expand
-                    );
-                    let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_minus_sqrt_div_2, p_expand, Uint384(2,0,0));
+                    let (minus_a_plus_sqrt: Uint384) = fq_lib.sub(sqrt_a_squared_plus_b_squared, a);
+                    let (local two_inverse: Uint384_expand) = get_2_inverse_exp();
+                    let (minus_a_plus_sqrt_div_2: Uint384) = field_arithmetic.mul_expanded(minus_a_plus_sqrt, two_inverse, p_expand);
+                    let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_plus_sqrt_div_2, p_expand, Uint384(2,0,0));
                     if (bool == 1) {
-                        let (twice_r1: Uint384) = field_arithmetic.mul_expanded(r1, Uint384_expand(340282366920938463463374607431768211456, 2, 0, 0, 0, 0, 0),p_expand);
+                        let (twice_r1: Uint384) = field_arithmetic.mul_expanded(r1, Uint384_expand(36893488147419103232, 2, 0, 0, 0, 0, 0),p_expand);
                         let (twice_r1_inverse: Uint384) = fq_lib.inverse(twice_r1);
                         let (r0: Uint384) = field_arithmetic.mul(b, twice_r1_inverse, p_expand);
                         return (1, FQ2(r0, r1));
                     } else {
-                        let (zero: FQ2) = get_zero();
-                        return (0, zero);
+                        let (minus_sqrt: Uint384) = fq_lib.sub(
+                        Uint384(0, 0, 0), sqrt_a_squared_plus_b_squared
+                        );
+                        let (minus_a_minus_sqrt: Uint384) = fq_lib.sub(minus_sqrt, a);
+                        let (minus_a_minus_sqrt_div_2: Uint384) = field_arithmetic.mul_expanded(
+                        minus_a_minus_sqrt, two_inverse, p_expand
+                        );
+                        let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_minus_sqrt_div_2, p_expand, Uint384(2,0,0));
+                        if (bool == 1) {
+                            let (twice_r1: Uint384) = field_arithmetic.mul_expanded(r1, Uint384_expand(36893488147419103232, 2, 0, 0, 0, 0, 0),p_expand);
+                            let (twice_r1_inverse: Uint384) = fq_lib.inverse(twice_r1);
+                            let (r0: Uint384) = field_arithmetic.mul(b, twice_r1_inverse, p_expand);
+                            return (1, FQ2(r0, r1));
+                        } else {
+                            let (zero: FQ2) = get_zero();
+                            return (0, zero);
+                        }
                     }
                 }
             }
@@ -370,14 +369,14 @@ namespace fq2_lib {
     }
 
     //best square :  steps=3145, memory_holes=100, range_check_builtin=332
-    func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
+    func square_new{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (r0_squared: Uint384) = field_arithmetic.square(x.e0, p_expand);
         let (r1_squared: Uint384) = field_arithmetic.square(x.e1, p_expand);
-        let (first_term:Uint384)=field_arithmetic.sub_reduced_a_and_reduced_b(r0_squared,r1_squared,p_expand);
+        let (first_term:Uint384)=fq_lib.sub(r0_squared, r1_squared);
         let (r0r1:Uint384)=field_arithmetic.mul(x.e0, x.e1, p_expand);
-        let (second_term:Uint384)=field_arithmetic.add(r0r1,r0r1,p_expand);
+        let (second_term:Uint384)=field_arithmetic.mul_expanded(r0r1, Uint384_expand(36893488147419103232, 2, 0, 0, 0, 0, 0), p_expand);
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
