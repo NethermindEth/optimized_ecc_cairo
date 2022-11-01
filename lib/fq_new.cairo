@@ -34,48 +34,41 @@ namespace fq_lib {
         return (res,);
     }
 
-    //This function does not work, the range_check reference gets revoked. Why?
-    func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (
+    //fuzz_runs=100, steps=μ: 786.08, Md: 685, min: 685, max: 1230, memory_holes=μ: 68.48, Md: 63, min: 63, max: 94                                    
+    //range_check_builtin=μ: 64.36, Md: 54, min: 54, max: 110
+    //This function checks whether unsigned x and y are already reduced modulo p.
+
+    func sub1{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
         alloc_locals;
         let (p_expand: Uint384_expand) = get_modulus_expand();
-        let (p:Uint384) = get_p_minus_one();
+        let (p:Uint384) = get_modulus();
         local range_check_ptr = range_check_ptr;
-        // x and y need to be reduced modulo p
-        // TODO: check that they are not already reduced before (more efficiency?)
-        // New: added the check that x and y are indeed already reduced mod p, this reduces the number of steps greatly when x and y are smaller than p
         let (res1)= uint384_lib.lt(x, p);
         let (res2)= uint384_lib.lt(y, p);
-	local xx: Uint384;
         if (res1==0){
             let (_, x1: Uint384) = uint384_lib.unsigned_div_rem_expanded(x, p_expand);
-	    assert xx = x1;
-        }else{
-	    assert xx = x;
-	}
-
-	local yy:Uint384;
-        if (res2==0){
-            let (_, y1: Uint384) = uint384_lib.unsigned_div_rem_expanded(y, p_expand);
-	    assert yy = y1;
-        }else{
-	    assert yy = y;
-	}
-        let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(xx, yy, p_expand);
-        return (res,);
+            if (res2==0){
+                let (_, y1: Uint384) = uint384_lib.unsigned_div_rem_expanded(y, p_expand);
+                let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(x1, y1, p_expand);
+                return (res,);
+            } else {
+                let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(x1, y, p_expand);
+                return (res,);
+            }
+        } else {
+            if (res2==0){
+                let (_, y1: Uint384) = uint384_lib.unsigned_div_rem_expanded(y, p_expand);
+                let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(x, y1, p_expand);
+                return (res,);
+            } else {
+                let (res) = field_arithmetic.sub_reduced_a_and_reduced_b(x, y, p_expand);
+                return (res,);
+            }
+        }
     }
-
-    //s:353, rc:28. Much better, even though we are not checking whether x and y are already reduced. 
-    func sub2{range_check_ptr}(x: Uint384, y: Uint384) -> (
-        difference: Uint384
-    ) {
-        let (p_expand: Uint384_expand) = get_modulus_expand();
-        let (diff:Uint384,_) = uint384_lib.sub(x, y);
-        let (_, res:Uint384) = uint384_lib.unsigned_div_rem_expanded(diff, p_expand);
-        return(res,);
-    }
-
+    
     //s:745 rc:82
     func mul{range_check_ptr}(x: Uint384, y: Uint384) -> (
         product: Uint384
