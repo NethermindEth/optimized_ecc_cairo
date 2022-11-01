@@ -38,14 +38,15 @@ namespace fq2_lib {
     }
 
     // Multiplies an element of FQ2 by an element of FQ
-    // steps=1480, memory_holes=40, range_check_builtin=164
+    // steps=1462, memory_holes=40, range_check_builtin=155
     func scalar_mul{range_check_ptr}(x: Uint384, y: FQ2) -> (
         product: FQ2
     ) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
-        let (e0: Uint384) = field_arithmetic.mul(x, y.e0, p_expand);
-        let (e1: Uint384) = field_arithmetic.mul(x, y.e1, p_expand);
+	let (x_exp) = uint384_lib.expand(x);
+        let (e0: Uint384) = field_arithmetic.mul_expanded(y.e0, x_exp, p_expand);
+        let (e1: Uint384) = field_arithmetic.mul_expanded(y.e1, x_exp, p_expand);
 
         return (FQ2(e0=e0, e1=e1),);
     }
