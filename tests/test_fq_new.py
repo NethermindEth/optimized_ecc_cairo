@@ -296,4 +296,102 @@ async def test_fq_get_sqrt(fq_new_factory, x):
         assert (python_sqrt == sqrt) or ((-python_sqrt) % field_modulus == sqrt)
 
 
+@given(x=st.integers(min_value=0, max_value=field_modulus-1))
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_neg(fq_new_factory, x):
+    contract = fq_new_factory
+
+    execution_info = await contract.neg(split(x)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (-x) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_mul_three_terms(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.mul_three_terms(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x * y * z) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_sub_three_terms(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.sub_three_terms(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x - y - z) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_sub_three_terms_new(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.sub_three_terms_new(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x - y - z) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_sub_three_terms2(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.sub_three_terms2(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x - y - z) % field_modulus
+
+
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_sub_three_terms3(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.sub_three_terms3(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x - y - z) % field_modulus
+
+
 # TODO: test for fq_lib.pow
