@@ -192,7 +192,6 @@ namespace field_arithmetic {
         }
 
         local success_x: felt;
-        local success_gx: felt;
         local sqrt_x: Uint384;
         local sqrt_gx: Uint384;
 
@@ -232,7 +231,6 @@ namespace field_arithmetic {
             if root_gx == None:
                 root_gx = 0
             ids.success_x = int(success_x)
-            ids.success_gx = int(success_gx)
             split_root_x = split(root_x)
             split_root_gx = split(root_gx)
             ids.sqrt_x.d0 = split_root_x[0]
@@ -251,20 +249,15 @@ namespace field_arithmetic {
             // TODO: Create a equality function within field_arithmetic to avoid overflow bugs
             let (check_x) = uint384_lib.eq(x, sqrt_x_squared);
             assert check_x = 1;
+            return (1, sqrt_x);
         } else {
             // In this case success_gx = 1
             let (sqrt_gx_squared: Uint384) = mul(sqrt_gx, sqrt_gx, p);
             let (check_gx) = uint384_lib.eq(gx, sqrt_gx_squared);
             assert check_gx = 1;
-        }
-
-        // Return the appropriate values
-        if (success_x == 0) {
             // No square roots were found
             // Note that Uint384(0, 0, 0) is not a square root here, but something needs to be returned
             return (0, Uint384(0, 0, 0));
-        } else {
-            return (1, sqrt_x);
         }
     }
 

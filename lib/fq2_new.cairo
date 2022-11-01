@@ -264,7 +264,7 @@ namespace fq2_lib {
     //TODO write a function that uses a hint instead.
 
     
-    // steps=2195, memory_holes=102, range_check_builtin=228
+    // steps=2193, memory_holes=102, range_check_builtin=228
     func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
@@ -301,9 +301,9 @@ namespace fq2_lib {
                 if (bool==1){
                     return(bool=1, sqrt=FQ2(sqrt_b_div_2,sqrt_b_div_2));
                 }else{
-                    let (minus_b_div_2) = fq_lib.sub(Uint384(1,0,0), b_div_2);
+                    let (minus_b_div_2) = fq_lib.sub(Uint384(0,0,0), b_div_2);
                     let (_, sqrt_minus_b_div_2:Uint384)=field_arithmetic.get_square_root(minus_b_div_2, p_expand, Uint384(2,0,0));
-                    let (minus_sqrt_minus_b_div_2:Uint384)=fq_lib.sub(Uint384(1,0,0), sqrt_minus_b_div_2);
+                    let (minus_sqrt_minus_b_div_2:Uint384)=fq_lib.sub(Uint384(0,0,0), sqrt_minus_b_div_2);
                     return(bool=1, sqrt=FQ2(sqrt_minus_b_div_2, minus_sqrt_minus_b_div_2));
                 }
             }
@@ -314,7 +314,7 @@ namespace fq2_lib {
                 if(bool==1){
                    return(bool=1, sqrt=FQ2(sqrt_a, Uint384(0,0,0))); 
                 }else{
-                   let(minus_a:Uint384)=fq_lib.sub(Uint384(1,0,0),a);
+                   let(minus_a:Uint384)=fq_lib.sub(Uint384(0,0,0),a);
                    let( _ , sqrt_minus_a:Uint384)= field_arithmetic.get_square_root(minus_a, p_expand, Uint384(2,0,0));
                    return(bool=1, sqrt=FQ2(Uint384(0,0,0),sqrt_minus_a));
                 }

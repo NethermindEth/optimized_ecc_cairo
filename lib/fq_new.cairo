@@ -201,6 +201,7 @@ namespace fq_lib {
 
     // Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
     // WARNING: Expects x to satisy 0 <= x < p-1
+    // s:1441 rc:155
     func get_square_root{range_check_ptr}(x: Uint384) -> (
         success: felt, res: Uint384
     ) {
