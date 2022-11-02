@@ -152,6 +152,7 @@ namespace fq_lib {
     }
     
     //scalar multiplication by Uint384
+    //same as mul, should probably remove
     func scalar_mul_uint384{range_check_ptr}(scalar: Uint384, x:Uint384) -> (
         product: Uint384
     ) {

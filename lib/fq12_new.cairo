@@ -22,6 +22,7 @@ struct FQ12 {
 // This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 const HALF_SHIFT = 2 ** 64;
 namespace fq12_lib {
+    // st=6847, mh=240, rc=732
     func add{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         // TODO: check why alloc_locals seems to be needed here
         alloc_locals;
@@ -43,6 +44,7 @@ namespace fq12_lib {
     }
 
     //using sub1 instead of sub
+    // st=8187, mh=756, rc=756
     func sub{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (e0: Uint384) = fq_lib.sub1(x.e0, y.e0);
@@ -62,6 +64,7 @@ namespace fq12_lib {
     }
 
     //allows for only one expansion of the modulus into a Uint384_expand.
+    // st=13831, mh=720, rc=1476
     func sub_2{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -109,15 +112,15 @@ namespace fq12_lib {
     }
 
     //changed scalar mul to allow for only one expansion of the modulus into a Uint384_expand, updated range_check_ptr
+    //assumes x<2**128
+    // st=8502, mh=240, rc=987
     func scalar_mul{range_check_ptr}(x: felt, y: FQ12) -> (
         product: FQ12
     ) {
         alloc_locals;
-        assert [range_check_ptr] = x;
-        let range_check_ptr = range_check_ptr + 1;
-        let p_expand:Uint384_expand= get_modulus_expand();
+        let (p_expand:Uint384_expand)= get_modulus_expand();
         let (low, high)=uint384_lib.split_64(x);
-        let (packed_expand: Uint384_expand) = Uint384_expand(low*HALF_SHIFT, x, high, 0, 0, 0, 0);
+        let packed_expand: Uint384_expand = Uint384_expand(low*HALF_SHIFT, x, high, 0, 0, 0, 0);
         let (e0: Uint384) = field_arithmetic.mul_expanded(y.e0, packed_expand, p_expand);
         let (e1: Uint384) = field_arithmetic.mul_expanded(y.e1, packed_expand, p_expand);
         let (e2: Uint384) = field_arithmetic.mul_expanded(y.e2, packed_expand, p_expand);
@@ -136,6 +139,7 @@ namespace fq12_lib {
 
 
     //changed mul so that it would only expand the modulus once. 
+    // st=194083, mh=6433, rc=22718
     func mul{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -467,6 +471,7 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
 
+    // st=193303, mh=6433, rc=22610
     func square{range_check_ptr}(a: FQ12) -> (square: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
