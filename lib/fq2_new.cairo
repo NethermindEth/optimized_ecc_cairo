@@ -482,7 +482,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    func is_quadratic_nonresidue{range_check_ptr}(a: FQ2) -> (
+    func is_quadratic_residue{range_check_ptr}(a: FQ2) -> (
         is_quad_nonresidue: felt
     ) {
         alloc_locals;
@@ -491,11 +491,10 @@ namespace fq2_lib {
         let (c1: Uint384) = fq_lib.mul(a.e1, a.e1);
         let (c3: Uint384) = fq_lib.add(c0, c1);
 
-        let (is_quad_nonresidue: felt,_) = fq_lib.get_square_root(c3);
+        let (is_quad_residue: felt,_) = fq_lib.get_square_root(c3);
 
-        return (is_quad_nonresidue,);
+        return (is_quad_residue,);
     }
-
 
     func one() -> (res: FQ2) {
         return (
