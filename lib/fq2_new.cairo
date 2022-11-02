@@ -13,7 +13,7 @@ struct FQ2 {
 }
 
 namespace fq2_lib {
-    // steps=1119, memory_holes=40, range_check_builtin=104
+    // steps=1167, memory_holes=40, range_check_builtin=122
     func add{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         // TODO: check why these alloc_locals need to be used
         alloc_locals;
@@ -24,7 +24,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    // steps=2211, memory_holes=120, range_check_builtin=204
+    // steps=2331, memory_holes=120, range_check_builtin=246
     func sub{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -38,7 +38,7 @@ namespace fq2_lib {
     }
 
     // Multiplies an element of FQ2 by an element of FQ
-    // steps=1462, memory_holes=40, range_check_builtin=155
+    // steps=1510, memory_holes=40, range_check_builtin=173
     func scalar_mul{range_check_ptr}(x: Uint384, y: FQ2) -> (
         product: FQ2
     ) {
@@ -51,7 +51,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    // steps=3989, memory_holes=120, range_check_builtin=432
+    // steps=4133, memory_holes=120, range_check_builtin=486
     func mul{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -77,7 +77,7 @@ namespace fq2_lib {
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
-    //s: 4026 rc: 432 mh: 120
+    //s: 4170 rc: 486 mh: 120
     func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
@@ -263,7 +263,7 @@ namespace fq2_lib {
     //This function assumes a and b are already reduced modulo p.
     //TODO write a function that uses a hint instead.
 
-    // steps=2193, memory_holes=94, range_check_builtin=228
+    // steps=2265, memory_holes=94, range_check_builtin=255
     func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
@@ -362,13 +362,13 @@ namespace fq2_lib {
         }
     }
 
-    // steps=3998, memory_holes=120, range_check_builtin=432
+    // steps=4142, memory_holes=120, range_check_builtin=486
     func square{range_check_ptr}(x: FQ2) -> (res: FQ2) {
         let (res) = mul(x, x);
         return (res,);
     }
 
-    //best square :  steps=3145, memory_holes=100, range_check_builtin=332
+    //best square :  steps=3265, memory_holes=100, range_check_builtin=377
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -427,7 +427,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    // steps=12901, memory_holes=459, range_check_builtin=1354
+    // steps=11965, memory_holes=379, range_check_builtin=1374
     func pow{range_check_ptr}(a: FQ2, exp: Uint768) -> (res: FQ2) {
         let o: FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0));
         let (res: FQ2) = pow_inner(a, exp, o);

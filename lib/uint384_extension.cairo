@@ -23,6 +23,18 @@ struct Uint768 {
 const HALF_SHIFT = 2 ** 64;
   
 namespace uint384_extension_lib {
+    // Verifies that the given integer is valid.
+    func check{range_check_ptr}(a: Uint768) {
+        [range_check_ptr] = a.d0;
+        [range_check_ptr + 1] = a.d1;
+        [range_check_ptr + 2] = a.d2;
+        [range_check_ptr + 3] = a.d3;
+        [range_check_ptr + 4] = a.d4;
+        [range_check_ptr + 5] = a.d5;
+        let range_check_ptr = range_check_ptr + 6;
+        return ();
+    }
+
     // Adds a 768-bit integer and a 384-bit integer. Returns the result as a 768-bit integer and the (1-bit) carry.
     func add_uint768_and_uint384{range_check_ptr}(a: Uint768, b: Uint384) -> (
         res: Uint768, carry: felt
@@ -189,6 +201,8 @@ namespace uint384_extension_lib {
             ids.remainder.d1 = remainder_split[1]
             ids.remainder.d2 = remainder_split[2]
         %}
+	check(quotient);
+	uint384_lib.check(remainder);
 
         let (res_mul_low: Uint768, res_mul_high: Uint384) = mul_uint768_by_uint384(quotient, div);
 
@@ -248,6 +262,8 @@ namespace uint384_extension_lib {
             ids.remainder.d1 = remainder_split[1]
             ids.remainder.d2 = remainder_split[2]
         %}
+	check(quotient);
+	uint384_lib.check(remainder);
 
         let (res_mul_low: Uint768, res_mul_high: Uint384) = mul_uint768_by_uint384_expanded(quotient, div);
 

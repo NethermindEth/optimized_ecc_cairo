@@ -478,6 +478,8 @@ namespace uint384_lib {
             ids.remainder.d1 = remainder_split[1]
             ids.remainder.d2 = remainder_split[2]
         %}
+	check(quotient);
+	check(remainder);
         let (res_mul: Uint384, carry: Uint384) = mul(quotient, div);
         assert carry = Uint384(0, 0, 0);
 
@@ -532,6 +534,8 @@ namespace uint384_lib {
             ids.remainder.d1 = remainder_split[1]
             ids.remainder.d2 = remainder_split[2]
         %}
+	check(quotient);
+	check(remainder);
         let (res_mul: Uint384, carry: Uint384) = mul_expanded(quotient, div);
         assert carry = Uint384(0, 0, 0);
 
@@ -576,6 +580,7 @@ namespace uint384_lib {
 
             ids.remainder = remainder
         %}
+	check(quotient);
         let (res_mul: Uint384, carry: felt) = add(quotient, quotient);
         assert carry = 0;
 

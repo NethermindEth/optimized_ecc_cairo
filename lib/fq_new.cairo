@@ -10,7 +10,7 @@ const ALL_ONES = 2 ** 128 - 1;
 const HALF_SHIFT = 2 ** 64;
 
 namespace fq_lib {
-    //s:563 rc:52
+    //s:587 rc:61
     func add{range_check_ptr}(x: Uint384, y: Uint384) -> (
         sum_mod: Uint384
     ) {
@@ -19,7 +19,7 @@ namespace fq_lib {
         return (sum,);
     }
 
-    //s:1114 rc:102
+    //s:1174 rc:123
     func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
@@ -69,7 +69,7 @@ namespace fq_lib {
         }
     }
     
-    //s:745 rc:82
+    //s:769 rc:91
     func mul{range_check_ptr}(x: Uint384, y: Uint384) -> (
         product: Uint384
     ) {
@@ -78,13 +78,13 @@ namespace fq_lib {
         return (res,);
     }
 
-    //751 steps, 82 range_checks
+    //775 steps, 91 range_checks
     func square{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (res: Uint384) = mul(x, x);
         return (res,);
     }
 
-    // Best square: 680 steps, 73 range_checks
+    // Best square: 704 steps, 82 range_checks
     func square2{range_check_ptr}(x: Uint384) -> (product: Uint384) {
         let (p_expand:Uint384_expand) = get_modulus_expand();
         let (res:Uint384) = field_arithmetic.square(x, p_expand);
@@ -92,22 +92,17 @@ namespace fq_lib {
     }
 
     // NOTE: Scalar has to be at most than 2**128 - 1
-    // 752 steps and 82 range_checks
+    // 776 steps and 91 range_checks
     func scalar_mul{range_check_ptr}(scalar: felt, x: Uint384) -> (
         product: Uint384
     ) {
-        // TODO: I want to check that scalar is at most 2**128
-        // But I get an error if I do, even fi the scalar is less than 2**128. I think [range_check_ptr] is already filled?
-
-        // assert [range_check_ptr] = scalar
-
         let packed: Uint384 = Uint384(d0=scalar, d1=0, d2=0);
         let (reduced: Uint384) = mul(packed, x);
 
         return (reduced,);
     }
 
-    //Actually a bit worse than scalar_mul: 761 steps, 82 range_checks
+    //Actually a bit worse than scalar_mul: 785 steps, 91 range_checks
     func scalar_mul2{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
@@ -118,11 +113,10 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    //Better version of scalar mul: 715 steps, 76 range_checks
+    //Better version of scalar mul: 739 steps, 85 range_checks
     func scalar_mul3{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
-        //assert [range_check_ptr] = scalar;
         let p_expand:Uint384_expand= get_modulus_expand();
         let (low, high)=uint384_lib.split_64(scalar);
         let packed_expand: Uint384_expand = Uint384_expand(low*HALF_SHIFT, scalar, high, 0, 0, 0, 0);
@@ -130,7 +124,7 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    //Best version: uses mul_by_uint128: 639 steps, 70 range_checks
+    //Best version: uses mul_by_uint128: 663 steps, 79 range_checks
     func scalar_mul4{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
@@ -144,7 +138,7 @@ namespace fq_lib {
     }
 
     //assumes scalar < 2**64
-    //619 steps, 67 range_checks
+    //643 steps, 76 range_checks
     func scalar64_mul{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
@@ -157,7 +151,7 @@ namespace fq_lib {
         return(remainder,);
     }
 
-    // Computes x*y^{-1}mod p. s:795, rc:83
+    // Computes x*y^{-1}mod p. s:819, rc:92
     func div{range_check_ptr}(x:Uint384, y:Uint384) -> (
         division : Uint384
     ) {
@@ -166,7 +160,7 @@ namespace fq_lib {
         return (result,);
     } 
 
-    // finds x in a x ≅ 1 (mod q). s:806, rc:83
+    // finds x in a x ≅ 1 (mod q). s:830, rc:92
     func inverse{range_check_ptr}(a:Uint384) -> (res: Uint384) {
         let (res:Uint384) = div(Uint384(1,0,0), a);    
         return (res,);
@@ -176,7 +170,6 @@ namespace fq_lib {
     func pow{range_check_ptr}(x: Uint384, exponent: Uint384) -> (
         res: Uint384
     ) {
-        //alloc_locals; is this alloc needed? I got it to work without
         let (p_expand: Uint384_expand) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.pow(x, exponent, p_expand);
         return (res,);
@@ -194,11 +187,10 @@ namespace fq_lib {
 
     // Finds a square of x in F_p, i.e. x ≅ y**2 (mod p) for some y
     // WARNING: Expects x to satisy 0 <= x < p-1
-    // s:1441 rc:155
+    // s:1489 rc:173
     func get_square_root{range_check_ptr}(x: Uint384) -> (
         success: felt, res: Uint384
     ) {
-        //alloc_locals; Is this needed? Got it to work without
         let (p_expand: Uint384_expand) = get_modulus_expand();
         // 2 happens to be a generator
         let generator = Uint384(2, 0, 0);
@@ -206,6 +198,7 @@ namespace fq_lib {
         return (success, res);
     }
 
+    // s:784 rc:91
     func from_256_bits{range_check_ptr}(input: Uint256) -> (
         res: Uint384
     ) {
@@ -226,6 +219,7 @@ namespace fq_lib {
         return (res,);
     }
 
+    // s:2873 rc:334
     func from_64_bytes{range_check_ptr}(a0: Uint256, a1: Uint256) -> (
         res: Uint384
     ) {
@@ -276,12 +270,14 @@ namespace fq_lib {
             d2=0));
     }
 
+    // s:617 rc:61
     func neg{range_check_ptr}(input: Uint384) -> (res: Uint384) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(Uint384(0,0,0), input, p_expand);
         return (res,);
     }
 
+    // s:1511 rc:182
     func mul_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -292,7 +288,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:2220, rc:204
+    //s:2340, rc:246
     func sub_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -301,7 +297,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //better, s:1930, rc:179
+    //better, s:2032, rc:215
     func sub_three_terms_new{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -315,7 +311,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1217, rc:106
+    //s:1265, rc:124
     func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -324,7 +320,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1308, rc:108
+    //s:1356, rc:126
     func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
