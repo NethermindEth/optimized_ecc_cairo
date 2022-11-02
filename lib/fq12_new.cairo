@@ -132,6 +132,29 @@ namespace fq12_lib {
         let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
         return (res,);
     }
+    
+    //scalar mul by Uint384
+    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ12) -> (
+        product: FQ12
+    ) {
+        alloc_locals;
+        let p_expand:Uint384_expand= get_modulus_expand();
+        let (e0: Uint384) = field_arithmetic.mul(y.e0, x, p_expand);
+        let (e1: Uint384) = field_arithmetic.mul(y.e1, x, p_expand);
+        let (e2: Uint384) = field_arithmetic.mul(y.e2, x, p_expand);
+        let (e3: Uint384) = field_arithmetic.mul(y.e3, x, p_expand);
+        let (e4: Uint384) = field_arithmetic.mul(y.e4,x, p_expand);
+        let (e5: Uint384) = field_arithmetic.mul(y.e5, x, p_expand);
+        let (e6: Uint384) = field_arithmetic.mul(y.e6,x, p_expand);
+        let (e7: Uint384) = field_arithmetic.mul(y.e7,x, p_expand);
+        let (e8: Uint384) = field_arithmetic.mul(y.e8, x, p_expand);
+        let (e9: Uint384) = field_arithmetic.mul(y.e9, x, p_expand);
+        let (e10: Uint384) = field_arithmetic.mul(y.e10, x, p_expand);
+        let (e11: Uint384) = field_arithmetic.mul(y.e11, x, p_expand);
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
+        return (res,);
+    }
+
 
 
     //changed mul so that it would only expand the modulus once. 
