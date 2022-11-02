@@ -1,4 +1,3 @@
-from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from lib.uint384 import Uint384, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq_new import fq_lib
@@ -22,7 +21,7 @@ struct FQ12 {
 // This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 const HALF_SHIFT = 2 ** 64;
 namespace fq12_lib {
-    func add{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
+    func add{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         // TODO: check why alloc_locals seems to be needed here
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -43,7 +42,7 @@ namespace fq12_lib {
     }
 
     //using sub1 instead of sub
-    func sub{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
+    func sub{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (e0: Uint384) = fq_lib.sub1(x.e0, y.e0);
         let (e1: Uint384) = fq_lib.sub1(x.e1, y.e1);
@@ -62,7 +61,7 @@ namespace fq12_lib {
     }
 
     //allows for only one expansion of the modulus into a Uint384_expand.
-    func sub_2{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
+    func sub_2{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (_, x_e0_red: Uint384) = uint384_lib.unsigned_div_rem_expanded(x.e0, p_expand);
@@ -109,7 +108,7 @@ namespace fq12_lib {
     }
 
     //changed scalar mul to allow for only one expansion of the modulus into a Uint384_expand, updated range_check_ptr
-    func scalar_mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: felt, y: FQ12) -> (
+    func scalar_mul{range_check_ptr}(x: felt, y: FQ12) -> (
         product: FQ12
     ) {
         alloc_locals;
@@ -136,7 +135,7 @@ namespace fq12_lib {
 
 
     //changed mul so that it would only expand the modulus once. 
-    func mul{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12, b: FQ12) -> (product: FQ12) {
+    func mul{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
         // d0
@@ -467,7 +466,7 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
 
-    func square{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12) -> (square: FQ12) {
+    func square{range_check_ptr}(a: FQ12) -> (square: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
         // d0
@@ -911,7 +910,7 @@ namespace fq12_lib {
     // TODO: Should the exponent go further than 768 bits?
     // Computes (a**exp). Uses the fast exponentiation algorithm
     // pow(a,0) is now 1
-    func pow{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12, exp: Uint768) -> (res: FQ12) {
+    func pow{range_check_ptr}(a: FQ12, exp: Uint768) -> (res: FQ12) {
         alloc_locals;
         let (is_exp_zero) = uint384_extension_lib.eq(exp, Uint768(0, 0, 0, 0, 0, 0));
 
@@ -944,7 +943,7 @@ namespace fq12_lib {
     }
 
     // Finds and FQ12 x such that a * x = 1
-    func inverse{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ12) -> (res: FQ12) {
+    func inverse{range_check_ptr}(a: FQ12) -> (res: FQ12) {
         alloc_locals;
 
         let (one_fq12: FQ12) = one();
@@ -1106,7 +1105,7 @@ namespace fq12_lib {
         return (a_inverse,);
     }
 
-    func mul_three_terms{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(
+    func mul_three_terms{range_check_ptr}(
         x: FQ12, y: FQ12, z: FQ12
     ) -> (res: FQ12) {
         let (x_times_y: FQ12) = mul(x, y);
@@ -1116,7 +1115,7 @@ namespace fq12_lib {
 }
 
 
-func _aux_polynomial_reduction{bitwise_ptr: BitwiseBuiltin*, range_check_ptr}(
+func _aux_polynomial_reduction{range_check_ptr}(
     coeff_to_reduce: Uint384, first_coef: Uint384, second_coef: Uint384
 ) -> (new_first_coef: Uint384, new_second_coef: Uint384) {
     // TODO: some way to avoid using local variables? (to improve efficiency)
