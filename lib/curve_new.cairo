@@ -2,24 +2,25 @@ from lib.uint384 import Uint384, Uint384_expand
 
 // Default modulus is field modulus for bls12-381 elliptic curve.
 // decimal p = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-const P0 = 40769914829639538012874174947278170795;
-const P1 = 133542214618860690590306275168919549476;
-const P2 = 34565483545414906068789196026815425751;
+// hex 0 = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
+
+//entries of the 'expanded' modulus in the sense of the Uint384_expand struct
+const P0exp =                                                                                 0xb9feffffffffaaab0000000000000000;
+const P1exp =                                                                 0x1eabfffeb153ffffb9feffffffffaaab;
+const P2exp =                                                 0x6730d2a0f6b0f6241eabfffeb153ffff;
+const P3exp =                                 0x64774b84f38512bf6730d2a0f6b0f624;
+const P4exp =                 0x4b1ba7b6434bacd764774b84f38512bf;
+const P5exp = 0x1a0111ea397fe69a4b1ba7b6434bacd7;
+const P6exp = 0x1a0111ea397fe69a;
+
+const P0 = P1exp;
+const P1 = P3exp;
+const P2 = P5exp;
 
 //p-1
 func get_p_minus_one() -> (res:Uint384) {
-    return(res=Uint384(40769914829639538012874174947278170794, P1, P2));
+    return(res=Uint384(0x1eabfffeb153ffffb9feffffffffaaaa, P1, P2));
 }
-
-
-//entries of the 'expanded' modulus in the sense of the Uint384_expand struct
-const P0exp = 247231214919135414563355292530659819520;
-const P1exp = 40769914829639538012874174947278170795;
-const P2exp = 137163985873926021497095410661308235775;
-const P3exp = 133542214618860690590306275168919549476;
-const P4exp = 99835693301805499553651678317486871231;
-const P5exp = 34565483545414906068789196026815425751;
-const P6exp = 1873798617647539866;
 
 //inverse of 2 modulo p is 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279894 in decimal
 //inverse of 2 modulo p, as a Uint384
