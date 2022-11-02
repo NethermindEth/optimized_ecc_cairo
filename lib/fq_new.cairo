@@ -150,6 +150,15 @@ namespace fq_lib {
         ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p_expand);
         return(remainder,);
     }
+    
+    //scalar multiplication by Uint384
+    func scalar_mul_uint384{range_check_ptr}(scalar: Uint384, x:Uint384) -> (
+        product: Uint384
+    ) {
+        let (p_expand : Uint384_expand) = get_modulus_expand();
+        let (product:Uint384) = field_arithmetic.mul(scalar, x, p_expand);
+        return(product,);
+    }
 
     // Computes x*y^{-1}mod p. s:819, rc:92
     func div{range_check_ptr}(x:Uint384, y:Uint384) -> (
