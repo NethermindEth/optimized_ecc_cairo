@@ -46,6 +46,15 @@ func test_mul{syscall_ptr: felt*, range_check_ptr}(
 }
 
 @external
+func test_mul_kar{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mults:FQ2) = fq2_lib.mul_kar(FQ2(Uint384(1,0,0), Uint384(1,0,0)),FQ2(Uint384(2,0,0), Uint384(1,0,0)));
+    assert mults = FQ2(Uint384(1,0,0), Uint384(3,0,0));
+    return();
+}
+
+@external
 func test_inv{syscall_ptr: felt*, range_check_ptr}(
     
 ) {
@@ -76,6 +85,15 @@ func test_square_new{syscall_ptr: felt*, range_check_ptr}(
     
 ) {
     let (sq:FQ2) = fq2_lib.square_new(FQ2(Uint384(1,0,0), Uint384(1,0,0)));
+    assert sq = FQ2(Uint384(0,0,0), Uint384(2,0,0));
+    return();
+}
+
+@external
+func test_square_kar{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (sq:FQ2) = fq2_lib.square_kar(FQ2(Uint384(1,0,0), Uint384(1,0,0)));
     assert sq = FQ2(Uint384(0,0,0), Uint384(2,0,0));
     return();
 }

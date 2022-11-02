@@ -72,6 +72,26 @@ namespace fq2_lib {
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
+    // Uses Karatsuba multiplication
+    // steps=3356, memory_holes=100, range_check_builtin=380
+    func mul_kar{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
+        alloc_locals;
+        let (p_expand:Uint384_expand)=get_modulus_expand();
+        let (first_term: Uint384) = field_arithmetic.mul(a.e0, b.e0, p_expand);
+        let (third_term: Uint384) = field_arithmetic.mul(a.e1, b.e1, p_expand);
+
+	let (sum_a: Uint384,_) = uint384_lib.add(a.e0,a.e1);
+	let (sum_b: Uint384,_) = uint384_lib.add(b.e0,b.e1);
+	let (second_term: Uint384) = field_arithmetic.mul(sum_a, sum_b, p_expand);
+
+	//field_arithmetic.mul always returns reduced values
+	let (second_term: Uint384) = fq_lib.sub_three_terms_no_input_check(second_term,first_term,third_term);
+	
+        let (first_term) = field_arithmetic.sub_reduced_a_and_reduced_b(first_term, third_term, p_expand);
+
+        return (FQ2(e0=first_term, e1=second_term),);
+    }
+
     // Find b such that b*a = 1 in FQ2
     // First the inverse is computed in a hint, and then verified in Cairo
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
@@ -368,7 +388,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    //best square :  steps=3265, memory_holes=100, range_check_builtin=377
+    //better square :  steps=3265, memory_holes=100, range_check_builtin=377
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -377,6 +397,25 @@ namespace fq2_lib {
         let (first_term:Uint384)=field_arithmetic.sub_reduced_a_and_reduced_b(r0_squared,r1_squared,p_expand);
         let (r0r1:Uint384)=field_arithmetic.mul(x.e0, x.e1, p_expand);
         let (second_term:Uint384)=field_arithmetic.add(r0r1,r0r1,p_expand);
+        return (FQ2(e0=first_term, e1=second_term),);
+    }
+
+    // Uses Karatsuba multiplication
+    // best square : steps=3126, memory_holes=100, range_check_builtin=350
+    func square_kar{range_check_ptr}(a: FQ2) -> (product: FQ2) {
+        alloc_locals;
+        let (p_expand:Uint384_expand)=get_modulus_expand();
+        let (first_term: Uint384) = field_arithmetic.square(a.e0, p_expand);
+        let (third_term: Uint384) = field_arithmetic.square(a.e1, p_expand);
+
+	let (sum_a: Uint384,_) = uint384_lib.add(a.e0,a.e1);
+	let (second_term: Uint384) = field_arithmetic.square(sum_a, p_expand);
+
+	//field_arithmetic.mul always returns reduced values
+	let (second_term: Uint384) = fq_lib.sub_three_terms_no_input_check(second_term,first_term,third_term);
+	
+        let (first_term) = field_arithmetic.sub_reduced_a_and_reduced_b(first_term, third_term, p_expand);
+
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
@@ -402,8 +441,8 @@ namespace fq2_lib {
     func mul_three_terms{range_check_ptr}(x: FQ2, y: FQ2, z: FQ2) -> (
         res: FQ2
     ) {
-        let (x_times_y: FQ2) = mul(x, y);
-        let (res: FQ2) = mul(x_times_y, z);
+        let (x_times_y: FQ2) = mul_kar(x, y);
+        let (res: FQ2) = mul_kar(x_times_y, z);
         return (res,);
     }
 
@@ -453,11 +492,11 @@ namespace fq2_lib {
         let (is_rem_zero:felt)=uint384_lib.eq(rem, Uint384(0,0,0));
         if (is_rem_zero == 1) {
             // NOTE: Code is repeated in the if-else to avoid declaring a_squared as a local variable
-            let (a_squared: FQ2) = square_new(a);
+            let (a_squared: FQ2) = square_kar(a);
             let (power: FQ2) = pow_inner(a_squared, exp_div_2, o);
         } else {
-            let (a_squared: FQ2) = square_new(a);
-            let (o_new: FQ2) = mul(a, o);
+            let (a_squared: FQ2) = square_kar(a);
+            let (o_new: FQ2) = mul_kar(a, o);
             let (power: FQ2) = pow_inner(a_squared, exp_div_2, o_new);
         }
         return(res=power);

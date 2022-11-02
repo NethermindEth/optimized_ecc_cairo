@@ -42,6 +42,15 @@ func mul{range_check_ptr}(x: FQ2, y: FQ2) -> (res: FQ2) {
 }
 
 @view
+func mul_kar{range_check_ptr}(x: FQ2, y: FQ2) -> (res: FQ2) {
+    alloc_locals;
+
+    let (res: FQ2) = fq2_lib.mul_kar(x, y);
+
+    return (res,);
+}
+
+@view
 func inv{range_check_ptr}(x: FQ2) -> (res: FQ2) {
     alloc_locals;
 
@@ -79,6 +88,17 @@ func square_new{range_check_ptr}(value: FQ2) -> (
     alloc_locals;
 
     let (res: FQ2) = fq2_lib.square_new(value);
+
+    return (res,);
+}
+
+@view
+func square_kar{range_check_ptr}(value: FQ2) -> (
+    res: FQ2
+) {
+    alloc_locals;
+
+    let (res: FQ2) = fq2_lib.square_kar(value);
 
     return (res,);
 }

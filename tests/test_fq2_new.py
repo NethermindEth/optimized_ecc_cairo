@@ -3,7 +3,7 @@ from utils import split, packFQP, field_modulus, splitFQP, max_base_bigint12_sum
 from math import sqrt
 from hypothesis import given, strategies as st, settings
 from py_ecc.fields import bls12_381_FQ2 as FQ2
-from sqrt_in_fq2 import has_squareroot, has_squareroot_v2
+from sqrt_in_fq2 import has_squareroot
 
 largest_factor = sqrt(2 ** (64 * 11))
 
@@ -82,6 +82,29 @@ async def test_fq2_mul(fq2_new_factory, x1, x2, y1, y2):
 @given(
     x1=st.integers(min_value=0, max_value=field_modulus - 1),
     x2=st.integers(min_value=0, max_value=field_modulus - 1),
+    y1=st.integers(min_value=0, max_value=field_modulus - 1),
+    y2=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_mul_kar(fq2_new_factory, x1, x2, y1, y2):
+    x = (x1, x2)
+    y = (y1, y2)
+    
+    contract = fq2_new_factory
+    execution_info = await contract.mul_kar(splitFQP(x), splitFQP(y)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ2(x)
+    y_fq2 = FQ2(y)
+    python_result = x_fq2 * y_fq2
+
+    assert cairo_result == python_result.coeffs
+
+
+@given(
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+    x2=st.integers(min_value=0, max_value=field_modulus - 1),
 )
 @settings(deadline=None)
 @pytest.mark.asyncio
@@ -109,6 +132,25 @@ async def test_fq2_square_new(fq2_new_factory, x1, x2):
     
     contract = fq2_new_factory
     execution_info = await contract.square_new(splitFQP(x)).call()
+    cairo_result = packFQP(execution_info.result[0])
+
+    x_fq2 = FQ2(x)
+    python_result = x_fq2 * x_fq2
+
+    assert cairo_result == python_result.coeffs
+
+
+@given(
+    x1=st.integers(min_value=0, max_value=field_modulus - 1),
+    x2=st.integers(min_value=0, max_value=field_modulus - 1),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq2_square_kar(fq2_new_factory, x1, x2):
+    x = (x1, x2)
+    
+    contract = fq2_new_factory
+    execution_info = await contract.square_kar(splitFQP(x)).call()
     cairo_result = packFQP(execution_info.result[0])
 
     x_fq2 = FQ2(x)
