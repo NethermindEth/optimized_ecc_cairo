@@ -3,7 +3,6 @@ from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq_new import fq_lib
 from lib.curve_new import fq2_c0, fq2_c1, get_modulus, get_modulus_expand, get_2_inverse, get_2_inverse_exp
 from lib.field_arithmetic_new import field_arithmetic
-from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 struct FQ12 {
     e0: Uint384,
@@ -909,7 +908,7 @@ namespace fq12_lib {
     
     
     //scalar mul by Uint384
-    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ12) -> (
+    func scalar_mul_uint384{range_check_ptr}(x: Uint384, y: FQ12) -> (
         product: FQ12
     ) {
         alloc_locals;
