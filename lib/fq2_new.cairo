@@ -524,7 +524,6 @@ namespace fq2_lib {
     func is_quadratic_residue{range_check_ptr}(a: FQ2) -> (
         is_quad_nonresidue: felt
     ) {
-        alloc_locals;
 
         let (c0: Uint384) = fq_lib.mul(a.e0, a.e0);
         let (c1: Uint384) = fq_lib.mul(a.e1, a.e1);
@@ -549,7 +548,6 @@ namespace fq2_lib {
     }
 
     func neg{range_check_ptr}(a: FQ2) -> (res: FQ2) {
-        alloc_locals;
 
         let (neg_e0: Uint384) = fq_lib.neg(a.e0);
         let (neg_e1: Uint384) = fq_lib.neg(a.e1);
@@ -559,7 +557,7 @@ namespace fq2_lib {
 
     // https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-09#section-4.1
     func sgn0{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(a: FQ2) -> (sign: felt) {
-        alloc_locals;
+      //alloc_locals;
 
         let sign = 0;
         let zero = 1;

@@ -198,11 +198,10 @@ namespace fq_lib {
         return (success, res);
     }
 
-    // s:784 rc:91
+    // s:782 rc:91
     func from_256_bits{range_check_ptr}(input: Uint256) -> (
         res: Uint384
     ) {
-        alloc_locals;
 
         let (res: Uint384) = toMont(Uint384(d0=input.low, d1=input.high, d2=0));
 
@@ -210,7 +209,6 @@ namespace fq_lib {
     }
 
     func toMont{range_check_ptr}(input: Uint384) -> (res: Uint384) {
-        alloc_locals;
 
         let (r_squared: Uint384) = get_r_squared();
 
