@@ -1,7 +1,9 @@
-from lib.uint384 import Uint384, uint384_lib
+from lib.uint384 import Uint384, Uint384_expand, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq_new import fq_lib
-from lib.curve_new import fq2_c0, fq2_c1, get_modulus
+from lib.curve_new import fq2_c0, fq2_c1, get_modulus, get_modulus_expand, get_2_inverse, get_2_inverse_exp
+from lib.field_arithmetic_new import field_arithmetic
+from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 
 struct FQ12 {
     e0: Uint384,
@@ -116,7 +118,7 @@ namespace fq12_lib {
         let range_check_ptr = range_check_ptr + 1;
         let p_expand:Uint384_expand= get_modulus_expand();
         let (low, high)=uint384_lib.split_64(x);
-        let (packed_expand: Uint384_expand) = Uint384_expand(low*HALF_SHIFT, scalar, high, 0, 0, 0, 0);
+        let (packed_expand: Uint384_expand) = Uint384_expand(low*HALF_SHIFT, x, high, 0, 0, 0, 0);
         let (e0: Uint384) = field_arithmetic.mul_expanded(y.e0, packed_expand, p_expand);
         let (e1: Uint384) = field_arithmetic.mul_expanded(y.e1, packed_expand, p_expand);
         let (e2: Uint384) = field_arithmetic.mul_expanded(y.e2, packed_expand, p_expand);
@@ -132,29 +134,6 @@ namespace fq12_lib {
         let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
         return (res,);
     }
-    
-    //scalar mul by Uint384
-    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ12) -> (
-        product: FQ12
-    ) {
-        alloc_locals;
-        let p_expand:Uint384_expand= get_modulus_expand();
-        let (e0: Uint384) = field_arithmetic.mul(y.e0, x, p_expand);
-        let (e1: Uint384) = field_arithmetic.mul(y.e1, x, p_expand);
-        let (e2: Uint384) = field_arithmetic.mul(y.e2, x, p_expand);
-        let (e3: Uint384) = field_arithmetic.mul(y.e3, x, p_expand);
-        let (e4: Uint384) = field_arithmetic.mul(y.e4,x, p_expand);
-        let (e5: Uint384) = field_arithmetic.mul(y.e5, x, p_expand);
-        let (e6: Uint384) = field_arithmetic.mul(y.e6,x, p_expand);
-        let (e7: Uint384) = field_arithmetic.mul(y.e7,x, p_expand);
-        let (e8: Uint384) = field_arithmetic.mul(y.e8, x, p_expand);
-        let (e9: Uint384) = field_arithmetic.mul(y.e9, x, p_expand);
-        let (e10: Uint384) = field_arithmetic.mul(y.e10, x, p_expand);
-        let (e11: Uint384) = field_arithmetic.mul(y.e11, x, p_expand);
-        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
-        return (res,);
-    }
-
 
 
     //changed mul so that it would only expand the modulus once. 
@@ -493,7 +472,7 @@ namespace fq12_lib {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
         // d0
-        let (d0: Uint384) = field_arithmetic.square(a.e0, a.e0, p_expand);
+        let (d0: Uint384) = field_arithmetic.square(a.e0, p_expand);
 
         // d1
         let (b_0_1: Uint384) = field_arithmetic.mul(a.e0, a.e1, p_expand);
@@ -623,7 +602,7 @@ namespace fq12_lib {
         let (b_7_3: Uint384) = field_arithmetic.mul(a.e7, a.e3, p_expand);
         let (b_8_2: Uint384) = field_arithmetic.mul(a.e8, a.e2, p_expand);
         let (b_9_1: Uint384) = field_arithmetic.mul(a.e9, a.e1, p_expand);
-        let (b_10_0: Uint384) = field_arithmetic.mul(a.e10, b.e0, p_expand);
+        let (b_10_0: Uint384) = field_arithmetic.mul(a.e10, a.e0, p_expand);
         let (d10: Uint384) = field_arithmetic.add(b_0_10, b_1_9, p_expand);
         let (d10: Uint384) = field_arithmetic.add(d10, b_2_8, p_expand);
         let (d10: Uint384) = field_arithmetic.add(d10, b_3_7, p_expand);
@@ -927,9 +906,31 @@ namespace fq12_lib {
             e11=Uint384(d0=0, d1=0, d2=0)),
         );
     }
-}
+    
+    
+    //scalar mul by Uint384
+    func scalar_mul_uint384{range_check_ptr, bitwise_ptr: BitwiseBuiltin*}(x: Uint384, y: FQ12) -> (
+        product: FQ12
+    ) {
+        alloc_locals;
+        let p_expand:Uint384_expand= get_modulus_expand();
+        let (e0: Uint384) = field_arithmetic.mul(y.e0, x, p_expand);
+        let (e1: Uint384) = field_arithmetic.mul(y.e1, x, p_expand);
+        let (e2: Uint384) = field_arithmetic.mul(y.e2, x, p_expand);
+        let (e3: Uint384) = field_arithmetic.mul(y.e3, x, p_expand);
+        let (e4: Uint384) = field_arithmetic.mul(y.e4,x, p_expand);
+        let (e5: Uint384) = field_arithmetic.mul(y.e5, x, p_expand);
+        let (e6: Uint384) = field_arithmetic.mul(y.e6,x, p_expand);
+        let (e7: Uint384) = field_arithmetic.mul(y.e7,x, p_expand);
+        let (e8: Uint384) = field_arithmetic.mul(y.e8, x, p_expand);
+        let (e9: Uint384) = field_arithmetic.mul(y.e9, x, p_expand);
+        let (e10: Uint384) = field_arithmetic.mul(y.e10, x, p_expand);
+        let (e11: Uint384) = field_arithmetic.mul(y.e11, x, p_expand);
+        let res = FQ12(e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11);
+        return (res,);
+    }
 
-// TODO: test
+    // TODO: test
     // TODO: Should the exponent go further than 768 bits?
     // Computes (a**exp). Uses the fast exponentiation algorithm
     // pow(a,0) is now 1
