@@ -1,7 +1,7 @@
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic_new import field_arithmetic
-from lib.curve_new import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2
+from lib.curve_new import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2, get_twice_p
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero, is_nn, is_le
 
@@ -329,6 +329,22 @@ namespace fq_lib {
         return (res,);
     }
 
+    //Best but assumes all inputs <p, can give wrong answers otherwise
+    //also relies on 3*p<2**384
+    //s:455, rc:40
+    func sub_three_terms_no_input_check{range_check_ptr}(
+        x: Uint384, y: Uint384, z: Uint384
+    ) -> (res: Uint384) {
+        let (p_expand: Uint384_expand) = get_modulus_expand();
+        let (twice_p: Uint384) = get_twice_p();
+	let (sum1: Uint384,_) = uint384_lib.add(x,twice_p);
+	let (sum2: Uint384,_) = uint384_lib.add(y,z);
+	// note that we must have sum1 > sum2
+	let (diff: Uint384,_) = uint384_lib.sub(sum1,sum2);
+
+	let (_,res: Uint384) = uint384_lib.unsigned_div_rem_expanded(diff,p_expand);
+        return (res,);
+    }
     
 
 }

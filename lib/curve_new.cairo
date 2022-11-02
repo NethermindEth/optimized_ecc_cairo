@@ -45,6 +45,11 @@ const P0_p_minus_one_div_2 = 20384957414819769006437087473639085397;
 const P1_p_minus_one_div_2 = 236912290769899577026840441300343880466;
 const P2_p_minus_one_div_2 = 17282741772707453034394598013407712875;
 
+// 2*p
+const twice_p0 = 0x3d57fffd62a7ffff73fdffffffff5556;
+const twice_p1 = 0xc8ee9709e70a257ece61a541ed61ec48;
+const twice_p2 = 0x340223d472ffcd3496374f6c869759ae;
+
 // @dev modify the returned value of this function to adjust the modulus
 // @dev modulus must be less than 2 ** (128 * 3)
 func get_modulus() -> (mod: Uint384) {
@@ -66,6 +71,10 @@ func get_2_inverse_exp() -> (twoinvexp:Uint384_expand) {
 
 func get_p_minus_one_div_2() -> (res: Uint384) {
     return (res=Uint384(d0=P0_p_minus_one_div_2, d1=P1_p_minus_one_div_2, d2=P2_p_minus_one_div_2));
+}
+
+func get_twice_p() -> (twice_p: Uint384) {
+    return (twice_p=Uint384(d0=twice_p0, d1=twice_p1, d2=twice_p2));
 }
 
 // Modulus coefficients for fq2

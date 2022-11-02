@@ -224,3 +224,12 @@ func test_sub_three_terms3{syscall_ptr: felt*, range_check_ptr}(
     assert mults = Uint384(1,0,0);
     return();
 }
+
+@external
+func test_sub_three_terms_no_input_check{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mults:Uint384) = fq_lib.sub_three_terms_no_input_check(Uint384(11,0,0), Uint384(7,0,0), Uint384(3,0,0));
+    assert mults = Uint384(1,0,0);
+    return();
+}

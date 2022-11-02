@@ -230,3 +230,12 @@ func sub_three_terms3{range_check_ptr}(x: Uint384, y: Uint384, z: Uint384) -> (r
 
     return (res,);
 }
+
+@view
+func sub_three_terms_no_input_check{range_check_ptr}(x: Uint384, y: Uint384, z: Uint384) -> (res: Uint384) {
+    alloc_locals;
+
+    let (res: Uint384) = fq_lib.sub_three_terms_no_input_check(x, y, z);
+
+    return (res,);
+}

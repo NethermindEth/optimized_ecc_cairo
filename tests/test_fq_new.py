@@ -394,4 +394,21 @@ async def test_fq_sub_three_terms3(fq_new_factory, x, y, z):
     assert result == (x - y - z) % field_modulus
 
 
+@given(
+    x=st.integers(min_value=1, max_value=field_modulus),
+    y=st.integers(min_value=1, max_value=field_modulus),
+    z=st.integers(min_value=1, max_value=field_modulus),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_sub_three_terms_no_input_check(fq_new_factory, x, y, z):
+    contract = fq_new_factory
+
+    execution_info = await contract.sub_three_terms_no_input_check(split(x), split(y), split(z)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x - y - z) % field_modulus
+
+
 # TODO: test for fq_lib.pow
