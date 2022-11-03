@@ -37,6 +37,7 @@ func test_add{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(10,0,0),
 				       Uint384(11,0,0),
 				       Uint384(12,0,0)));
+    
     assert add = FQ12(Uint384(1,0,0),
 		      Uint384(3,0,0),
 		      Uint384(4,0,0),
@@ -79,8 +80,8 @@ func test_sub{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
-				       Uint384(1,0,0)),
-);
+				       Uint384(1,0,0)));
+    
     assert sub = FQ12(Uint384(0,0,0),
 		      Uint384(1,0,0),
 		      Uint384(2,0,0),
@@ -123,8 +124,8 @@ func test_sub_2{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
-				       Uint384(1,0,0)),
-);
+				       Uint384(1,0,0)));
+    
     assert sub = FQ12(Uint384(0,0,0),
 		      Uint384(1,0,0),
 		      Uint384(2,0,0),
@@ -167,8 +168,8 @@ func test_sub_3{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
 				       Uint384(1,0,0),
-				       Uint384(1,0,0)),
-);
+				       Uint384(1,0,0)));
+    
     assert sub = FQ12(Uint384(0,0,0),
 		      Uint384(1,0,0),
 		      Uint384(2,0,0),
@@ -200,8 +201,8 @@ func test_scalar_mul{syscall_ptr: felt*, range_check_ptr}(
 					      Uint384(1,0,0),
 					      Uint384(1,0,0),
 					      Uint384(1,0,0),
-					      Uint384(1,0,0)),
-);
+					      Uint384(1,0,0)));
+    
     assert mul = FQ12(Uint384(3,0,0),
 		      Uint384(3,0,0),
 		      Uint384(3,0,0),
@@ -234,8 +235,8 @@ func test_scalar_mul2{syscall_ptr: felt*, range_check_ptr}(
 					       Uint384(1,0,0),
 					       Uint384(1,0,0),
 					       Uint384(1,0,0),
-					       Uint384(1,0,0)),
-);
+					       Uint384(1,0,0)));
+    
     assert mul = FQ12(Uint384(3,0,0),
 		      Uint384(3,0,0),
 		      Uint384(3,0,0),
@@ -248,6 +249,40 @@ func test_scalar_mul2{syscall_ptr: felt*, range_check_ptr}(
 		      Uint384(3,0,0),
 		      Uint384(3,0,0),
 		      Uint384(3,0,0));
+    return();
+}
+
+
+@external
+func test_scalar_mul_uint384{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mul:FQ12) = fq12_lib.scalar_mul_uint384(Uint384(1,2,3),
+						 FQ12(Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0),
+						      Uint384(1,0,0)));
+    
+    assert mul = FQ12(Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3),
+		      Uint384(1,2,3));
     return();
 }
 
@@ -280,7 +315,7 @@ func test_mul{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(0,0,0),
 				       Uint384(0,0,0),
 				       Uint384(0,0,0)),
-);
+				  );
     assert mul = FQ12(Uint384(2,0,0),
 		      Uint384(4,0,0),
 		      Uint384(6,0,0),
@@ -323,8 +358,8 @@ func test_mul_2{syscall_ptr: felt*, range_check_ptr}(
 				       Uint384(0,0,0),
 				       Uint384(0,0,0),
 				       Uint384(0,0,0),
-				       Uint384(0,0,0)),
-);
+				       Uint384(0,0,0)));
+    
     assert mul = FQ12(Uint384(2,0,0),
 		      Uint384(4,0,0),
 		      Uint384(6,0,0),
