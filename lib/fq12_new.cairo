@@ -1274,6 +1274,378 @@ namespace fq12_lib {
 
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
+    
+    //square function derived from mul_2, since squaring is slightly more efficient than mul_expand, though the improvement should be small.
+    func square_2{range_check_ptr}(a: FQ12) -> (product: FQ12) {
+        alloc_locals;
+        let (p_expand:Uint384_expand) = get_modulus_expand();
+
+	let (a_e0:Uint384_expand) = uint384_lib.expand(a.e0);
+	let (a_e1:Uint384_expand) = uint384_lib.expand(a.e1);
+	let (a_e2:Uint384_expand) = uint384_lib.expand(a.e2);
+	let (a_e3:Uint384_expand) = uint384_lib.expand(a.e3);
+	let (a_e4:Uint384_expand) = uint384_lib.expand(a.e4);
+	let (a_e5:Uint384_expand) = uint384_lib.expand(a.e5);
+	let (a_e6:Uint384_expand) = uint384_lib.expand(a.e6);
+	let (a_e7:Uint384_expand) = uint384_lib.expand(a.e7);
+	let (a_e8:Uint384_expand) = uint384_lib.expand(a.e8);
+	let (a_e9:Uint384_expand) = uint384_lib.expand(a.e9);
+	let (a_e10:Uint384_expand) = uint384_lib.expand(a.e10);
+	let (a_e11:Uint384_expand) = uint384_lib.expand(a.e11);
+	
+        // d0
+        let (d0: Uint384) = field_arithmetic.square(a.e0, p_expand);
+
+        // d1
+        let (a_0_1: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e1, p_expand);
+        let (a_1_0: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e0, p_expand);
+        let (d1: Uint384,_) = uint384_lib.add(a_0_1, a_1_0);
+	let (_,d1: Uint384) = uint384_lib.unsigned_div_rem_expanded(d1, p_expand);
+
+        // d2
+        let (a_0_2: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e2, p_expand);
+        let (a_1_1: Uint384) = field_arithmetic.square(a.e1, p_expand);
+        let (a_2_0: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e0, p_expand);
+        let (d2: Uint384,_) = uint384_lib.add(a_0_2, a_1_1);
+        let (d2: Uint384,_) = uint384_lib.add(d2, a_2_0);
+	let (_,d2: Uint384) = uint384_lib.unsigned_div_rem_expanded(d2, p_expand);
+
+        // d3
+        let (a_0_3: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e3, p_expand);
+        let (a_1_2: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e2, p_expand);
+        let (a_2_1: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e1, p_expand);
+        let (a_3_0: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e0, p_expand);
+        let (d3: Uint384,_) = uint384_lib.add(a_0_3, a_1_2);
+        let (d3: Uint384,_) = uint384_lib.add(d3, a_2_1);
+        let (d3: Uint384,_) = uint384_lib.add(d3, a_3_0);
+	let (_,d3: Uint384) = uint384_lib.unsigned_div_rem_expanded(d3, p_expand);
+
+        // d4
+        let (a_0_4: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e4, p_expand);
+        let (a_1_3: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e3, p_expand);
+        let (a_2_2: Uint384) = field_arithmetic.square(a.e2, p_expand);
+        let (a_3_1: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e1, p_expand);
+        let (a_4_0: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e0, p_expand);
+        let (d4: Uint384,_) = uint384_lib.add(a_0_4, a_1_3);
+        let (d4: Uint384,_) = uint384_lib.add(d4, a_2_2);
+        let (d4: Uint384,_) = uint384_lib.add(d4, a_3_1);
+        let (d4: Uint384,_) = uint384_lib.add(d4, a_4_0);
+	let (_,d4: Uint384) = uint384_lib.unsigned_div_rem_expanded(d4, p_expand);
+
+        // d5
+        let (a_0_5: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e5, p_expand);
+        let (a_1_4: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e4, p_expand);
+        let (a_2_3: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e3, p_expand);
+        let (a_3_2: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e2, p_expand);
+        let (a_4_1: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e1, p_expand);
+        let (a_5_0: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e0, p_expand);
+        let (d5: Uint384,_) = uint384_lib.add(a_0_5, a_1_4);
+        let (d5: Uint384,_) = uint384_lib.add(d5, a_2_3);
+        let (d5: Uint384,_) = uint384_lib.add(d5, a_3_2);
+        let (d5: Uint384,_) = uint384_lib.add(d5, a_4_1);
+        let (d5: Uint384,_) = uint384_lib.add(d5, a_5_0);
+	let (_,d5: Uint384) = uint384_lib.unsigned_div_rem_expanded(d5, p_expand);
+
+        // d6
+        let (a_0_6: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e6, p_expand);
+        let (a_1_5: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e5, p_expand);
+        let (a_2_4: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e4, p_expand);
+        let (a_3_3: Uint384) = field_arithmetic.square(a.e3, p_expand);
+        let (a_4_2: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e2, p_expand);
+        let (a_5_1: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e1, p_expand);
+        let (a_6_0: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e0, p_expand);
+        let (d6: Uint384,_) = uint384_lib.add(a_0_6, a_1_5);
+        let (d6: Uint384,_) = uint384_lib.add(d6, a_2_4);
+        let (d6: Uint384,_) = uint384_lib.add(d6, a_3_3);
+        let (d6: Uint384,_) = uint384_lib.add(d6, a_4_2);
+        let (d6: Uint384,_) = uint384_lib.add(d6, a_5_1);
+        let (d6: Uint384,_) = uint384_lib.add(d6, a_6_0);
+	let (_,d6: Uint384) = uint384_lib.unsigned_div_rem_expanded(d6, p_expand);
+
+        // d7
+        let (a_0_7: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e7, p_expand);
+        let (a_1_6: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e6, p_expand);
+        let (a_2_5: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e5, p_expand);
+        let (a_3_4: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e4, p_expand);
+        let (a_4_3: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e3, p_expand);
+        let (a_5_2: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e2, p_expand);
+        let (a_6_1: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e1, p_expand);
+        let (a_7_0: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e0, p_expand);
+        let (d7: Uint384,_) = uint384_lib.add(a_0_7, a_1_6);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_2_5);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_3_4);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_4_3);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_5_2);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_6_1);
+        let (d7: Uint384,_) = uint384_lib.add(d7, a_7_0);
+	let (_,d7: Uint384) = uint384_lib.unsigned_div_rem_expanded(d7, p_expand);
+
+        // d8
+        let (a_0_8: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e8, p_expand);
+        let (a_1_7: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e7, p_expand);
+        let (a_2_6: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e6, p_expand);
+        let (a_3_5: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e5, p_expand);
+        let (a_4_4: Uint384) = field_arithmetic.square(a.e4, p_expand);
+        let (a_5_3: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e3, p_expand);
+        let (a_6_2: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e2, p_expand);
+        let (a_7_1: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e1, p_expand);
+        let (a_8_0: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e0, p_expand);
+        let (d8: Uint384,_) = uint384_lib.add(a_0_8, a_1_7);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_2_6);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_3_5);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_4_4);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_5_3);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_6_2);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_7_1);
+        let (d8: Uint384,_) = uint384_lib.add(d8, a_8_0);
+	let (_,d8: Uint384) = uint384_lib.unsigned_div_rem_expanded(d8, p_expand);
+
+        // d9
+        let (a_0_9: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e9, p_expand);
+        let (a_1_8: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e8, p_expand);
+        let (a_2_7: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e7, p_expand);
+        let (a_3_6: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e6, p_expand);
+        let (a_4_5: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e5, p_expand);
+        let (a_5_4: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e4, p_expand);
+        let (a_6_3: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e3, p_expand);
+        let (a_7_2: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e2, p_expand);
+        let (a_8_1: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e1, p_expand);
+        let (a_9_0: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e0, p_expand);
+        let (d9: Uint384,_) = uint384_lib.add(a_0_9, a_1_8);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_2_7);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_3_6);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_4_5);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_5_4);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_6_3);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_7_2);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_8_1);
+	let (_,d9: Uint384) = uint384_lib.unsigned_div_rem_expanded(d9, p_expand);
+        let (d9: Uint384,_) = uint384_lib.add(d9, a_9_0);
+	let (_,d9: Uint384) = uint384_lib.unsigned_div_rem_expanded(d9, p_expand);
+
+        // d10
+        let (a_0_10: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e10, p_expand);
+        let (a_1_9: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e9, p_expand);
+        let (a_2_8: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e8, p_expand);
+        let (a_3_7: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e7, p_expand);
+        let (a_4_6: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e6, p_expand);
+        let (a_5_5: Uint384) = field_arithmetic.square(a.e5, p_expand);
+        let (a_6_4: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e4, p_expand);
+        let (a_7_3: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e3, p_expand);
+        let (a_8_2: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e2, p_expand);
+        let (a_9_1: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e1, p_expand);
+        let (a_10_0: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e0, p_expand);
+        let (d10: Uint384,_) = uint384_lib.add(a_0_10, a_1_9);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_2_8);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_3_7);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_4_6);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_5_5);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_6_4);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_7_3);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_8_2);
+	let (_,d10: Uint384) = uint384_lib.unsigned_div_rem_expanded(d10, p_expand);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_9_1);
+        let (d10: Uint384,_) = uint384_lib.add(d10, a_10_0);
+	let (_,d10: Uint384) = uint384_lib.unsigned_div_rem_expanded(d10, p_expand);
+
+        // d11
+        let (a_0_11: Uint384) = field_arithmetic.mul_expanded(a.e0, a_e11, p_expand);
+        let (a_1_10: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e10, p_expand);
+        let (a_2_9: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e9, p_expand);
+        let (a_3_8: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e8, p_expand);
+        let (a_4_7: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e7, p_expand);
+        let (a_5_6: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e6, p_expand);
+        let (a_6_5: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e5, p_expand);
+        let (a_7_4: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e4, p_expand);
+        let (a_8_3: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e3, p_expand);
+        let (a_9_2: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e2, p_expand);
+        let (a_10_1: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e1, p_expand);
+        let (a_11_0: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e0, p_expand);
+        let (d11: Uint384,_) = uint384_lib.add(a_0_11, a_1_10);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_2_9);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_3_8);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_4_7);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_5_6);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_6_5);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_7_4);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_8_3);
+	let (_,d11: Uint384) = uint384_lib.unsigned_div_rem_expanded(d11, p_expand);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_9_2);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_10_1);
+        let (d11: Uint384,_) = uint384_lib.add(d11, a_11_0);
+	let (_,d11: Uint384) = uint384_lib.unsigned_div_rem_expanded(d11, p_expand);
+
+        // d12
+        let (a_1_11: Uint384) = field_arithmetic.mul_expanded(a.e1, a_e11, p_expand);
+        let (a_2_10: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e10, p_expand);
+        let (a_3_9: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e9, p_expand);
+        let (a_4_8: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e8, p_expand);
+        let (a_5_7: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e7, p_expand);
+        let (a_6_6: Uint384) = field_arithmetic.square(a.e6, p_expand);
+        let (a_7_5: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e5, p_expand);
+        let (a_8_4: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e4, p_expand);
+        let (a_9_3: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e3, p_expand);
+        let (a_10_2: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e2, p_expand);
+        let (a_11_1: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e1, p_expand);
+        let (d12: Uint384,_) = uint384_lib.add(a_1_11, a_2_10);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_3_9);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_4_8);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_5_7);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_6_6);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_7_5);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_8_4);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_9_3);
+	let (_,d12: Uint384) = uint384_lib.unsigned_div_rem_expanded(d12, p_expand);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_10_2);
+        let (d12: Uint384,_) = uint384_lib.add(d12, a_11_1);
+	let (_,d12: Uint384) = uint384_lib.unsigned_div_rem_expanded(d12, p_expand);
+
+        // d13
+        let (a_2_11: Uint384) = field_arithmetic.mul_expanded(a.e2, a_e11, p_expand);
+        let (a_3_10: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e10, p_expand);
+        let (a_4_9: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e9, p_expand);
+        let (a_5_8: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e8, p_expand);
+        let (a_6_7: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e7, p_expand);
+        let (a_7_6: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e6, p_expand);
+        let (a_8_5: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e5, p_expand);
+        let (a_9_4: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e4, p_expand);
+        let (a_10_3: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e3, p_expand);
+        let (a_11_2: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e2, p_expand);
+        let (d13: Uint384,_) = uint384_lib.add(a_2_11, a_3_10);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_4_9);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_5_8);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_6_7);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_7_6);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_8_5);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_9_4);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_10_3);
+	let (_,d13: Uint384) = uint384_lib.unsigned_div_rem_expanded(d13, p_expand);
+        let (d13: Uint384,_) = uint384_lib.add(d13, a_11_2);
+	let (_,d13: Uint384) = uint384_lib.unsigned_div_rem_expanded(d13, p_expand);
+
+        // d14
+        let (a_3_11: Uint384) = field_arithmetic.mul_expanded(a.e3, a_e11, p_expand);
+        let (a_4_10: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e10, p_expand);
+        let (a_5_9: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e9, p_expand);
+        let (a_6_8: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e8, p_expand);
+        let (a_7_7: Uint384) = field_arithmetic.square(a.e7, p_expand);
+        let (a_8_6: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e6, p_expand);
+        let (a_9_5: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e5, p_expand);
+        let (a_10_4: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e4, p_expand);
+        let (a_11_3: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e3, p_expand);
+        let (d14: Uint384,_) = uint384_lib.add(a_3_11, a_4_10);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_5_9);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_6_8);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_7_7);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_8_6);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_9_5);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_10_4);
+        let (d14: Uint384,_) = uint384_lib.add(d14, a_11_3);
+	let (_,d14: Uint384) = uint384_lib.unsigned_div_rem_expanded(d14, p_expand);
+
+        // d15
+        let (a_4_11: Uint384) = field_arithmetic.mul_expanded(a.e4, a_e11, p_expand);
+        let (a_5_10: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e10, p_expand);
+        let (a_6_9: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e9, p_expand);
+        let (a_7_8: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e8, p_expand);
+        let (a_8_7: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e7, p_expand);
+        let (a_9_6: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e6, p_expand);
+        let (a_10_5: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e5, p_expand);
+        let (a_11_4: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e4, p_expand);
+        let (d15: Uint384,_) = uint384_lib.add(a_4_11, a_5_10);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_6_9);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_7_8);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_8_7);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_9_6);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_10_5);
+        let (d15: Uint384,_) = uint384_lib.add(d15, a_11_4);
+	let (_,d15: Uint384) = uint384_lib.unsigned_div_rem_expanded(d15, p_expand);
+
+        // d16
+        let (a_5_11: Uint384) = field_arithmetic.mul_expanded(a.e5, a_e11, p_expand);
+        let (a_6_10: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e10, p_expand);
+        let (a_7_9: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e9, p_expand);
+        let (a_8_8: Uint384) = field_arithmetic.square(a.e8, p_expand);
+        let (a_9_7: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e7, p_expand);
+        let (a_10_6: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e6, p_expand);
+        let (a_11_5: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e5, p_expand);
+        let (d16: Uint384,_) = uint384_lib.add(a_5_11, a_6_10);
+        let (d16: Uint384,_) = uint384_lib.add(d16, a_7_9);
+        let (d16: Uint384,_) = uint384_lib.add(d16, a_8_8);
+        let (d16: Uint384,_) = uint384_lib.add(d16, a_9_7);
+        let (d16: Uint384,_) = uint384_lib.add(d16, a_10_6);
+        let (d16: Uint384,_) = uint384_lib.add(d16, a_11_5);
+	let (_,d16: Uint384) = uint384_lib.unsigned_div_rem_expanded(d16, p_expand);
+
+        // d17
+        let (a_6_11: Uint384) = field_arithmetic.mul_expanded(a.e6, a_e11, p_expand);
+        let (a_7_10: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e10, p_expand);
+        let (a_8_9: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e9, p_expand);
+        let (a_9_8: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e8, p_expand);
+        let (a_10_7: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e7, p_expand);
+        let (a_11_6: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e6, p_expand);
+        let (d17: Uint384,_) = uint384_lib.add(a_6_11, a_7_10);
+        let (d17: Uint384,_) = uint384_lib.add(d17, a_8_9);
+        let (d17: Uint384,_) = uint384_lib.add(d17, a_9_8);
+        let (d17: Uint384,_) = uint384_lib.add(d17, a_10_7);
+        let (d17: Uint384,_) = uint384_lib.add(d17, a_11_6);
+	let (_,d17: Uint384) = uint384_lib.unsigned_div_rem_expanded(d17, p_expand);
+
+        // d18
+        let (a_7_11: Uint384) = field_arithmetic.mul_expanded(a.e7, a_e11, p_expand);
+        let (a_8_10: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e10, p_expand);
+        let (a_9_9: Uint384) = field_arithmetic.square(a.e9, p_expand);
+        let (a_10_8: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e8, p_expand);
+        let (a_11_7: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e7, p_expand);
+        let (d18: Uint384,_) = uint384_lib.add(a_7_11, a_8_10);
+        let (d18: Uint384,_) = uint384_lib.add(d18, a_9_9);
+        let (d18: Uint384,_) = uint384_lib.add(d18, a_10_8);
+        let (d18: Uint384,_) = uint384_lib.add(d18, a_11_7);
+	let (_,d18: Uint384) = uint384_lib.unsigned_div_rem_expanded(d18, p_expand);
+
+        // d19
+        let (a_8_11: Uint384) = field_arithmetic.mul_expanded(a.e8, a_e11, p_expand);
+        let (a_9_10: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e10, p_expand);
+        let (a_10_9: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e9, p_expand);
+        let (a_11_8: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e8, p_expand);
+        let (d19: Uint384,_) = uint384_lib.add(a_8_11, a_9_10);
+        let (d19: Uint384,_) = uint384_lib.add(d19, a_10_9);
+        let (d19: Uint384,_) = uint384_lib.add(d19, a_11_8);
+	let (_,d19: Uint384) = uint384_lib.unsigned_div_rem_expanded(d19, p_expand);
+
+        // d20
+        let (a_9_11: Uint384) = field_arithmetic.mul_expanded(a.e9, a_e11, p_expand);
+        let (a_10_10: Uint384) = field_arithmetic.square(a.e10, p_expand);
+        let (a_11_9: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e9, p_expand);
+        let (d20: Uint384,_) = uint384_lib.add(a_9_11, a_10_10);
+        let (d20: Uint384,_) = uint384_lib.add(d20, a_11_9);
+	let (_,d20: Uint384) = uint384_lib.unsigned_div_rem_expanded(d20, p_expand);
+
+        // d21
+        let (a_10_11: Uint384) = field_arithmetic.mul_expanded(a.e10, a_e11, p_expand);
+        let (a_11_10: Uint384) = field_arithmetic.mul_expanded(a.e11, a_e10, p_expand);
+        let (d21: Uint384,_) = uint384_lib.add(a_10_11, a_11_10);
+	let (_,d21: Uint384) = uint384_lib.unsigned_div_rem_expanded(d21, p_expand);
+
+        // d22
+        let (d22: Uint384) = field_arithmetic.square(a.e11, p_expand);
+
+        // Reducing the results modulo the irreducible polynomial
+        // Note that the order in which _aux_polynomial_reduction is called is important here
+        let (d10: Uint384, d16: Uint384) = _aux_polynomial_reduction(d22, d10, d16);
+        let (d9: Uint384, d15: Uint384) = _aux_polynomial_reduction(d21, d9, d15);
+        let (d8: Uint384, d14: Uint384) = _aux_polynomial_reduction(d20, d8, d14);
+        let (d7: Uint384, d13: Uint384) = _aux_polynomial_reduction(d19, d7, d13);
+        let (d6: Uint384, d12: Uint384) = _aux_polynomial_reduction(d18, d6, d12);
+        let (d5: Uint384, d11: Uint384) = _aux_polynomial_reduction(d17, d5, d11);
+        let (d4: Uint384, d10: Uint384) = _aux_polynomial_reduction(d16, d4, d10);
+        let (d3: Uint384, d9: Uint384) = _aux_polynomial_reduction(d15, d3, d9);
+        let (d2: Uint384, d8: Uint384) = _aux_polynomial_reduction(d14, d2, d8);
+        let (d1: Uint384, d7: Uint384) = _aux_polynomial_reduction(d13, d1, d7);
+        let (d0: Uint384, d6: Uint384) = _aux_polynomial_reduction(d12, d0, d6);
+
+        return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
+    }
 
     func eq{range_check_ptr}(x: FQ12, y: FQ12) -> (bool: felt) {
         let (is_e0_eq) = uint384_lib.eq(x.e0, y.e0);
