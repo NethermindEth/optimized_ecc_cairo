@@ -237,7 +237,7 @@ namespace fq12_lib {
 
 
     //changed mul so that it would only expand the modulus once. 
-    // st=194468, mh=6653, rc=22762
+    // st=187659, mh=6180, rc=21948
     func mul{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -571,7 +571,7 @@ namespace fq12_lib {
 
     // since 9*p < 2**384 we can add up to 9 elements before needing to reduce
     // also expanded the components of b
-    // st=134311, mh=4753, rc=15362
+    // st=127502, mh=4280, rc=14548
     func mul_2{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -943,7 +943,7 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
 
-    // st=193688, mh=6653, rc=22654
+    // st=186879, mh=6180, rc=21840
     func square{range_check_ptr}(a: FQ12) -> (square: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -1621,8 +1621,9 @@ func _aux_polynomial_reduction{range_check_ptr}(
 ) -> (new_first_coef: Uint384, new_second_coef: Uint384) {
     // TODO: some way to avoid using local variables? (to improve efficiency)
     alloc_locals;
-    let (local twice_coeff_to_reduce: Uint384) = fq_lib.scalar_mul4(2, coeff_to_reduce);
-    let (first_coef: Uint384) = fq_lib.sub1(first_coef, twice_coeff_to_reduce);
-    let (second_coef: Uint384) = fq_lib.add(second_coef, twice_coeff_to_reduce);
+    let (p_expand:Uint384_expand)=get_modulus_expand();
+    let (twice_coeff_to_reduce: Uint384) = fq_lib.add_no_input_check(coeff_to_reduce,coeff_to_reduce);
+    let (first_coef: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(first_coef, twice_coeff_to_reduce, p_expand);
+    let (second_coef: Uint384) = fq_lib.add_no_input_check(second_coef, twice_coeff_to_reduce);
     return (first_coef, second_coef);
 }
