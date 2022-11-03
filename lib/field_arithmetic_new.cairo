@@ -85,6 +85,19 @@ namespace field_arithmetic {
         return (remainder,);
     }
 
+    // assumes b < 2**128
+    func mul_by_uint128{range_check_ptr}(a:Uint384, b:felt, p: Uint384_expand) -> (
+        product: Uint384
+    ) {
+        let (low: Uint384, high: felt) = uint384_lib.mul_by_uint128(a,b);
+	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let (
+            quotient: Uint768, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p);
+        return(remainder,);
+    }
+
+
     // Computes a**2 modulo p
     func square{range_check_ptr}(a: Uint384, p: Uint384_expand) -> (res: Uint384) {
         let (low: Uint384, high: Uint384) = uint384_lib.square(a);
