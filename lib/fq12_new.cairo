@@ -44,7 +44,7 @@ namespace fq12_lib {
     }
 
     //using sub1 instead of sub
-    // st=8187, mh=756, rc=756
+    // st=8607, mh=996, rc=804
     func sub{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (e0: Uint384) = fq_lib.sub1(x.e0, y.e0);
@@ -64,7 +64,7 @@ namespace fq12_lib {
     }
 
     //allows for only one expansion of the modulus into a Uint384_expand.
-    // st=13831, mh=720, rc=1476
+    // st=14251, mh=960, rc=1524
     func sub_2{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -112,7 +112,7 @@ namespace fq12_lib {
     }
 
     //assumes all components are < p
-    // st=7135, mh=240, rc=732
+    // st=7555, mh=480, rc=780
     func sub_3{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -184,7 +184,7 @@ namespace fq12_lib {
 
 
     //changed mul so that it would only expand the modulus once. 
-    // st=194083, mh=6433, rc=22718
+    // st=194468, mh=6653, rc=22762
     func mul{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -518,7 +518,7 @@ namespace fq12_lib {
 
     // since 9*p < 2**384 we can add up to 9 elements before needing to reduce
     // also expanded the components of b
-    // st=133926, mh=4533, rc=15318
+    // st=134311, mh=4753, rc=15362
     func mul_2{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -890,7 +890,7 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
 
-    // st=193303, mh=6433, rc=22610
+    // st=193688, mh=6653, rc=22654
     func square{range_check_ptr}(a: FQ12) -> (square: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();

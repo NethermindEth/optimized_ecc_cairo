@@ -31,7 +31,7 @@ namespace fq_lib {
         return (rem,);
     }
 
-    //s:1174 rc:123
+    //s:1209 rc:127
     func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
@@ -173,7 +173,7 @@ namespace fq_lib {
         return(product,);
     }
 
-    // Computes x*y^{-1}mod p. s:819, rc:92
+    // Computes x*y^{-1}mod p. s:854, rc:96
     func div{range_check_ptr}(x:Uint384, y:Uint384) -> (
         division : Uint384
     ) {
@@ -182,7 +182,7 @@ namespace fq_lib {
         return (result,);
     } 
 
-    // finds x in a x ≅ 1 (mod q). s:830, rc:92
+    // finds x in a x ≅ 1 (mod q). s:865, rc:96
     func inverse{range_check_ptr}(a:Uint384) -> (res: Uint384) {
         let (res:Uint384) = div(Uint384(1,0,0), a);    
         return (res,);
@@ -239,7 +239,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    // s:2873 rc:334
+    // s:2869 rc:334
     func from_64_bytes{range_check_ptr}(a0: Uint256, a1: Uint256) -> (
         res: Uint384
     ) {
@@ -290,7 +290,7 @@ namespace fq_lib {
             d2=0));
     }
 
-    // s:617 rc:61
+    // s:654 rc:65
     func neg{range_check_ptr}(input: Uint384) -> (res: Uint384) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(Uint384(0,0,0), input, p_expand);
@@ -308,7 +308,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:2340, rc:246
+    //s:2410, rc:254
     func sub_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -317,7 +317,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //better, s:2032, rc:215
+    //better, s:2102, rc:223
     func sub_three_terms_new{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -331,7 +331,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1265, rc:124
+    //s:1300, rc:128
     func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -340,7 +340,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1356, rc:126
+    //s:1426, rc:166
     func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -359,7 +359,7 @@ namespace fq_lib {
         let (twice_p: Uint384) = get_twice_p();
 	let (sum1: Uint384,_) = uint384_lib.add(x,twice_p);
 	let (sum2: Uint384,_) = uint384_lib.add(y,z);
-	// note that we must have sum1 > sum2
+	// note that we are guaranteed sum1 > sum2
 	let (diff: Uint384,_) = uint384_lib.sub(sum1,sum2);
 
 	let (_,res: Uint384) = uint384_lib.unsigned_div_rem_expanded(diff,p_expand);
