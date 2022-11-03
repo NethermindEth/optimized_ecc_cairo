@@ -22,6 +22,59 @@ struct FQ12 {
 // This library is implemented without recursvie calls, hardcoding and repeating code instead, for the sake of efficiency
 const HALF_SHIFT = 2 ** 64;
 namespace fq12_lib {
+    // Verifies that the given field element is valid.
+    func check{range_chek_ptr}(x: FQ12) -> () {
+        let (field_modulus: Uint384) = get_modulus();
+	
+	uint384_lib.check(x.e0);
+	let (is_valid) = uint384_lib.lt(x.e0, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e1);
+	let (is_valid) = uint384_lib.lt(x.e1, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e2);
+	let (is_valid) = uint384_lib.lt(x.e2, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e3);
+	let (is_valid) = uint384_lib.lt(x.e3, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e4);
+	let (is_valid) = uint384_lib.lt(x.e4, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e5);
+	let (is_valid) = uint384_lib.lt(x.e5, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e6);
+	let (is_valid) = uint384_lib.lt(x.e6, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e7);
+	let (is_valid) = uint384_lib.lt(x.e7, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e8);
+	let (is_valid) = uint384_lib.lt(x.e8, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e9);
+	let (is_valid) = uint384_lib.lt(x.e9, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e10);
+	let (is_valid) = uint384_lib.lt(x.e10, field_modulus);
+	assert is_valid = 1;
+	
+	uint384_lib.check(x.e11);
+	let (is_valid) = uint384_lib.lt(x.e11, field_modulus);
+	assert is_valid = 1;
+    }
+  
     // st=6847, mh=240, rc=732
     func add{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         // TODO: check why alloc_locals seems to be needed here
@@ -1544,6 +1597,7 @@ namespace fq12_lib {
             ids.a_inverse.e11.d2 = res[11][2]
             print("findme4")
         %}
+	check(a_inverse);
 
         let (a_inverse_times_a: FQ12) = mul(a_inverse, a);
         let (one_fq12: FQ12) = one();

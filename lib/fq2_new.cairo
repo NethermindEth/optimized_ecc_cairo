@@ -97,7 +97,7 @@ namespace fq2_lib {
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
-    //s: 3988 rc: 463 mh: 140
+    //s: 4061 rc: 471 mh: 180
     func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
@@ -137,6 +137,13 @@ namespace fq2_lib {
             ids.a_inverse.e1.d1 = new_e1_split[1]
             ids.a_inverse.e1.d2 = new_e1_split[2]
         %}
+	uint384_lib.check(a_inverse.e0);
+	let (is_valid) = uint384_lib.lt(a_inverse.e0, field_modulus);
+	assert is_valid = 1;
+	uint384_lib.check(a_inverse.e1);
+	let (is_valid) = uint384_lib.lt(a_inverse.e1, field_modulus);
+	assert is_valid = 1;
+
 
         let (a_inverse_times_a: FQ2) = mul(a_inverse, a);
         let (one: FQ2) = get_one();
