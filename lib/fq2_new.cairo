@@ -283,7 +283,7 @@ namespace fq2_lib {
     //This function assumes a and b are already reduced modulo p.
     //TODO write a function that uses a hint instead.
 
-    // steps=2265, memory_holes=94, range_check_builtin=255
+    // steps=2300, memory_holes=114, range_check_builtin=259
     func get_square_root_new{range_check_ptr}(element: FQ2) -> (
         bool: felt, sqrt: FQ2
     ) {
