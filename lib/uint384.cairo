@@ -255,20 +255,9 @@ namespace uint384_lib {
     
     //assumes b < 2**64
     func mul_by_uint64{range_check_ptr}(a: Uint384, b: felt) -> (low: Uint384, high: felt) {
-        alloc_locals;
-        let (a0, a1) = split_64(a.d0);
-        let (a2, a3) = split_64(a.d1);
-        let (a4, a5) = split_64(a.d2);
-
-	local B0 = b*HALF_SHIFT;
-
-        let (res0, carry) = split_128(a1 * B0 + a0 * b);
-        let (res2, carry) = split_128(
-	    a3 * B0 + a2 * b + carry,
-        );
-        let (res4, carry) = split_128(
-            a5 * B0 + a4 * b + carry,
-        );
+        let (res0, carry) = split_128(a.d0*b);
+        let (res2, carry) = split_128(a.d1*b + carry);
+        let (res4, carry) = split_128(a.d2*b + carry);
 
         return (
             low=Uint384(d0=res0, d1=res2, d2=res4),

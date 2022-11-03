@@ -150,7 +150,7 @@ namespace fq_lib {
     }
 
     //assumes scalar < 2**64
-    //643 steps, 76 range_checks
+    //590 steps, 67 range_checks
     func scalar64_mul{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
