@@ -46,8 +46,8 @@ namespace fq_lib {
         return (res,);
     }
 
-    //fuzz_runs=100, steps=μ: 786.08, Md: 685, min: 685, max: 1230, memory_holes=μ: 68.48, Md: 63, min: 63, max: 94                                    
-    //range_check_builtin=μ: 64.36, Md: 54, min: 54, max: 110
+    //fuzz_runs=100, steps=μ: 784.34, Md: 731, min: 731, max: 1013, memory_holes=μ: 85.96, Md: 83, min: 83, max: 100
+    // range_check_builtin=μ: 72.89, Md: 67, min: 67, max: 98
     //This function checks whether unsigned x and y are already reduced modulo p.
 
     func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (
