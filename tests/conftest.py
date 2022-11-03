@@ -17,6 +17,7 @@ HASH_TO_CURVE_CONTRACT = os.path.join("contracts", "hash_to_curve.cairo")
 
 FQ_NEW_CONTRACT = os.path.join("contracts", "fq_new.cairo")
 FQ2_NEW_CONTRACT = os.path.join("contracts", "fq2_new.cairo")
+FQ12_NEW_CONTRACT = os.path.join("contracts", "fq12_new.cairo")
 
 @pytest.fixture(scope="module")
 def event_loop():
@@ -164,5 +165,19 @@ async def fq2_new_factory(starknet_factory):
     fq2_contract = await starknet.deploy(contract_class=contract_class)
 
     return fq2_contract
+
+
+@pytest.fixture(scope="module")
+async def fq12_new_factory(starknet_factory):
+
+    starknet = starknet_factory
+
+    # Deploy the account contract
+    contract_class = compile_starknet_files(
+        files=[FQ12_NEW_CONTRACT], disable_hint_validation=True
+    )
+    fq12_contract = await starknet.deploy(contract_class=contract_class)
+
+    return fq12_contract
 
 
