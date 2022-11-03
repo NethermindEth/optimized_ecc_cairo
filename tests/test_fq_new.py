@@ -69,6 +69,21 @@ async def test_fq_add(fq_new_factory, x, y):
     assert result == (x + y) % field_modulus
 
 
+@given(
+    x=st.integers(min_value=1,  max_value=(field_modulus-1)),
+    y=st.integers(min_value=1,  max_value=(field_modulus-1)),
+)
+@settings(deadline=None)
+@pytest.mark.asyncio
+async def test_fq_add_no_input_check(fq_new_factory, x, y):
+    contract = fq_new_factory
+    execution_info = await contract.add_no_input_check(split(x), split(y)).call()
+
+    result = pack(execution_info.result[0])
+
+    assert result == (x + y) % field_modulus
+
+
 @given(x=st.integers(min_value=1, max_value=field_modulus))
 @settings(deadline=None)
 @pytest.mark.asyncio

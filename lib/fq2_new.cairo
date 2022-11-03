@@ -51,14 +51,14 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    // steps=4133, memory_holes=120, range_check_builtin=486
+    // steps=3916, memory_holes=120, range_check_builtin=459
     func mul{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
         let (first_term: Uint384) = field_arithmetic.mul(a.e0, b.e0 , p_expand);
         let (b_0_1: Uint384) = field_arithmetic.mul(a.e0, b.e1, p_expand);
         let (b_1_0: Uint384) = field_arithmetic.mul(a.e1, b.e0, p_expand);
-        let (second_term: Uint384) = field_arithmetic.add(b_0_1, b_1_0, p_expand);
+        let (second_term: Uint384) = fq_lib.add_no_input_check(b_0_1, b_1_0);
         let (third_term: Uint384) = field_arithmetic.mul(a.e1, b.e1,p_expand);
 
         // Using the irreducible polynomial x**2 + 1 as modulus, we get that
@@ -225,7 +225,7 @@ namespace fq2_lib {
             } else {
                 let (a_squared: Uint384) = fq_lib.mul(a, a);
                 let (b_squared: Uint384) = fq_lib.mul(b, b);
-                let (a_squared_plus_b_squared: Uint384) = fq_lib.add(a_squared, b_squared);
+                let (a_squared_plus_b_squared: Uint384) = fq_lib.add_no_input_check(a_squared, b_squared);
                 let (bool, sqrt_a_squared_plus_b_squared: Uint384) = fq_lib.get_square_root(
                     a_squared_plus_b_squared
                 );
@@ -340,7 +340,7 @@ namespace fq2_lib {
             } else {
                 let (a_squared: Uint384) = field_arithmetic.square(a, p_expand);
                 let (b_squared: Uint384) = field_arithmetic.square(b, p_expand);
-                let (a_squared_plus_b_squared: Uint384) = field_arithmetic.add(a_squared, b_squared, p_expand);
+                let (a_squared_plus_b_squared: Uint384) = fq_lib.add_no_input_check(a_squared, b_squared);
                 let (bool, sqrt_a_squared_plus_b_squared: Uint384) = field_arithmetic.get_square_root(
                     a_squared_plus_b_squared, p_expand, Uint384(2,0,0)
                 );
@@ -354,7 +354,7 @@ namespace fq2_lib {
                     let (minus_a_plus_sqrt_div_2: Uint384) = field_arithmetic.mul_expanded(minus_a_plus_sqrt, two_inverse, p_expand);
                     let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_plus_sqrt_div_2, p_expand, Uint384(2,0,0));
                     if (bool == 1) {
-                        let (twice_r1: Uint384) = field_arithmetic.add(r1, r1 ,p_expand);
+                        let (twice_r1: Uint384) = fq_lib.add_no_input_check(r1, r1);
                         let (twice_r1_inverse: Uint384) = fq_lib.inverse(twice_r1);
                         let (r0: Uint384) = field_arithmetic.mul(b, twice_r1_inverse, p_expand);
                         return (1, FQ2(r0, r1));
@@ -368,7 +368,7 @@ namespace fq2_lib {
                         );
                         let (bool, r1: Uint384) = field_arithmetic.get_square_root(minus_a_minus_sqrt_div_2, p_expand, Uint384(2,0,0));
                         if (bool == 1) {
-                            let (twice_r1: Uint384) = field_arithmetic.add(r1, r1 ,p_expand);
+                            let (twice_r1: Uint384) = fq_lib.add_no_input_check(r1, r1);
                             let (twice_r1_inverse: Uint384) = fq_lib.inverse(twice_r1);
                             let (r0: Uint384) = field_arithmetic.mul(b, twice_r1_inverse, p_expand);
                             return (1, FQ2(r0, r1));
@@ -388,7 +388,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    //better square :  steps=3265, memory_holes=100, range_check_builtin=377
+    //best square :  steps=3048, memory_holes=100, range_check_builtin=350
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -396,12 +396,12 @@ namespace fq2_lib {
         let (r1_squared: Uint384) = field_arithmetic.square(x.e1, p_expand);
         let (first_term:Uint384)=field_arithmetic.sub_reduced_a_and_reduced_b(r0_squared,r1_squared,p_expand);
         let (r0r1:Uint384)=field_arithmetic.mul(x.e0, x.e1, p_expand);
-        let (second_term:Uint384)=field_arithmetic.add(r0r1,r0r1,p_expand);
+        let (second_term:Uint384)=fq_lib.add_no_input_check(r0r1,r0r1);
         return (FQ2(e0=first_term, e1=second_term),);
     }
 
     // Uses Karatsuba multiplication
-    // best square : steps=3126, memory_holes=100, range_check_builtin=350
+    // better square : steps=3126, memory_holes=100, range_check_builtin=350
     func square_kar{range_check_ptr}(a: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -527,7 +527,7 @@ namespace fq2_lib {
 
         let (c0: Uint384) = fq_lib.mul(a.e0, a.e0);
         let (c1: Uint384) = fq_lib.mul(a.e1, a.e1);
-        let (c3: Uint384) = fq_lib.add(c0, c1);
+        let (c3: Uint384) = fq_lib.add_no_input_check(c0, c1);
 
         let (is_quad_residue: felt,_) = fq_lib.get_square_root(c3);
 

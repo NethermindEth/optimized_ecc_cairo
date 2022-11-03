@@ -19,6 +19,18 @@ namespace fq_lib {
         return (sum,);
     }
 
+    // requires x,y < p
+    // uses that 2*p < 2**384
+    //s:352 rc:34
+    func add_no_input_check{range_check_ptr}(x: Uint384, y: Uint384) -> (
+        sum_mod: Uint384
+    ) {
+        let(p_expand:Uint384_expand)= get_modulus_expand();
+        let (sum: Uint384,_) = uint384_lib.add(x, y);
+	let (_,rem: Uint384) = uint384_lib.unsigned_div_rem_expanded(sum, p_expand);
+        return (rem,);
+    }
+
     //s:1174 rc:123
     func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384

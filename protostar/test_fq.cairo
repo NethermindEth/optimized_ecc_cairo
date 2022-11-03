@@ -17,6 +17,15 @@ func test_add{syscall_ptr: felt*, range_check_ptr}(
 }
 
 @external
+func test_add_no_input_check{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (add:Uint384) = fq_lib.add_no_input_check(Uint384(11,0,0),Uint384(7,0,0));
+    assert add = Uint384(18,0,0);
+    return();
+}
+
+@external
 func test_sub{syscall_ptr: felt*, range_check_ptr}(
     
 ) {

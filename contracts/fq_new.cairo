@@ -16,6 +16,14 @@ func add{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
 }
 
 @view
+func add_no_input_check{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
+    alloc_locals;
+    let (res: Uint384) = fq_lib.add_no_input_check(x, y);
+
+    return (res,);
+}
+
+@view
 func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (res: Uint384) {
     alloc_locals;
 
