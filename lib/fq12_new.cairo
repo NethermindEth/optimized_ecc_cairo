@@ -23,7 +23,8 @@ struct FQ12 {
 const HALF_SHIFT = 2 ** 64;
 namespace fq12_lib {
     // Verifies that the given field element is valid.
-    func check{range_chek_ptr}(x: FQ12) -> () {
+    func check{range_check_ptr}(x: FQ12) -> () {
+        alloc_locals;
         let (field_modulus: Uint384) = get_modulus();
 	
 	uint384_lib.check(x.e0);
@@ -73,6 +74,8 @@ namespace fq12_lib {
 	uint384_lib.check(x.e11);
 	let (is_valid) = uint384_lib.lt(x.e11, field_modulus);
 	assert is_valid = 1;
+
+	return ();
     }
   
     // st=6847, mh=240, rc=732
