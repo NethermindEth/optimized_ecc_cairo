@@ -355,6 +355,9 @@ namespace field_arithmetic {
         // Verify that the values computed in the hint are what they are supposed to be
         let (gx: Uint384) = mul(generator, x, p);
         if (success_x == 1) {
+	    uint384_lib.check(sqrt_x);
+	    let (is_valid) = uint384_lib.lt(sqrt_x, Uint384(p.b01,p.b23,p.b45));
+	    assert is_valid = 1;
             let (sqrt_x_squared: Uint384) = square(sqrt_x, p);
             // Note these checks may fail if the input x does not satisfy 0<= x < p
             // TODO: Create a equality function within field_arithmetic to avoid overflow bugs
@@ -362,6 +365,9 @@ namespace field_arithmetic {
             return (1, sqrt_x);
         } else {
             // In this case success_gx = 1
+	    uint384_lib.check(sqrt_gx);
+	    let (is_valid) = uint384_lib.lt(sqrt_gx, Uint384(p.b01,p.b23,p.b45));
+	    assert is_valid = 1;
             let (sqrt_gx_squared: Uint384) = square(sqrt_gx, p);
 	    assert gx = sqrt_gx_squared;
             // No square roots were found
