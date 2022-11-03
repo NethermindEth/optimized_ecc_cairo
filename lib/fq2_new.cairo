@@ -492,10 +492,10 @@ namespace fq2_lib {
         let (is_rem_zero:felt)=uint384_lib.eq(rem, Uint384(0,0,0));
         if (is_rem_zero == 1) {
             // NOTE: Code is repeated in the if-else to avoid declaring a_squared as a local variable
-            let (a_squared: FQ2) = square_kar(a);
+            let (a_squared: FQ2) = square_new(a);
             let (power: FQ2) = pow_inner(a_squared, exp_div_2, o);
         } else {
-            let (a_squared: FQ2) = square_kar(a);
+            let (a_squared: FQ2) = square_new(a);
             let (o_new: FQ2) = mul_kar(a, o);
             let (power: FQ2) = pow_inner(a_squared, exp_div_2, o_new);
         }
