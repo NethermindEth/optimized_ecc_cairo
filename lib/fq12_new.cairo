@@ -1275,7 +1275,8 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
     
-    //square function derived from mul_2, since squaring is slightly more efficient than mul_expand, though the improvement should be small.
+    // square function derived from mul_2, since squaring is slightly more efficient than mul_expand, though the improvement should be small.
+    // st=127238, mh=4280, rc=14548
     func square_2{range_check_ptr}(a: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
