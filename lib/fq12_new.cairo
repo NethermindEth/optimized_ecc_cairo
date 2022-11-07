@@ -3,6 +3,7 @@ from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.fq_new import fq_lib
 from lib.curve_new import fq2_c0, fq2_c1, get_modulus, get_modulus_expand, get_2_inverse, get_2_inverse_exp
 from lib.field_arithmetic_new import field_arithmetic
+from lib.uint384_vec import dot_by_uint64_vec12_mod, dot_by_uint64_vec23_mod
 
 struct FQ12 {
     e0: Uint384,
@@ -929,6 +930,1239 @@ namespace fq12_lib {
         // d22
         let (d22: Uint384) = field_arithmetic.mul_expanded(a.e11, b_e11, p_expand);
 
+        // Reducing the results modulo the irreducible polynomial
+        // Note that the order in which _aux_polynomial_reduction is called is important here
+        let (d10: Uint384, d16: Uint384) = _aux_polynomial_reduction(d22, d10, d16);
+        let (d9: Uint384, d15: Uint384) = _aux_polynomial_reduction(d21, d9, d15);
+        let (d8: Uint384, d14: Uint384) = _aux_polynomial_reduction(d20, d8, d14);
+        let (d7: Uint384, d13: Uint384) = _aux_polynomial_reduction(d19, d7, d13);
+        let (d6: Uint384, d12: Uint384) = _aux_polynomial_reduction(d18, d6, d12);
+        let (d5: Uint384, d11: Uint384) = _aux_polynomial_reduction(d17, d5, d11);
+        let (d4: Uint384, d10: Uint384) = _aux_polynomial_reduction(d16, d4, d10);
+        let (d3: Uint384, d9: Uint384) = _aux_polynomial_reduction(d15, d3, d9);
+        let (d2: Uint384, d8: Uint384) = _aux_polynomial_reduction(d14, d2, d8);
+        let (d1: Uint384, d7: Uint384) = _aux_polynomial_reduction(d13, d1, d7);
+        let (d0: Uint384, d6: Uint384) = _aux_polynomial_reduction(d12, d0, d6);
+
+        return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
+    }
+
+    // Toom-Cook 12
+    // st=82454, mh=3060, rc=7869
+    func mul_TC_12{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
+        alloc_locals;
+	local d0: Uint384;
+	local d1: Uint384;
+	local d2: Uint384;
+	local d3: Uint384;
+	local d4: Uint384;
+	local d5: Uint384;
+	local d6: Uint384;
+	local d7: Uint384;
+	local d8: Uint384;
+	local d9: Uint384;
+	local d10: Uint384;
+	local d11: Uint384;
+	local d12: Uint384;
+	local d13: Uint384;
+	local d14: Uint384;
+	local d15: Uint384;
+	local d16: Uint384;
+	local d17: Uint384;
+	local d18: Uint384;
+	local d19: Uint384;
+	local d20: Uint384;
+	local d21: Uint384;
+	local d22: Uint384;
+        let (p_expand:Uint384_expand) = get_modulus_expand();
+	%{
+            p = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
+            
+            def pack(z, num_bits_shift: int = 128) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            def split(num: int, num_bits_shift: int = 128, length: int = 3):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift
+                return tuple(a)
+
+            def pack_FQ12(z):
+                limbs = (z.e0, z.e1, z.e2, z.e3, z.e4, z.e5, z.e6, z.e7, z.e8, z.e9, z.e10, z.e11)
+                ans = [pack(limb) for limb in limbs]
+                return tuple(ans)
+
+            #quadratic, but this is python
+            def mult_poly12(a,b):
+                return tuple([sum(a[j]*b[i-j] for j in range(max(0,i - 11),min(i + 1,12))) % p for i in range(23)])
+
+            def split2(v, num: int):
+                n=split(num)
+                v.d0=n[0]
+                v.d1=n[1]
+                v.d2=n[2]
+
+            a = pack_FQ12(ids.a)
+            b = pack_FQ12(ids.b)
+            d = mult_poly12(a,b)
+            
+            split2(ids.d0,d[0])
+            split2(ids.d1,d[1])
+            split2(ids.d2,d[2])
+            split2(ids.d3,d[3])
+            split2(ids.d4,d[4])
+            split2(ids.d5,d[5])
+            split2(ids.d6,d[6])
+            split2(ids.d7,d[7])
+            split2(ids.d8,d[8])
+            split2(ids.d9,d[9])
+            split2(ids.d10,d[10])
+            split2(ids.d11,d[11])
+            split2(ids.d12,d[12])
+            split2(ids.d13,d[13])
+            split2(ids.d14,d[14])
+            split2(ids.d15,d[15])
+            split2(ids.d16,d[16])
+            split2(ids.d17,d[17])
+            split2(ids.d18,d[18])
+            split2(ids.d19,d[19])
+            split2(ids.d20,d[20])
+            split2(ids.d21,d[21])
+            split2(ids.d22,d[22])
+	%}
+        fq_lib.check(d0);
+        fq_lib.check(d1);
+        fq_lib.check(d2);
+        fq_lib.check(d3);
+        fq_lib.check(d4);
+        fq_lib.check(d5);
+        fq_lib.check(d6);
+        fq_lib.check(d7);
+        fq_lib.check(d8);
+        fq_lib.check(d9);
+        fq_lib.check(d10);
+        fq_lib.check(d11);
+        fq_lib.check(d12);
+        fq_lib.check(d13);
+        fq_lib.check(d14);
+        fq_lib.check(d15);
+        fq_lib.check(d16);
+        fq_lib.check(d17);
+        fq_lib.check(d18);
+        fq_lib.check(d19);
+        fq_lib.check(d20);
+        fq_lib.check(d21);
+        fq_lib.check(d22);
+
+	let av01 = a.e0;
+	let av10 = a.e11;
+	let (av11) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,1,
+					     a.e2,1,
+					     a.e3,1,
+					     a.e4,1,
+					     a.e5,1,
+					     a.e6,1,
+					     a.e7,1,
+					     a.e8,1,
+					     a.e9,1,
+					     a.e10,1,
+					     a.e11,1,
+					     p_expand);
+	let (av21) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,2,
+					     a.e2,2**2,
+					     a.e3,2**3,
+					     a.e4,2**4,
+					     a.e5,2**5,
+					     a.e6,2**6,
+					     a.e7,2**7,
+					     a.e8,2**8,
+					     a.e9,2**9,
+					     a.e10,2**10,
+					     a.e11,2**11,
+					     p_expand);
+	let (av12) = dot_by_uint64_vec12_mod(a.e0,2**11,
+					     a.e1,2**10,
+					     a.e2,2**9,
+					     a.e3,2**8,
+					     a.e4,2**7,
+					     a.e5,2**6,
+					     a.e6,2**5,
+					     a.e7,2**4,
+					     a.e8,2**3,
+					     a.e9,2**2,
+					     a.e10,2,
+					     a.e11,1,
+					     p_expand);
+	let (av31) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,3,
+					     a.e2,3**2,
+					     a.e3,3**3,
+					     a.e4,3**4,
+					     a.e5,3**5,
+					     a.e6,3**6,
+					     a.e7,3**7,
+					     a.e8,3**8,
+					     a.e9,3**9,
+					     a.e10,3**10,
+					     a.e11,3**11,
+					     p_expand);
+	let (av13) = dot_by_uint64_vec12_mod(a.e0,3**11,
+					     a.e1,3**10,
+					     a.e2,3**9,
+					     a.e3,3**8,
+					     a.e4,3**7,
+					     a.e5,3**6,
+					     a.e6,3**5,
+					     a.e7,3**4,
+					     a.e8,3**3,
+					     a.e9,3**2,
+					     a.e10,3,
+					     a.e11,1,
+					     p_expand);
+	let (av32) = dot_by_uint64_vec12_mod(a.e0,2**11,
+					     a.e1,3*2**10,
+					     a.e2,3**2*2**9,
+					     a.e3,3**3*2**8,
+					     a.e4,3**4*2**7,
+					     a.e5,3**5*2**6,
+					     a.e6,3**6*2**5,
+					     a.e7,3**7*2**4,
+					     a.e8,3**8*2**3,
+					     a.e9,3**9*2**2,
+					     a.e10,3**10*2,
+					     a.e11,3**11,
+					     p_expand);
+	let (av23) = dot_by_uint64_vec12_mod(a.e0,3**11,
+					     a.e1,2*3**10,
+					     a.e2,2**2*3**9,
+					     a.e3,2**3*3**8,
+					     a.e4,2**4*3**7,
+					     a.e5,2**5*3**6,
+					     a.e6,2**6*3**5,
+					     a.e7,2**7*3**4,
+					     a.e8,2**8*3**3,
+					     a.e9,2**9*3**2,
+					     a.e10,2**10*3,
+					     a.e11,2**11,
+					     p_expand);
+	let (av41) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,4,
+					     a.e2,4**2,
+					     a.e3,4**3,
+					     a.e4,4**4,
+					     a.e5,4**5,
+					     a.e6,4**6,
+					     a.e7,4**7,
+					     a.e8,4**8,
+					     a.e9,4**9,
+					     a.e10,4**10,
+					     a.e11,4**11,
+					     p_expand);
+	let (av14) = dot_by_uint64_vec12_mod(a.e0,4**11,
+					     a.e1,4**10,
+					     a.e2,4**9,
+					     a.e3,4**8,
+					     a.e4,4**7,
+					     a.e5,4**6,
+					     a.e6,4**5,
+					     a.e7,4**4,
+					     a.e8,4**3,
+					     a.e9,4**2,
+					     a.e10,4,
+					     a.e11,1,
+					     p_expand);
+	let (av43) = dot_by_uint64_vec12_mod(a.e0,3**11,
+					     a.e1,4*3**10,
+					     a.e2,4**2*3**9,
+					     a.e3,4**3*3**8,
+					     a.e4,4**4*3**7,
+					     a.e5,4**5*3**6,
+					     a.e6,4**6*3**5,
+					     a.e7,4**7*3**4,
+					     a.e8,4**8*3**3,
+					     a.e9,4**9*3**2,
+					     a.e10,4**10*3,
+					     a.e11,4**11,
+					     p_expand);
+	let (av34) = dot_by_uint64_vec12_mod(a.e0,4**11,
+					     a.e1,3*4**10,
+					     a.e2,3**2*4**9,
+					     a.e3,3**3*4**8,
+					     a.e4,3**4*4**7,
+					     a.e5,3**5*4**6,
+					     a.e6,3**6*4**5,
+					     a.e7,3**7*4**4,
+					     a.e8,3**8*4**3,
+					     a.e9,3**9*4**2,
+					     a.e10,3**10*4,
+					     a.e11,3**11,
+					     p_expand);
+	let (av51) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,5,
+					     a.e2,5**2,
+					     a.e3,5**3,
+					     a.e4,5**4,
+					     a.e5,5**5,
+					     a.e6,5**6,
+					     a.e7,5**7,
+					     a.e8,5**8,
+					     a.e9,5**9,
+					     a.e10,5**10,
+					     a.e11,5**11,
+					     p_expand);
+	let (av15) = dot_by_uint64_vec12_mod(a.e0,5**11,
+					     a.e1,5**10,
+					     a.e2,5**9,
+					     a.e3,5**8,
+					     a.e4,5**7,
+					     a.e5,5**6,
+					     a.e6,5**5,
+					     a.e7,5**4,
+					     a.e8,5**3,
+					     a.e9,5**2,
+					     a.e10,5,
+					     a.e11,1,
+					     p_expand);
+	let (av52) = dot_by_uint64_vec12_mod(a.e0,2**11,
+					     a.e1,5*2**10,
+					     a.e2,5**2*2**9,
+					     a.e3,5**3*2**8,
+					     a.e4,5**4*2**7,
+					     a.e5,5**5*2**6,
+					     a.e6,5**6*2**5,
+					     a.e7,5**7*2**4,
+					     a.e8,5**8*2**3,
+					     a.e9,5**9*2**2,
+					     a.e10,5**10*2,
+					     a.e11,5**11,
+					     p_expand);
+	let (av25) = dot_by_uint64_vec12_mod(a.e0,5**11,
+					     a.e1,2*5**10,
+					     a.e2,2**2*5**9,
+					     a.e3,2**3*5**8,
+					     a.e4,2**4*5**7,
+					     a.e5,2**5*5**6,
+					     a.e6,2**6*5**5,
+					     a.e7,2**7*5**4,
+					     a.e8,2**8*5**3,
+					     a.e9,2**9*5**2,
+					     a.e10,2**10*5,
+					     a.e11,2**11,
+					     p_expand);
+	let (av53) = dot_by_uint64_vec12_mod(a.e0,3**11,
+					     a.e1,5*3**10,
+					     a.e2,5**2*3**9,
+					     a.e3,5**3*3**8,
+					     a.e4,5**4*3**7,
+					     a.e5,5**5*3**6,
+					     a.e6,5**6*3**5,
+					     a.e7,5**7*3**4,
+					     a.e8,5**8*3**3,
+					     a.e9,5**9*3**2,
+					     a.e10,5**10*3,
+					     a.e11,5**11,
+					     p_expand);
+	let (av35) = dot_by_uint64_vec12_mod(a.e0,5**11,
+					     a.e1,3*5**10,
+					     a.e2,3**2*5**9,
+					     a.e3,3**3*5**8,
+					     a.e4,3**4*5**7,
+					     a.e5,3**5*5**6,
+					     a.e6,3**6*5**5,
+					     a.e7,3**7*5**4,
+					     a.e8,3**8*5**3,
+					     a.e9,3**9*5**2,
+					     a.e10,3**10*5,
+					     a.e11,3**11,
+					     p_expand);
+	let (av54) = dot_by_uint64_vec12_mod(a.e0,4**11,
+					     a.e1,5*4**10,
+					     a.e2,5**2*4**9,
+					     a.e3,5**3*4**8,
+					     a.e4,5**4*4**7,
+					     a.e5,5**5*4**6,
+					     a.e6,5**6*4**5,
+					     a.e7,5**7*4**4,
+					     a.e8,5**8*4**3,
+					     a.e9,5**9*4**2,
+					     a.e10,5**10*4,
+					     a.e11,5**11,
+					     p_expand);
+	let (av45) = dot_by_uint64_vec12_mod(a.e0,5**11,
+					     a.e1,4*5**10,
+					     a.e2,4**2*5**9,
+					     a.e3,4**3*5**8,
+					     a.e4,4**4*5**7,
+					     a.e5,4**5*5**6,
+					     a.e6,4**6*5**5,
+					     a.e7,4**7*5**4,
+					     a.e8,4**8*5**3,
+					     a.e9,4**9*5**2,
+					     a.e10,4**10*5,
+					     a.e11,4**11,
+					     p_expand);
+	let (av61) = dot_by_uint64_vec12_mod(a.e0,1,
+					     a.e1,6,
+					     a.e2,6**2,
+					     a.e3,6**3,
+					     a.e4,6**4,
+					     a.e5,6**5,
+					     a.e6,6**6,
+					     a.e7,6**7,
+					     a.e8,6**8,
+					     a.e9,6**9,
+					     a.e10,6**10,
+					     a.e11,6**11,
+					     p_expand);
+	let (av16) = dot_by_uint64_vec12_mod(a.e0,6**11,
+					     a.e1,6**10,
+					     a.e2,6**9,
+					     a.e3,6**8,
+					     a.e4,6**7,
+					     a.e5,6**6,
+					     a.e6,6**5,
+					     a.e7,6**4,
+					     a.e8,6**3,
+					     a.e9,6**2,
+					     a.e10,6,
+					     a.e11,1,
+					     p_expand);
+
+	let bv01 = b.e0;
+	let bv10 = b.e11;
+	let (bv11) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,1,
+					     b.e2,1,
+					     b.e3,1,
+					     b.e4,1,
+					     b.e5,1,
+					     b.e6,1,
+					     b.e7,1,
+					     b.e8,1,
+					     b.e9,1,
+					     b.e10,1,
+					     b.e11,1,
+					     p_expand);
+	let (bv21) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,2,
+					     b.e2,2**2,
+					     b.e3,2**3,
+					     b.e4,2**4,
+					     b.e5,2**5,
+					     b.e6,2**6,
+					     b.e7,2**7,
+					     b.e8,2**8,
+					     b.e9,2**9,
+					     b.e10,2**10,
+					     b.e11,2**11,
+					     p_expand);
+	let (bv12) = dot_by_uint64_vec12_mod(b.e0,2**11,
+					     b.e1,2**10,
+					     b.e2,2**9,
+					     b.e3,2**8,
+					     b.e4,2**7,
+					     b.e5,2**6,
+					     b.e6,2**5,
+					     b.e7,2**4,
+					     b.e8,2**3,
+					     b.e9,2**2,
+					     b.e10,2,
+					     b.e11,1,
+					     p_expand);
+	let (bv31) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,3,
+					     b.e2,3**2,
+					     b.e3,3**3,
+					     b.e4,3**4,
+					     b.e5,3**5,
+					     b.e6,3**6,
+					     b.e7,3**7,
+					     b.e8,3**8,
+					     b.e9,3**9,
+					     b.e10,3**10,
+					     b.e11,3**11,
+					     p_expand);
+	let (bv13) = dot_by_uint64_vec12_mod(b.e0,3**11,
+					     b.e1,3**10,
+					     b.e2,3**9,
+					     b.e3,3**8,
+					     b.e4,3**7,
+					     b.e5,3**6,
+					     b.e6,3**5,
+					     b.e7,3**4,
+					     b.e8,3**3,
+					     b.e9,3**2,
+					     b.e10,3,
+					     b.e11,1,
+					     p_expand);
+	let (bv32) = dot_by_uint64_vec12_mod(b.e0,2**11,
+					     b.e1,3*2**10,
+					     b.e2,3**2*2**9,
+					     b.e3,3**3*2**8,
+					     b.e4,3**4*2**7,
+					     b.e5,3**5*2**6,
+					     b.e6,3**6*2**5,
+					     b.e7,3**7*2**4,
+					     b.e8,3**8*2**3,
+					     b.e9,3**9*2**2,
+					     b.e10,3**10*2,
+					     b.e11,3**11,
+					     p_expand);
+	let (bv23) = dot_by_uint64_vec12_mod(b.e0,3**11,
+					     b.e1,2*3**10,
+					     b.e2,2**2*3**9,
+					     b.e3,2**3*3**8,
+					     b.e4,2**4*3**7,
+					     b.e5,2**5*3**6,
+					     b.e6,2**6*3**5,
+					     b.e7,2**7*3**4,
+					     b.e8,2**8*3**3,
+					     b.e9,2**9*3**2,
+					     b.e10,2**10*3,
+					     b.e11,2**11,
+					     p_expand);
+	let (bv41) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,4,
+					     b.e2,4**2,
+					     b.e3,4**3,
+					     b.e4,4**4,
+					     b.e5,4**5,
+					     b.e6,4**6,
+					     b.e7,4**7,
+					     b.e8,4**8,
+					     b.e9,4**9,
+					     b.e10,4**10,
+					     b.e11,4**11,
+					     p_expand);
+	let (bv14) = dot_by_uint64_vec12_mod(b.e0,4**11,
+					     b.e1,4**10,
+					     b.e2,4**9,
+					     b.e3,4**8,
+					     b.e4,4**7,
+					     b.e5,4**6,
+					     b.e6,4**5,
+					     b.e7,4**4,
+					     b.e8,4**3,
+					     b.e9,4**2,
+					     b.e10,4,
+					     b.e11,1,
+					     p_expand);
+	let (bv43) = dot_by_uint64_vec12_mod(b.e0,3**11,
+					     b.e1,4*3**10,
+					     b.e2,4**2*3**9,
+					     b.e3,4**3*3**8,
+					     b.e4,4**4*3**7,
+					     b.e5,4**5*3**6,
+					     b.e6,4**6*3**5,
+					     b.e7,4**7*3**4,
+					     b.e8,4**8*3**3,
+					     b.e9,4**9*3**2,
+					     b.e10,4**10*3,
+					     b.e11,4**11,
+					     p_expand);
+	let (bv34) = dot_by_uint64_vec12_mod(b.e0,4**11,
+					     b.e1,3*4**10,
+					     b.e2,3**2*4**9,
+					     b.e3,3**3*4**8,
+					     b.e4,3**4*4**7,
+					     b.e5,3**5*4**6,
+					     b.e6,3**6*4**5,
+					     b.e7,3**7*4**4,
+					     b.e8,3**8*4**3,
+					     b.e9,3**9*4**2,
+					     b.e10,3**10*4,
+					     b.e11,3**11,
+					     p_expand);
+	let (bv51) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,5,
+					     b.e2,5**2,
+					     b.e3,5**3,
+					     b.e4,5**4,
+					     b.e5,5**5,
+					     b.e6,5**6,
+					     b.e7,5**7,
+					     b.e8,5**8,
+					     b.e9,5**9,
+					     b.e10,5**10,
+					     b.e11,5**11,
+					     p_expand);
+	let (bv15) = dot_by_uint64_vec12_mod(b.e0,5**11,
+					     b.e1,5**10,
+					     b.e2,5**9,
+					     b.e3,5**8,
+					     b.e4,5**7,
+					     b.e5,5**6,
+					     b.e6,5**5,
+					     b.e7,5**4,
+					     b.e8,5**3,
+					     b.e9,5**2,
+					     b.e10,5,
+					     b.e11,1,
+					     p_expand);
+	let (bv52) = dot_by_uint64_vec12_mod(b.e0,2**11,
+					     b.e1,5*2**10,
+					     b.e2,5**2*2**9,
+					     b.e3,5**3*2**8,
+					     b.e4,5**4*2**7,
+					     b.e5,5**5*2**6,
+					     b.e6,5**6*2**5,
+					     b.e7,5**7*2**4,
+					     b.e8,5**8*2**3,
+					     b.e9,5**9*2**2,
+					     b.e10,5**10*2,
+					     b.e11,5**11,
+					     p_expand);
+	let (bv25) = dot_by_uint64_vec12_mod(b.e0,5**11,
+					     b.e1,2*5**10,
+					     b.e2,2**2*5**9,
+					     b.e3,2**3*5**8,
+					     b.e4,2**4*5**7,
+					     b.e5,2**5*5**6,
+					     b.e6,2**6*5**5,
+					     b.e7,2**7*5**4,
+					     b.e8,2**8*5**3,
+					     b.e9,2**9*5**2,
+					     b.e10,2**10*5,
+					     b.e11,2**11,
+					     p_expand);
+	let (bv53) = dot_by_uint64_vec12_mod(b.e0,3**11,
+					     b.e1,5*3**10,
+					     b.e2,5**2*3**9,
+					     b.e3,5**3*3**8,
+					     b.e4,5**4*3**7,
+					     b.e5,5**5*3**6,
+					     b.e6,5**6*3**5,
+					     b.e7,5**7*3**4,
+					     b.e8,5**8*3**3,
+					     b.e9,5**9*3**2,
+					     b.e10,5**10*3,
+					     b.e11,5**11,
+					     p_expand);
+	let (bv35) = dot_by_uint64_vec12_mod(b.e0,5**11,
+					     b.e1,3*5**10,
+					     b.e2,3**2*5**9,
+					     b.e3,3**3*5**8,
+					     b.e4,3**4*5**7,
+					     b.e5,3**5*5**6,
+					     b.e6,3**6*5**5,
+					     b.e7,3**7*5**4,
+					     b.e8,3**8*5**3,
+					     b.e9,3**9*5**2,
+					     b.e10,3**10*5,
+					     b.e11,3**11,
+					     p_expand);
+	let (bv54) = dot_by_uint64_vec12_mod(b.e0,4**11,
+					     b.e1,5*4**10,
+					     b.e2,5**2*4**9,
+					     b.e3,5**3*4**8,
+					     b.e4,5**4*4**7,
+					     b.e5,5**5*4**6,
+					     b.e6,5**6*4**5,
+					     b.e7,5**7*4**4,
+					     b.e8,5**8*4**3,
+					     b.e9,5**9*4**2,
+					     b.e10,5**10*4,
+					     b.e11,5**11,
+					     p_expand);
+	let (bv45) = dot_by_uint64_vec12_mod(b.e0,5**11,
+					     b.e1,4*5**10,
+					     b.e2,4**2*5**9,
+					     b.e3,4**3*5**8,
+					     b.e4,4**4*5**7,
+					     b.e5,4**5*5**6,
+					     b.e6,4**6*5**5,
+					     b.e7,4**7*5**4,
+					     b.e8,4**8*5**3,
+					     b.e9,4**9*5**2,
+					     b.e10,4**10*5,
+					     b.e11,4**11,
+					     p_expand);
+	let (bv61) = dot_by_uint64_vec12_mod(b.e0,1,
+					     b.e1,6,
+					     b.e2,6**2,
+					     b.e3,6**3,
+					     b.e4,6**4,
+					     b.e5,6**5,
+					     b.e6,6**6,
+					     b.e7,6**7,
+					     b.e8,6**8,
+					     b.e9,6**9,
+					     b.e10,6**10,
+					     b.e11,6**11,
+					     p_expand);
+	let (bv16) = dot_by_uint64_vec12_mod(b.e0,6**11,
+					     b.e1,6**10,
+					     b.e2,6**9,
+					     b.e3,6**8,
+					     b.e4,6**7,
+					     b.e5,6**6,
+					     b.e6,6**5,
+					     b.e7,6**4,
+					     b.e8,6**3,
+					     b.e9,6**2,
+					     b.e10,6,
+					     b.e11,1,
+					     p_expand);
+        
+	let dv01 = d0;
+	let dv10 = d22;
+	let (dv11) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,1,
+					     d2,1,
+					     d3,1,
+					     d4,1,
+					     d5,1,
+					     d6,1,
+					     d7,1,
+					     d8,1,
+					     d9,1,
+					     d10,1,
+					     d11,1,
+					     d12,1,
+					     d13,1,
+					     d14,1,
+					     d15,1,
+					     d16,1,
+					     d17,1,
+					     d18,1,
+					     d19,1,
+					     d20,1,
+					     d21,1,
+					     d22,1,
+					     p_expand);
+	let (dv21) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,2,
+					     d2,2**2,
+					     d3,2**3,
+					     d4,2**4,
+					     d5,2**5,
+					     d6,2**6,
+					     d7,2**7,
+					     d8,2**8,
+					     d9,2**9,
+					     d10,2**10,
+					     d11,2**11,
+					     d12,2**12,
+					     d13,2**13,
+					     d14,2**14,
+					     d15,2**15,
+					     d16,2**16,
+					     d17,2**17,
+					     d18,2**18,
+					     d19,2**19,
+					     d20,2**20,
+					     d21,2**21,
+					     d22,2**22,
+					     p_expand);
+	let (dv12) = dot_by_uint64_vec23_mod(d0,2**22,
+					     d1,2**21,
+					     d2,2**20,
+					     d3,2**19,
+					     d4,2**18,
+					     d5,2**17,
+					     d6,2**16,
+					     d7,2**15,
+					     d8,2**14,
+					     d9,2**13,
+					     d10,2**12,
+					     d11,2**11,
+					     d12,2**10,
+					     d13,2**9,
+					     d14,2**8,
+					     d15,2**7,
+					     d16,2**6,
+					     d17,2**5,
+					     d18,2**4,
+					     d19,2**3,
+					     d20,2**2,
+					     d21,2,
+					     d22,1,
+					     p_expand);
+	let (dv31) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,3,
+					     d2,3**2,
+					     d3,3**3,
+					     d4,3**4,
+					     d5,3**5,
+					     d6,3**6,
+					     d7,3**7,
+					     d8,3**8,
+					     d9,3**9,
+					     d10,3**10,
+					     d11,3**11,
+					     d12,3**12,
+					     d13,3**13,
+					     d14,3**14,
+					     d15,3**15,
+					     d16,3**16,
+					     d17,3**17,
+					     d18,3**18,
+					     d19,3**19,
+					     d20,3**20,
+					     d21,3**21,
+					     d22,3**22,
+					     p_expand);
+	let (dv13) = dot_by_uint64_vec23_mod(d0,3**22,
+					     d1,3**21,
+					     d2,3**20,
+					     d3,3**19,
+					     d4,3**18,
+					     d5,3**17,
+					     d6,3**16,
+					     d7,3**15,
+					     d8,3**14,
+					     d9,3**13,
+					     d10,3**12,
+					     d11,3**11,
+					     d12,3**10,
+					     d13,3**9,
+					     d14,3**8,
+					     d15,3**7,
+					     d16,3**6,
+					     d17,3**5,
+					     d18,3**4,
+					     d19,3**3,
+					     d20,3**2,
+					     d21,3,
+					     d22,1,
+					     p_expand);
+	let (dv32) = dot_by_uint64_vec23_mod(d0,2**22,
+					     d1,3*2**21,
+					     d2,3**2*2**20,
+					     d3,3**3*2**19,
+					     d4,3**4*2**18,
+					     d5,3**5*2**17,
+					     d6,3**6*2**16,
+					     d7,3**7*2**15,
+					     d8,3**8*2**14,
+					     d9,3**9*2**13,
+					     d10,3**10*2**12,
+					     d11,3**11*2**11,
+					     d12,3**12*2**10,
+					     d13,3**13*2**9,
+					     d14,3**14*2**8,
+					     d15,3**15*2**7,
+					     d16,3**16*2**6,
+					     d17,3**17*2**5,
+					     d18,3**18*2**4,
+					     d19,3**19*2**3,
+					     d20,3**20*2**2,
+					     d21,3**21*2,
+					     d22,3**22,
+					     p_expand);
+	let (dv23) = dot_by_uint64_vec23_mod(d0,3**22,
+					     d1,2*3**21,
+					     d2,2**2*3**20,
+					     d3,2**3*3**19,
+					     d4,2**4*3**18,
+					     d5,2**5*3**17,
+					     d6,2**6*3**16,
+					     d7,2**7*3**15,
+					     d8,2**8*3**14,
+					     d9,2**9*3**13,
+					     d10,2**10*3**12,
+					     d11,2**11*3**11,
+					     d12,2**12*3**10,
+					     d13,2**13*3**9,
+					     d14,2**14*3**8,
+					     d15,2**15*3**7,
+					     d16,2**16*3**6,
+					     d17,2**17*3**5,
+					     d18,2**18*3**4,
+					     d19,2**19*3**3,
+					     d20,2**20*3**2,
+					     d21,2**21*3,
+					     d22,2**22,
+					     p_expand);
+	let (dv41) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,4,
+					     d2,4**2,
+					     d3,4**3,
+					     d4,4**4,
+					     d5,4**5,
+					     d6,4**6,
+					     d7,4**7,
+					     d8,4**8,
+					     d9,4**9,
+					     d10,4**10,
+					     d11,4**11,
+					     d12,4**12,
+					     d13,4**13,
+					     d14,4**14,
+					     d15,4**15,
+					     d16,4**16,
+					     d17,4**17,
+					     d18,4**18,
+					     d19,4**19,
+					     d20,4**20,
+					     d21,4**21,
+					     d22,4**22,
+					     p_expand);
+	let (dv14) = dot_by_uint64_vec23_mod(d0,4**22,
+					     d1,4**21,
+					     d2,4**20,
+					     d3,4**19,
+					     d4,4**18,
+					     d5,4**17,
+					     d6,4**16,
+					     d7,4**15,
+					     d8,4**14,
+					     d9,4**13,
+					     d10,4**12,
+					     d11,4**11,
+					     d12,4**10,
+					     d13,4**9,
+					     d14,4**8,
+					     d15,4**7,
+					     d16,4**6,
+					     d17,4**5,
+					     d18,4**4,
+					     d19,4**3,
+					     d20,4**2,
+					     d21,4,
+					     d22,1,
+					     p_expand);
+	let (dv43) = dot_by_uint64_vec23_mod(d0,3**22,
+					     d1,4*3**21,
+					     d2,4**2*3**20,
+					     d3,4**3*3**19,
+					     d4,4**4*3**18,
+					     d5,4**5*3**17,
+					     d6,4**6*3**16,
+					     d7,4**7*3**15,
+					     d8,4**8*3**14,
+					     d9,4**9*3**13,
+					     d10,4**10*3**12,
+					     d11,4**11*3**11,
+					     d12,4**12*3**10,
+					     d13,4**13*3**9,
+					     d14,4**14*3**8,
+					     d15,4**15*3**7,
+					     d16,4**16*3**6,
+					     d17,4**17*3**5,
+					     d18,4**18*3**4,
+					     d19,4**19*3**3,
+					     d20,4**20*3**2,
+					     d21,4**21*3,
+					     d22,4**22,
+					     p_expand);
+	let (dv34) = dot_by_uint64_vec23_mod(d0,4**22,
+					     d1,3*4**21,
+					     d2,3**2*4**20,
+					     d3,3**3*4**19,
+					     d4,3**4*4**18,
+					     d5,3**5*4**17,
+					     d6,3**6*4**16,
+					     d7,3**7*4**15,
+					     d8,3**8*4**14,
+					     d9,3**9*4**13,
+					     d10,3**10*4**12,
+					     d11,3**11*4**11,
+					     d12,3**12*4**10,
+					     d13,3**13*4**9,
+					     d14,3**14*4**8,
+					     d15,3**15*4**7,
+					     d16,3**16*4**6,
+					     d17,3**17*4**5,
+					     d18,3**18*4**4,
+					     d19,3**19*4**3,
+					     d20,3**20*4**2,
+					     d21,3**21*4,
+					     d22,3**22,
+					     p_expand);
+	let (dv51) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,5,
+					     d2,5**2,
+					     d3,5**3,
+					     d4,5**4,
+					     d5,5**5,
+					     d6,5**6,
+					     d7,5**7,
+					     d8,5**8,
+					     d9,5**9,
+					     d10,5**10,
+					     d11,5**11,
+					     d12,5**12,
+					     d13,5**13,
+					     d14,5**14,
+					     d15,5**15,
+					     d16,5**16,
+					     d17,5**17,
+					     d18,5**18,
+					     d19,5**19,
+					     d20,5**20,
+					     d21,5**21,
+					     d22,5**22,
+					     p_expand);
+	let (dv15) = dot_by_uint64_vec23_mod(d0,5**22,
+					     d1,5**21,
+					     d2,5**20,
+					     d3,5**19,
+					     d4,5**18,
+					     d5,5**17,
+					     d6,5**16,
+					     d7,5**15,
+					     d8,5**14,
+					     d9,5**13,
+					     d10,5**12,
+					     d11,5**11,
+					     d12,5**10,
+					     d13,5**9,
+					     d14,5**8,
+					     d15,5**7,
+					     d16,5**6,
+					     d17,5**5,
+					     d18,5**4,
+					     d19,5**3,
+					     d20,5**2,
+					     d21,5,
+					     d22,1,
+					     p_expand);
+	let (dv52) = dot_by_uint64_vec23_mod(d0,2**22,
+					     d1,5*2**21,
+					     d2,5**2*2**20,
+					     d3,5**3*2**19,
+					     d4,5**4*2**18,
+					     d5,5**5*2**17,
+					     d6,5**6*2**16,
+					     d7,5**7*2**15,
+					     d8,5**8*2**14,
+					     d9,5**9*2**13,
+					     d10,5**10*2**12,
+					     d11,5**11*2**11,
+					     d12,5**12*2**10,
+					     d13,5**13*2**9,
+					     d14,5**14*2**8,
+					     d15,5**15*2**7,
+					     d16,5**16*2**6,
+					     d17,5**17*2**5,
+					     d18,5**18*2**4,
+					     d19,5**19*2**3,
+					     d20,5**20*2**2,
+					     d21,5**21*2,
+					     d22,5**22,
+					     p_expand);
+	let (dv25) = dot_by_uint64_vec23_mod(d0,5**22,
+					     d1,2*5**21,
+					     d2,2**2*5**20,
+					     d3,2**3*5**19,
+					     d4,2**4*5**18,
+					     d5,2**5*5**17,
+					     d6,2**6*5**16,
+					     d7,2**7*5**15,
+					     d8,2**8*5**14,
+					     d9,2**9*5**13,
+					     d10,2**10*5**12,
+					     d11,2**11*5**11,
+					     d12,2**12*5**10,
+					     d13,2**13*5**9,
+					     d14,2**14*5**8,
+					     d15,2**15*5**7,
+					     d16,2**16*5**6,
+					     d17,2**17*5**5,
+					     d18,2**18*5**4,
+					     d19,2**19*5**3,
+					     d20,2**20*5**2,
+					     d21,2**21*5,
+					     d22,2**22,
+					     p_expand);
+	let (dv53) = dot_by_uint64_vec23_mod(d0,3**22,
+					     d1,5*3**21,
+					     d2,5**2*3**20,
+					     d3,5**3*3**19,
+					     d4,5**4*3**18,
+					     d5,5**5*3**17,
+					     d6,5**6*3**16,
+					     d7,5**7*3**15,
+					     d8,5**8*3**14,
+					     d9,5**9*3**13,
+					     d10,5**10*3**12,
+					     d11,5**11*3**11,
+					     d12,5**12*3**10,
+					     d13,5**13*3**9,
+					     d14,5**14*3**8,
+					     d15,5**15*3**7,
+					     d16,5**16*3**6,
+					     d17,5**17*3**5,
+					     d18,5**18*3**4,
+					     d19,5**19*3**3,
+					     d20,5**20*3**2,
+					     d21,5**21*3,
+					     d22,5**22,
+					     p_expand);
+	let (dv35) = dot_by_uint64_vec23_mod(d0,5**22,
+					     d1,3*5**21,
+					     d2,3**2*5**20,
+					     d3,3**3*5**19,
+					     d4,3**4*5**18,
+					     d5,3**5*5**17,
+					     d6,3**6*5**16,
+					     d7,3**7*5**15,
+					     d8,3**8*5**14,
+					     d9,3**9*5**13,
+					     d10,3**10*5**12,
+					     d11,3**11*5**11,
+					     d12,3**12*5**10,
+					     d13,3**13*5**9,
+					     d14,3**14*5**8,
+					     d15,3**15*5**7,
+					     d16,3**16*5**6,
+					     d17,3**17*5**5,
+					     d18,3**18*5**4,
+					     d19,3**19*5**3,
+					     d20,3**20*5**2,
+					     d21,3**21*5,
+					     d22,3**22,
+					     p_expand);
+	let (dv54) = dot_by_uint64_vec23_mod(d0,4**22,
+					     d1,5*4**21,
+					     d2,5**2*4**20,
+					     d3,5**3*4**19,
+					     d4,5**4*4**18,
+					     d5,5**5*4**17,
+					     d6,5**6*4**16,
+					     d7,5**7*4**15,
+					     d8,5**8*4**14,
+					     d9,5**9*4**13,
+					     d10,5**10*4**12,
+					     d11,5**11*4**11,
+					     d12,5**12*4**10,
+					     d13,5**13*4**9,
+					     d14,5**14*4**8,
+					     d15,5**15*4**7,
+					     d16,5**16*4**6,
+					     d17,5**17*4**5,
+					     d18,5**18*4**4,
+					     d19,5**19*4**3,
+					     d20,5**20*4**2,
+					     d21,5**21*4,
+					     d22,5**22,
+					     p_expand);
+	let (dv45) = dot_by_uint64_vec23_mod(d0,5**22,
+					     d1,4*5**21,
+					     d2,4**2*5**20,
+					     d3,4**3*5**19,
+					     d4,4**4*5**18,
+					     d5,4**5*5**17,
+					     d6,4**6*5**16,
+					     d7,4**7*5**15,
+					     d8,4**8*5**14,
+					     d9,4**9*5**13,
+					     d10,4**10*5**12,
+					     d11,4**11*5**11,
+					     d12,4**12*5**10,
+					     d13,4**13*5**9,
+					     d14,4**14*5**8,
+					     d15,4**15*5**7,
+					     d16,4**16*5**6,
+					     d17,4**17*5**5,
+					     d18,4**18*5**4,
+					     d19,4**19*5**3,
+					     d20,4**20*5**2,
+					     d21,4**21*5,
+					     d22,4**22,
+					     p_expand);
+	let (dv61) = dot_by_uint64_vec23_mod(d0,1,
+					     d1,6,
+					     d2,6**2,
+					     d3,6**3,
+					     d4,6**4,
+					     d5,6**5,
+					     d6,6**6,
+					     d7,6**7,
+					     d8,6**8,
+					     d9,6**9,
+					     d10,6**10,
+					     d11,6**11,
+					     d12,6**12,
+					     d13,6**13,
+					     d14,6**14,
+					     d15,6**15,
+					     d16,6**16,
+					     d17,6**17,
+					     d18,6**18,
+					     d19,6**19,
+					     d20,6**20,
+					     d21,6**21,
+					     d22,6**22,
+					     p_expand);
+	let (dv16) = dot_by_uint64_vec23_mod(d0,6**22,
+					     d1,6**21,
+					     d2,6**20,
+					     d3,6**19,
+					     d4,6**18,
+					     d5,6**17,
+					     d6,6**16,
+					     d7,6**15,
+					     d8,6**14,
+					     d9,6**13,
+					     d10,6**12,
+					     d11,6**11,
+					     d12,6**10,
+					     d13,6**9,
+					     d14,6**8,
+					     d15,6**7,
+					     d16,6**6,
+					     d17,6**5,
+					     d18,6**4,
+					     d19,6**3,
+					     d20,6**2,
+					     d21,6,
+					     d22,1,
+					     p_expand);
+        
+
+        let (dv01b)=fq_lib.mul(av01,bv01);
+        assert dv01 = dv01b;
+        let (dv10b)=fq_lib.mul(av10,bv10);
+        assert dv10 = dv10b;
+        let (dv11b)=fq_lib.mul(av11,bv11);
+        assert dv11 = dv11b;
+        let (dv21b)=fq_lib.mul(av21,bv21);
+        assert dv21 = dv21b;
+        let (dv12b)=fq_lib.mul(av12,bv12);
+        assert dv12 = dv12b;
+        let (dv31b)=fq_lib.mul(av31,bv31);
+        assert dv31 = dv31b;
+        let (dv13b)=fq_lib.mul(av13,bv13);
+        assert dv13 = dv13b;
+        let (dv32b)=fq_lib.mul(av32,bv32);
+        assert dv32 = dv32b;
+        let (dv23b)=fq_lib.mul(av23,bv23);
+        assert dv23 = dv23b;
+        let (dv41b)=fq_lib.mul(av41,bv41);
+        assert dv41 = dv41b;
+        let (dv14b)=fq_lib.mul(av14,bv14);
+        assert dv14 = dv14b;
+        let (dv43b)=fq_lib.mul(av43,bv43);
+        assert dv43 = dv43b;
+        let (dv34b)=fq_lib.mul(av34,bv34);
+        assert dv34 = dv34b;
+        let (dv51b)=fq_lib.mul(av51,bv51);
+        assert dv51 = dv51b;
+        let (dv15b)=fq_lib.mul(av15,bv15);
+        assert dv15 = dv15b;
+        let (dv52b)=fq_lib.mul(av52,bv52);
+        assert dv52 = dv52b;
+        let (dv25b)=fq_lib.mul(av25,bv25);
+        assert dv25 = dv25b;
+        let (dv53b)=fq_lib.mul(av53,bv53);
+        assert dv53 = dv53b;
+        let (dv35b)=fq_lib.mul(av35,bv35);
+        assert dv35 = dv35b;
+        let (dv54b)=fq_lib.mul(av54,bv54);
+        assert dv54 = dv54b;
+        let (dv45b)=fq_lib.mul(av45,bv45);
+        assert dv45 = dv45b;
+        let (dv61b)=fq_lib.mul(av61,bv61);
+        assert dv61 = dv61b;
+        let (dv16b)=fq_lib.mul(av16,bv16);
+        assert dv16 = dv16b;
+	
         // Reducing the results modulo the irreducible polynomial
         // Note that the order in which _aux_polynomial_reduction is called is important here
         let (d10: Uint384, d16: Uint384) = _aux_polynomial_reduction(d22, d10, d16);

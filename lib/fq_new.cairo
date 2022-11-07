@@ -10,6 +10,18 @@ const ALL_ONES = 2 ** 128 - 1;
 const HALF_SHIFT = 2 ** 64;
 
 namespace fq_lib {
+    // Verifies that the given field element is valid.
+    func check{range_check_ptr}(x: Uint384) -> () {
+        alloc_locals;
+        let (field_modulus: Uint384) = get_modulus();
+	
+	uint384_lib.check(x);
+	let (is_valid) = uint384_lib.lt(x, field_modulus);
+	assert is_valid = 1;
+
+	return();
+    }
+  
     //s:587 rc:61
     func add{range_check_ptr}(x: Uint384, y: Uint384) -> (
         sum_mod: Uint384

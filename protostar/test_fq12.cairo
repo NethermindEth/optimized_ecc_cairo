@@ -376,6 +376,50 @@ func test_mul_2{syscall_ptr: felt*, range_check_ptr}(
 }
 
 @external
+func test_mul_TC_12{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (mul:FQ12) = fq12_lib.mul_TC_12(FQ12(Uint384(1,0,0),
+					     Uint384(2,0,0),
+					     Uint384(3,0,0),
+					     Uint384(4,0,0),
+					     Uint384(5,0,0),
+					     Uint384(6,0,0),
+					     Uint384(7,0,0),
+					     Uint384(8,0,0),
+					     Uint384(9,0,0),
+					     Uint384(10,0,0),
+					     Uint384(11,0,0),
+					     Uint384(12,0,0)),
+					FQ12(Uint384(2,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0),
+					     Uint384(0,0,0)));
+    
+    assert mul = FQ12(Uint384(2,0,0),
+		      Uint384(4,0,0),
+		      Uint384(6,0,0),
+		      Uint384(8,0,0),
+		      Uint384(10,0,0),
+		      Uint384(12,0,0),
+		      Uint384(14,0,0),
+		      Uint384(16,0,0),
+		      Uint384(18,0,0),
+		      Uint384(20,0,0),
+		      Uint384(22,0,0),
+		      Uint384(24,0,0));
+    return();
+}
+
+@external
 func test_square{syscall_ptr: felt*, range_check_ptr}(
     
 ) {

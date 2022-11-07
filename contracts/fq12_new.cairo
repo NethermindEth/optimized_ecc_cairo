@@ -87,6 +87,15 @@ func mul_2{range_check_ptr}(x: FQ12, y: FQ12) -> (res: FQ12) {
 }
 
 @view
+func mul_TC_12{range_check_ptr}(x: FQ12, y: FQ12) -> (res: FQ12) {
+    alloc_locals;
+
+    let (res: FQ12) = fq12_lib.mul_TC_12(x, y);
+
+    return (res,);
+}
+
+@view
 func square{range_check_ptr}(x: FQ12) -> (res: FQ12) {
     alloc_locals;
 

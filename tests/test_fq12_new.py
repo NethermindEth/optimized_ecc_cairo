@@ -44,7 +44,7 @@ async def test_fq12_mul_short(
     contract = fq12_new_factory
     x_split = splitFQP(x)
     y_split = splitFQP(y)
-    execution_info = await contract.mul_2(x_split, y_split).call()
+    execution_info = await contract.mul_TC_12(x_split, y_split).call()
     cairo_result = packFQP(execution_info.result[0])
 
     x_fq12 = FQ12(x)
@@ -90,7 +90,7 @@ async def test_fq12_mul_specific(
     contract = fq12_new_factory
     x_split = splitFQP(x)
     y_split = splitFQP(y)
-    execution_info = await contract.mul(x_split, y_split).call()
+    execution_info = await contract.mul_TC_12(x_split, y_split).call()
     cairo_result = packFQP(execution_info.result[0])
 
     x_fq12 = FQ12(x)
