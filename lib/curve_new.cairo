@@ -2,7 +2,7 @@ from lib.uint384 import Uint384, Uint384_expand
 
 // Default modulus is field modulus for bls12-381 elliptic curve.
 // decimal p = 4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787
-// hex 0 = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
+// hex p = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
 
 //entries of the 'expanded' modulus in the sense of the Uint384_expand struct
 const P0exp =                                                                                 0xb9feffffffffaaab0000000000000000;
