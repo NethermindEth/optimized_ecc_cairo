@@ -482,3 +482,35 @@ func test_square_2{syscall_ptr: felt*, range_check_ptr}(
 		     Uint384(0,0,0));
     return();
 }
+
+@external
+func test_square_TC_12{syscall_ptr: felt*, range_check_ptr}(
+    
+) {
+    let (sq:FQ12) = fq12_lib.square_TC_12(FQ12(Uint384(2,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0),
+					       Uint384(0,0,0)));
+
+    assert sq = FQ12(Uint384(4,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0),
+		     Uint384(0,0,0));
+    return();
+}
