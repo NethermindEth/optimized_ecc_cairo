@@ -54,10 +54,67 @@ namespace fq12_lib{
         return (sub = sub3,);
     }
 
-    //We use Toom-Cook3 for multiplication in FQ6
-    func mul_fq6{range_check_ptr}(x:FQ6, y:FQ6)->(prod:FQ6){
-
+    //Returns the non-immediate evaluations of a polynomial of degree 3, i.e. those at 1, -1  & -2
+    func fq6_toom3_eval{range_check_ptr}(m0:FQ2, m1:FQ2, m2:FQ2)->(p1:FQ2, pm1:FQ2, pm2:FQ2){
+        let (p0:FQ2) = fq2_lib.add(m0,m2);
+        let (p1:FQ2) = fq2_lib.add(p0, m1);
+        let (pm1:FQ2) = fq2_lib.sub(p0, m1);
+        let (int:FQ2) = fq2_lib.add(pm1, m2);
+        let (twint:FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), int);
+        let (pm2:FQ2) = fq2_lib.sub(twint, m1);
+        return(p1, pm1, pm2);
     }
+
+    //finds the non-obvious coefficients of a degree 4 polynomial from 5 evaluations at distinct points.
+    func fq6_toom3_interp{range_check_ptr}(z0:FQ2, zinf:FQ2, z1:FQ2, zm1:FQ2, zm2:FQ2)->(r1:FQ2, r2:FQ2, r3:FQ2){
+        let (twoinv:Uint384) = get_2_inverse();
+        let (threeinv:Uint384) = get_3_inverse();
+        let (two_r_inf:FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), zinf);
+        let (sub1:FQ2) = fq2_lib.sub(zm2, z1);
+        let (r3_temp:FQ2) = fq2_lib.mul_kar(threeinv, sub1);
+        let (sub2:FQ2) = fq2_lib.sub(z1, zm1);
+        let (r1_temp:FQ2) = fq2_lib.mul_kar(twoinv, sub2);
+        let (r2_temp:FQ2) = fq2_lib.sub(zm1,z0);
+        let (sub_r23:FQ2) = fq2_lib.sub(r2_temp, r3_temp);
+        let (sub_r14:FQ2) = fq2_lib.sub(r1_temp, zinf);
+        let (sub_r23_div2:FQ2) = fq2_lib.mul_kar(twoinv, sub_r23);
+        let (r3:FQ2) = fq2_lib.add(sub_r23_div2, two_r_inf);
+        let (r2:FQ2) = fq2_lib.add(r2_temp, sub_r14);
+        let (r1:FQ2) = fq2_lib.sub(r1_temp, r3);
+        return(r1,r2,r3);
+    }
+
+
+    //Elements of FQ6 are already polynomials of the form a+bv+cv^2
+    //We use Toom-Cook3 to obtain the coefficient of the multiplication of two FQ6 elements. 
+    //Then we need to reduce the v^3 and v^4 coefficients using the particularity if multiplication by (u+1)in FQ2.
+    func mul_fq6{range_check_ptr}(x:FQ6, y:FQ6)->(prod:FQ6){
+        let (x1:FQ2, xm1:FQ2, xm2:FQ2) = fq6_toom3_eval(x.f0, x.f1, x.f2);
+        let (y1:FQ2, ym1:FQ2, ym2:FQ2) = fq6_toom3_eval(y.f0, y.f1, y.f2);
+        let (z0:FQ2) = fq2_lib.mul_kar(x.f0, y.f0);
+        let (zinf:FQ2) = fq2_lib.mul_kar(x.f2, y.f2);
+        let (z1:FQ2) = fq2_lib.mul_kar(x1, y1);
+        let (zm1:FQ2) = fq2_lib.mul_kar(xm1, ym1);
+        let (zm2:FQ2) = fq2_lib.mul_kar(xm2, ym2);
+
+        //we obtain the (non obvious) coefficients of the degree 4 polynomial corresponding to the multiplication
+        let (r1:FQ2, r2:FQ2, r3:FQ2) = fq6_toom3_interp(z0, zinf, z1, zm1, zm2);
+
+        //we have r0+r1v+r2v^2+r3v^3+r4v^4, with v^3=(u+1) and v^4=v(u+1).Now the effect of multiplying 
+        //the FQ2 element c3 = d1+d2*u by (u+1) is given by (d1, d2)--> (d1 - d2, d1 + d2). 
+        let (r3_d1_minus_d2:Uint384) = fq_lib.sub1(r3.e0, r3.e1);
+        let (r3_d1_plus_d2:Uint384) = fq_lib.add(r3.e0, r3.e1);
+        let (r0:FQ2) = fq2_lib.add(z0, FQ2(r3_d1_minus_d2, r3_d1_plus_d2));
+
+        //do the same for r4
+        let (r4_d1_minus_d2:Uint384) = fq_lib.sub1(r4.e0, r4.e1);
+        let (r4_d1_plus_d2:Uint384) = fq_lib.add(r4.e0, r4.e1);
+        let (r1:FQ2) = fq2_lib.add(r1, FQ2(r4_d1_minus_d2, r4_d1_plus_d2));
+
+        //we have all coefficients in the product
+        return(prod=FQ6(r0, r1, r2),);
+    }
+
 
     //Implement multiplication as a form of applying Karatsuba by using TC3 over FQ6, and using 
     //the particularity of multiplication by v in FQ6, and by (u+1) in FQ2. 
