@@ -71,13 +71,13 @@ namespace fq12_lib{
         let (threeinv:Uint384) = get_3_inverse();
         let (two_r_inf:FQ2) = fq2_lib.add(zinf, zinf);
         let (sub1:FQ2) = fq2_lib.sub(zm2, z1);
-        let (r3_temp:FQ2) = fq2_lib.mul_kar(threeinv, sub1);
+        let (r3_temp:FQ2) = fq2_lib.scalar_mul(threeinv, sub1);
         let (sub2:FQ2) = fq2_lib.sub(z1, zm1);
-        let (r1_temp:FQ2) = fq2_lib.mul_kar(twoinv, sub2);
+        let (r1_temp:FQ2) = fq2_lib.scalar_mul(twoinv, sub2);
         let (r2_temp:FQ2) = fq2_lib.sub(zm1,z0);
         let (sub_r23:FQ2) = fq2_lib.sub(r2_temp, r3_temp);
         let (sub_r14:FQ2) = fq2_lib.sub(r1_temp, zinf);
-        let (sub_r23_div2:FQ2) = fq2_lib.mul_kar(twoinv, sub_r23);
+        let (sub_r23_div2:FQ2) = fq2_lib.scalar_mul(twoinv, sub_r23);
         let (r3:FQ2) = fq2_lib.add(sub_r23_div2, two_r_inf);
         let (r2:FQ2) = fq2_lib.add(r2_temp, sub_r14);
         let (r1:FQ2) = fq2_lib.sub(r1_temp, r3);
