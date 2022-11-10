@@ -79,7 +79,7 @@ namespace fq12_lib {
 	return ();
     }
   
-    // st=6847, mh=240, rc=732
+    // st=4963, mh=240, rc=540
     func add{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         // TODO: check why alloc_locals seems to be needed here
         alloc_locals;
@@ -101,7 +101,7 @@ namespace fq12_lib {
     }
 
     //using sub1 instead of sub
-    // st=8607, mh=996, rc=804
+    // st=6723, mh=996, rc=612
     func sub{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (e0: Uint384) = fq_lib.sub1(x.e0, y.e0);
@@ -121,7 +121,7 @@ namespace fq12_lib {
     }
 
     //allows for only one expansion of the modulus into a Uint384_expand.
-    // st=14251, mh=960, rc=1524
+    // st=12367, mh=960, rc=1332
     func sub_2{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -169,7 +169,7 @@ namespace fq12_lib {
     }
 
     //assumes all components are < p
-    // st=7555, mh=480, rc=780
+    // st=5671, mh=480, rc=588
     func sub_3{range_check_ptr}(x: FQ12, y: FQ12) -> (sum_mod: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -217,7 +217,7 @@ namespace fq12_lib {
     
     //changed scalar mul to allow for only one expansion of the modulus into a Uint384_expand, updated range_check_ptr
     //assumes x<2**128
-    // st=7916, mh=240, rc=948
+    // st=6032, mh=240, rc=756
     func scalar_mul2{range_check_ptr}(x: felt, y: FQ12) -> (
         product: FQ12
     ) {
@@ -241,7 +241,7 @@ namespace fq12_lib {
 
 
     //changed mul so that it would only expand the modulus once. 
-    // st=187659, mh=6180, rc=21948
+    // st=166935, mh=6180, rc=19836
     func mul{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -575,7 +575,7 @@ namespace fq12_lib {
 
     // since 9*p < 2**384 we can add up to 9 elements before needing to reduce
     // also expanded the components of b
-    // st=127502, mh=4280, rc=14548
+    // st=125775, mh=4280, rc=14372
     func mul_2{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -948,7 +948,7 @@ namespace fq12_lib {
     }
 
     // Toom-Cook 12
-    // st=82454, mh=3060, rc=7869
+    // st=70836, mh=3060, rc=6685
     func mul_TC_12{range_check_ptr}(a: FQ12, b: FQ12) -> (product: FQ12) {
         alloc_locals;
 	local d0: Uint384;
@@ -2180,7 +2180,7 @@ namespace fq12_lib {
         return (FQ12(d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11),);
     }
 
-    // st=186879, mh=6180, rc=21840
+    // st=166155, mh=6180, rc=19728
     func square{range_check_ptr}(a: FQ12) -> (square: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -2513,7 +2513,7 @@ namespace fq12_lib {
     }
     
     // square function derived from mul_2, since squaring is slightly more efficient than mul_expand, though the improvement should be small.
-    // st=127238, mh=4280, rc=14548
+    // st=125511, mh=4280, rc=14372
     func square_2{range_check_ptr}(a: FQ12) -> (product: FQ12) {
         alloc_locals;
         let (p_expand:Uint384_expand) = get_modulus_expand();
@@ -2886,7 +2886,7 @@ namespace fq12_lib {
     }
 
     // Toom-Cook 12
-    // st=65614, mh=2640, rc=6255
+    // st=57293, mh=2640, rc=5407
     func square_TC_12{range_check_ptr}(a: FQ12) -> (product: FQ12) {
         alloc_locals;
 	local d0: Uint384;

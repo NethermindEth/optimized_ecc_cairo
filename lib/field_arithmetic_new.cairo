@@ -6,7 +6,7 @@ from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.registers import get_ap, get_fp_and_pc
 // Import uint384 files (path may change in the future)
 from lib.uint384 import uint384_lib, Uint384, Uint384_expand, SHIFT, HALF_SHIFT
-from lib.uint384_extension import uint384_extension_lib, Uint768
+from lib.uint384_extension import uint384_extension_lib, Uint768, Uint512
 
 // Functions for operating elements in a finite field F_p (i.e. modulo a prime p), with p of at most 384 bits
 
@@ -14,11 +14,11 @@ namespace field_arithmetic {
     // Computes (a + b) modulo p .
     func add{range_check_ptr}(a: Uint384, b: Uint384, p: Uint384_expand) -> (res: Uint384) {
         let (sum: Uint384, carry) = uint384_lib.add(a, b);
-        let sum_with_carry: Uint768 = Uint768(sum.d0, sum.d1, sum.d2, carry, 0, 0);
+        let sum_with_carry: Uint512 = Uint512(sum.d0, sum.d1, sum.d2, carry);
 
         let (
-            quotient: Uint768, remainder: Uint384
-        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(sum_with_carry, p);
+            quotient: Uint512, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(sum_with_carry, p);
         return (remainder,);
     }
 
@@ -93,10 +93,10 @@ namespace field_arithmetic {
         product: Uint384
     ) {
         let (low: Uint384, high: felt) = uint384_lib.mul_by_uint128(a,b);
-	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let full_mul_result: Uint512 = Uint512(low.d0, low.d1, low.d2, high);
 	let (
-            quotient: Uint768, remainder: Uint384
-        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p);
+            quotient: Uint512, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(full_mul_result, p);
         return(remainder,);
     }
 

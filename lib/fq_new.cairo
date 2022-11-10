@@ -1,5 +1,5 @@
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
-from lib.uint384_extension import Uint768, uint384_extension_lib
+from lib.uint384_extension import Uint768, Uint512, uint384_extension_lib
 from lib.field_arithmetic_new import field_arithmetic
 from lib.curve_new import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2, get_twice_p
 from starkware.cairo.common.uint256 import Uint256
@@ -22,7 +22,7 @@ namespace fq_lib {
 	return();
     }
   
-    //s:587 rc:61
+    //s:430 rc:45
     func add{range_check_ptr}(x: Uint384, y: Uint384) -> (
         sum_mod: Uint384
     ) {
@@ -43,7 +43,7 @@ namespace fq_lib {
         return (rem,);
     }
 
-    //s:1209 rc:127
+    //s:1052 rc:111
     func sub{range_check_ptr}(x: Uint384, y: Uint384) -> (
         difference: Uint384
     ) {
@@ -58,8 +58,8 @@ namespace fq_lib {
         return (res,);
     }
 
-    //fuzz_runs=100, steps=μ: 784.34, Md: 731, min: 731, max: 1013, memory_holes=μ: 85.96, Md: 83, min: 83, max: 100
-    // range_check_builtin=μ: 72.89, Md: 67, min: 67, max: 98
+    //fuzz_runs=100, steps=μ: 669.24, Md: 574, min: 574, max: 1137, memory_holes=μ: 88.42, Md: 83, min: 83, max: 114
+    // range_check_builtin=μ: 61.54, Md: 51, min: 51, max: 113
     //This function checks whether unsigned x and y are already reduced modulo p.
 
     func sub1{range_check_ptr}(x: Uint384, y: Uint384) -> (
@@ -148,30 +148,30 @@ namespace fq_lib {
         return(reduced,);
     }
 
-    //Best version: uses mul_by_uint128: 663 steps, 79 range_checks
+    //Best version: uses mul_by_uint128: 506 steps, 63 range_checks
     func scalar_mul4{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
         let p_expand:Uint384_expand= get_modulus_expand();
         let (low: Uint384, high: felt) = uint384_lib.mul_by_uint128(x,scalar);
-	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let full_mul_result: Uint512 = Uint512(low.d0, low.d1, low.d2, high);
 	let (
-            quotient: Uint768, remainder: Uint384
-        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p_expand);
+            quotient: Uint512, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(full_mul_result, p_expand);
         return(remainder,);
     }
 
     //assumes scalar < 2**64
-    //590 steps, 67 range_checks
+    //433 steps, 51 range_checks
     func scalar64_mul{range_check_ptr}(scalar: felt, x:Uint384) -> (
         product: Uint384
     ) {
         let p_expand:Uint384_expand= get_modulus_expand();
         let (low: Uint384, high: felt) = uint384_lib.mul_by_uint64(x,scalar);
-	let full_mul_result: Uint768 = Uint768(low.d0, low.d1, low.d2, high, 0, 0);
+	let full_mul_result: Uint512 = Uint512(low.d0, low.d1, low.d2, high);
 	let (
-            quotient: Uint768, remainder: Uint384
-        ) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(full_mul_result, p_expand);
+            quotient: Uint512, remainder: Uint384
+        ) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(full_mul_result, p_expand);
         return(remainder,);
     }
     
@@ -251,7 +251,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    // s:2869 rc:334
+    // s:2712 rc:318
     func from_64_bytes{range_check_ptr}(a0: Uint256, a1: Uint256) -> (
         res: Uint384
     ) {
@@ -302,7 +302,7 @@ namespace fq_lib {
             d2=0));
     }
 
-    // s:654 rc:65
+    // s:497 rc:49
     func neg{range_check_ptr}(input: Uint384) -> (res: Uint384) {
         let (p_expand: Uint384_expand) = get_modulus_expand();
         let (res: Uint384) = field_arithmetic.sub_reduced_a_and_reduced_b(Uint384(0,0,0), input, p_expand);
@@ -320,7 +320,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:2410, rc:254
+    //s:2096, rc:222
     func sub_three_terms{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -329,7 +329,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //better, s:2102, rc:223
+    //better, s:1788, rc:191
     func sub_three_terms_new{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -343,7 +343,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1300, rc:128
+    //s:986, rc:96
     func sub_three_terms2{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -352,7 +352,7 @@ namespace fq_lib {
         return (res,);
     }
 
-    //s:1426, rc:166
+    //s:1112, rc:102
     func sub_three_terms3{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {
@@ -363,7 +363,7 @@ namespace fq_lib {
 
     //Best but assumes all inputs <p, can give wrong answers otherwise
     //also relies on 3*p<2**384
-    //s:455, rc:40
+    //s:352, rc:34
     func sub_three_terms_no_input_check{range_check_ptr}(
         x: Uint384, y: Uint384, z: Uint384
     ) -> (res: Uint384) {

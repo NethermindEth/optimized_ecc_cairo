@@ -13,7 +13,7 @@ struct FQ2 {
 }
 
 namespace fq2_lib {
-    // steps=1167, memory_holes=40, range_check_builtin=122
+    // steps=853, memory_holes=40, range_check_builtin=90
     func add{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         // TODO: check why these alloc_locals need to be used
         alloc_locals;
@@ -24,7 +24,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    // steps=2401, memory_holes=160, range_check_builtin=254
+    // steps=2087, memory_holes=160, range_check_builtin=222
     func sub{range_check_ptr}(x: FQ2, y: FQ2) -> (sum_mod: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -51,7 +51,7 @@ namespace fq2_lib {
         return (FQ2(e0=e0, e1=e1),);
     }
 
-    // steps=3951, memory_holes=140, range_check_builtin=463
+    // steps=3794, memory_holes=140, range_check_builtin=447
     func mul{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -73,7 +73,7 @@ namespace fq2_lib {
     }
 
     // Uses Karatsuba multiplication
-    // steps=3391, memory_holes=120, range_check_builtin=384
+    // steps=3234, memory_holes=120, range_check_builtin=368
     func mul_kar{range_check_ptr}(a: FQ2, b: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -97,7 +97,7 @@ namespace fq2_lib {
     // The formulas for the inverse come from writing a = e0 + e1 x and a_inverse = d0 + d1x,
     // multiplying these modulo the irreducible polynomial x**2 + 1, and then solving for
     // d0 and d1
-    //s: 4061 rc: 471 mh: 180
+    //s: 3908 rc: 455 mh: 180
     func inv{range_check_ptr}(a: FQ2) -> (inverse: FQ2) {
         alloc_locals;
         local a_inverse: FQ2;
@@ -389,13 +389,13 @@ namespace fq2_lib {
         }
     }
 
-    // steps=3960, memory_holes=140, range_check_builtin=463
+    // steps=3803, memory_holes=140, range_check_builtin=447
     func square{range_check_ptr}(x: FQ2) -> (res: FQ2) {
         let (res) = mul(x, x);
         return (res,);
     }
 
-    //best square :  steps=3083, memory_holes=120, range_check_builtin=354
+    //best square :  steps=2926, memory_holes=120, range_check_builtin=338
     func square_new{range_check_ptr}(x:FQ2) -> (res:FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -408,7 +408,7 @@ namespace fq2_lib {
     }
 
     // Uses Karatsuba multiplication
-    // better square : steps=3161, memory_holes=120, range_check_builtin=354
+    // better square : steps=3004, memory_holes=120, range_check_builtin=338
     func square_kar{range_check_ptr}(a: FQ2) -> (product: FQ2) {
         alloc_locals;
         let (p_expand:Uint384_expand)=get_modulus_expand();
@@ -473,7 +473,7 @@ namespace fq2_lib {
         return (res,);
     }
 
-    // steps=10861, memory_holes=419, range_check_builtin=1226
+    // steps=10390, memory_holes=419, range_check_builtin=1178
     func pow{range_check_ptr}(a: FQ2, exp: Uint768) -> (res: FQ2) {
         let o: FQ2 = FQ2(e0=Uint384(d0=1, d1=0, d2=0), e1=Uint384(d0=0, d1=0, d2=0));
         let (res: FQ2) = pow_inner(a, exp, o);

@@ -1,5 +1,5 @@
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
-from lib.uint384_extension import uint384_extension_lib, Uint768
+from lib.uint384_extension import uint384_extension_lib, Uint512
 
 // requires the sum of the bi's to be <2**64
 func dot_by_uint64_vec12{range_check_ptr}(a0: Uint384, b0: felt,
@@ -191,7 +191,7 @@ func dot_by_uint64_vec12_mod{range_check_ptr}(a0: Uint384, b0: felt,
 					 a9, b9,
 					 a10, b10,
 					 a11, b11);
-    let (_, rem) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(Uint768(sum.d0, sum.d1, sum.d2, carry, 0, 0), p);
+    let (_, rem) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(Uint512(sum.d0, sum.d1, sum.d2, carry), p);
 
     return (rem,);
 }
@@ -243,7 +243,7 @@ func dot_by_uint64_vec23_mod{range_check_ptr}(a0: Uint384, b0: felt,
 					 a20, b20,
 					 a21, b21,
 					 a22, b22);
-    let (_, rem) = uint384_extension_lib.unsigned_div_rem_uint768_by_uint384_expand(Uint768(sum.d0, sum.d1, sum.d2, carry, 0, 0), p);
+    let (_, rem) = uint384_extension_lib.unsigned_div_rem_uint512_by_uint384_expand(Uint512(sum.d0, sum.d1, sum.d2, carry), p);
 
     return (rem,);
 }

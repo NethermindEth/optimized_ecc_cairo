@@ -5,7 +5,7 @@ from starkware.cairo.common.math_cmp import is_le
 from starkware.cairo.common.pow import pow
 from starkware.cairo.common.registers import get_ap, get_fp_and_pc
 // Import uint384 files (path may change in the future)
-from lib.uint384 import uint384_lib, Uint384, Uint384_expand, ALL_ONES
+from lib.uint384 import uint384_lib, Uint384, Uint384_expand, ALL_ONES, SHIFT
 
 // Functions for operating 384-bit integers with 768-bit integers
 
@@ -18,6 +18,13 @@ struct Uint768 {
     d3: felt,
     d4: felt,
     d5: felt,
+}
+  
+struct Uint512 {
+    d0: felt,
+    d1: felt,
+    d2: felt,
+    d3: felt,
 }
 
 const HALF_SHIFT = 2 ** 64;
@@ -314,4 +321,252 @@ namespace uint384_extension_lib {
         let (d5) = bitwise_and(a.d5, b.d5);
         return (Uint768(d0, d1, d2, d3, d4, d5),);
     }
+
+        // Verifies that the given integer is valid.
+    func check_uint512{range_check_ptr}(a: Uint512) {
+        [range_check_ptr] = a.d0;
+        [range_check_ptr + 1] = a.d1;
+        [range_check_ptr + 2] = a.d2;
+        [range_check_ptr + 3] = a.d3;
+	let range_check_ptr = range_check_ptr + 4;
+        return ();
+    }
+
+    // Adds a 512-bit integer and a 384-bit integer. Returns the result as a 768-bit integer and the (1-bit) carry.
+    func add_uint512_and_uint384{range_check_ptr}(a: Uint512, b: Uint384) -> (
+        res: Uint512, carry: felt
+    ) {
+        alloc_locals;
+        local res: Uint512;
+        local carry_d0: felt;
+        local carry_d1: felt;
+        local carry_d2: felt;
+	local carry_d3: felt;
+        %{
+            sum_d0 = ids.a.d0 + ids.b.d0
+            ids.carry_d0 = 1 if sum_d0 >= ids.SHIFT else 0
+            sum_d1 = ids.a.d1 + ids.b.d1 + ids.carry_d0
+            ids.carry_d1 = 1 if sum_d1 >= ids.SHIFT else 0
+            sum_d2 = ids.a.d2 + ids.b.d2 + ids.carry_d1
+            ids.carry_d2 = 1 if sum_d2 >= ids.SHIFT else 0
+            sum_d3 = ids.a.d3 + ids.carry_d2
+            ids.carry_d3 = 1 if sum_d3 >= ids.SHIFT else 0
+        %}
+
+        // Either 0 or 1
+        assert carry_d0 * carry_d0 = carry_d0;
+        assert carry_d1 * carry_d1 = carry_d1;
+        assert carry_d2 * carry_d2 = carry_d2;
+        assert carry_d3 * carry_d3 = carry_d3;
+
+        assert res.d0 = a.d0 + b.d0 - carry_d0 * SHIFT;
+        assert res.d1 = a.d1 + b.d1 + carry_d0 - carry_d1 * SHIFT;
+        assert res.d2 = a.d2 + b.d2 + carry_d1 - carry_d2 * SHIFT;
+        assert res.d3 = a.d3 + carry_d2 - carry_d3 * SHIFT;
+
+        check_uint512(res);
+
+        return (res, carry_d3);
+    }
+
+    // Multiplies a 512-bit integer and a 384-bit integer.
+    // Returns the result (896 bits) as a 512-bit integer (the lower bits of the result) and
+    // a 384-bit integer (the higher bits of the result)
+    func mul_uint512_by_uint384{range_check_ptr}(a: Uint512, b: Uint384) -> (
+        low: Uint512, high: Uint384
+    ) {
+        alloc_locals;
+        let (a0, a1) = uint384_lib.split_64(a.d0);
+        let (a2, a3) = uint384_lib.split_64(a.d1);
+        let (a4, a5) = uint384_lib.split_64(a.d2);
+        let (a6, a7) = uint384_lib.split_64(a.d3);
+        let (b0, b1) = uint384_lib.split_64(b.d0);
+        let (b2, b3) = uint384_lib.split_64(b.d1);
+        let (b4, b5) = uint384_lib.split_64(b.d2);
+
+	local B0 = b0*HALF_SHIFT;
+	local b12 = b1 + b2*HALF_SHIFT;
+	local b34 = b3 + b4*HALF_SHIFT;
+
+        let (res0, carry) = uint384_lib.split_128(a1 * B0 + a0 * b.d0);
+        let (res2, carry) = uint384_lib.split_128(
+            a3 * B0 + a2 * b.d0 + a1 * b12 + a0 * b.d1 + carry
+        );
+        let (res4, carry) = uint384_lib.split_128(
+            a5 * B0 + a4 * b.d0 + a3 * b12 + a2 * b.d1 + a1 * b34 + a0 * b.d2 + carry
+        );
+        let (res6, carry) = uint384_lib.split_128(
+            a7 * B0 + a6 * b.d0 + a5 * b12 + a4 * b.d1 + a3 * b34 + a2 * b.d2 + a1 * b5 + carry
+        );
+        let (res8, carry) = uint384_lib.split_128(
+            a7 * b12 + a6 * b.d1 + a5 * b34 + a4 * b.d2 + a3 * b5 + carry
+        );
+        let (res10, carry) = uint384_lib.split_128(
+            a7 * b34 + a6 * b.d2 + a5 * b5 + carry
+        );
+        // let (res12, carry) = split_64(a7 * b5 + carry)
+
+        return (
+	    low=Uint512(d0=res0, d1=res2, d2=res4, d3=res6),
+            high=Uint384(d0=res8, d1=res10, d2=a7 * b5 + carry),
+        );
+    }
+    
+    func mul_uint512_by_uint384_expanded{range_check_ptr}(a: Uint512, b: Uint384_expand) -> (
+        low: Uint512, high: Uint384
+    ) {
+        let (a0, a1) = uint384_lib.split_64(a.d0);
+        let (a2, a3) = uint384_lib.split_64(a.d1);
+        let (a4, a5) = uint384_lib.split_64(a.d2);
+        let (a6, a7) = uint384_lib.split_64(a.d3);
+
+        let (res0, carry) = uint384_lib.split_128(a1 * b.B0 + a0 * b.b01);
+        let (res2, carry) = uint384_lib.split_128(
+            a3 * b.B0 + a2 * b.b01 + a1 * b.b12 + a0 * b.b23 + carry
+        );
+        let (res4, carry) = uint384_lib.split_128(
+            a5 * b.B0 + a4 * b.b01 + a3 * b.b12 + a2 * b.b23 + a1 * b.b34 + a0 * b.b45 + carry
+        );
+        let (res6, carry) = uint384_lib.split_128(
+            a7 * b.B0 + a6 * b.b01 + a5 * b.b12 + a4 * b.b23 + a3 * b.b34 + a2 * b.b45 + a1 * b.b5 + carry
+        );
+        let (res8, carry) = uint384_lib.split_128(
+            a7 * b.b12 + a6 * b.b23 + a5 * b.b34 + a4 * b.b45 + a3 * b.b5 + carry
+        );
+        let (res10, carry) = uint384_lib.split_128(
+            a7 * b.b34 + a6 * b.b45 + a5 * b.b5 + carry
+        );
+        // let (res12, carry) = split_64(a7 * b.b5 + carry)
+
+        return (
+	    low=Uint512(d0=res0, d1=res2, d2=res4, d3=res6),
+            high=Uint384(d0=res8, d1=res10, d2=a7 * b.b5 + carry),
+        );
+    }
+    
+    // Unsigned integer division between a 512-bit integer and a 384-bit integer. Returns the quotient (512 bits) and the remainder (384 bits).
+    // Conforms to EVM specifications: division by 0 yields 0.
+    func unsigned_div_rem_uint512_by_uint384{range_check_ptr}(a: Uint512, div: Uint384) -> (
+        quotient: Uint512, remainder: Uint384
+    ) {
+        alloc_locals;
+        local quotient: Uint512;
+        local remainder: Uint384;
+
+        // If div == 0, return (0, 0).
+        if (div.d0 + div.d1 + div.d2 == 0) {
+            return (quotient=Uint512(0, 0, 0, 0, 0, 0), remainder=Uint384(0, 0, 0));
+        }
+
+        %{
+            def split(num: int, num_bits_shift: int, length: int):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift 
+                return tuple(a)
+
+            def pack(z, num_bits_shift: int) -> int:
+                limbs = (z.d0, z.d1, z.d2)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+                
+            def pack_extended(z, num_bits_shift: int) -> int:
+                limbs = (z.d0, z.d1, z.d2, z.d3)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            a = pack_extended(ids.a, num_bits_shift = 128)
+            div = pack(ids.div, num_bits_shift = 128)
+
+            quotient, remainder = divmod(a, div)
+
+            quotient_split = split(quotient, num_bits_shift=128, length=4)
+
+            ids.quotient.d0 = quotient_split[0]
+            ids.quotient.d1 = quotient_split[1]
+            ids.quotient.d2 = quotient_split[2]
+            ids.quotient.d3 = quotient_split[3]
+
+            remainder_split = split(remainder, num_bits_shift=128, length=3)
+            ids.remainder.d0 = remainder_split[0]
+            ids.remainder.d1 = remainder_split[1]
+            ids.remainder.d2 = remainder_split[2]
+        %}
+	check_uint512(quotient);
+	uint384_lib.check(remainder);
+
+        let (res_mul_low: Uint512, res_mul_high: Uint384) = mul_uint512_by_uint384(quotient, div);
+
+        assert res_mul_high = Uint384(0, 0, 0);
+
+        let (check_val: Uint512, add_carry: felt) = add_uint512_and_uint384(res_mul_low, remainder);
+
+        assert add_carry = 0;
+        assert check_val = a;
+
+        let (is_valid) = uint384_lib.lt(remainder, div);
+        assert is_valid = 1;
+
+        return (quotient=quotient, remainder=remainder);
+    }
+    
+    // Unsigned integer division between a 512-bit integer and a 384-bit integer. Returns the quotient (512 bits) and the remainder (384 bits).
+    func unsigned_div_rem_uint512_by_uint384_expand{range_check_ptr}(a: Uint512, div: Uint384_expand) -> (
+        quotient: Uint512, remainder: Uint384
+    ) {
+        alloc_locals;
+        local quotient: Uint512;
+        local remainder: Uint384;
+
+        %{
+            def split(num: int, num_bits_shift: int, length: int):
+                a = []
+                for _ in range(length):
+                    a.append( num & ((1 << num_bits_shift) - 1) )
+                    num = num >> num_bits_shift 
+                return tuple(a)
+
+            def pack(z, num_bits_shift: int) -> int:
+                limbs = (z.b01, z.b23, z.b45)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+                
+            def pack_extended(z, num_bits_shift: int) -> int:
+                limbs = (z.d0, z.d1, z.d2, z.d3)
+                return sum(limb << (num_bits_shift * i) for i, limb in enumerate(limbs))
+
+            a = pack_extended(ids.a, num_bits_shift = 128)
+            div = pack(ids.div, num_bits_shift = 128)
+
+            quotient, remainder = divmod(a, div)
+
+            quotient_split = split(quotient, num_bits_shift=128, length=4)
+
+            ids.quotient.d0 = quotient_split[0]
+            ids.quotient.d1 = quotient_split[1]
+            ids.quotient.d2 = quotient_split[2]
+            ids.quotient.d3 = quotient_split[3]
+
+            remainder_split = split(remainder, num_bits_shift=128, length=3)
+            ids.remainder.d0 = remainder_split[0]
+            ids.remainder.d1 = remainder_split[1]
+            ids.remainder.d2 = remainder_split[2]
+        %}
+	check_uint512(quotient);
+	uint384_lib.check(remainder);
+
+        let (res_mul_low: Uint512, res_mul_high: Uint384) = mul_uint512_by_uint384_expanded(quotient, div);
+
+        assert res_mul_high = Uint384(0, 0, 0);
+
+        let (check_val: Uint512, add_carry: felt) = add_uint512_and_uint384(res_mul_low, remainder);
+
+        assert add_carry = 0;
+        assert check_val = a;
+	
+	let div2 = Uint384(div.b01,div.b23,div.b45);
+        let (is_valid) = uint384_lib.lt(remainder, div2);
+        assert is_valid = 1;
+
+        return (quotient=quotient, remainder=remainder);
+    }
+
 }
