@@ -135,7 +135,7 @@ namespace fq12_lib{
         //is given by (d1, d2)--> (d1 - d2, d1 + d2). 
 
         //d1-d2
-        let (first_coeff_mul_by_u: Uint384) = fq_lib.sub(mul_g1.f2.e0, mul_g1.f2.e1);
+        let (first_coeff_mul_by_u: Uint384) = fq_lib.sub1(mul_g1.f2.e0, mul_g1.f2.e1);
         //d1+d2
         let (second_coeff_mul_by_u: Uint384) = fq_lib.add(mul_g1.f2.e0, mul_g1.f2.e1);
 
