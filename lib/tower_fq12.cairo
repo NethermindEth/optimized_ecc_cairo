@@ -60,7 +60,7 @@ namespace fq12_lib{
         let (p1:FQ2) = fq2_lib.add(p0, m1);
         let (pm1:FQ2) = fq2_lib.sub(p0, m1);
         let (int:FQ2) = fq2_lib.add(pm1, m2);
-        let (twint:FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), int);
+        let (twint:FQ2) = fq2_lib.add(int, int);
         let (pm2:FQ2) = fq2_lib.sub(twint, m1);
         return(p1, pm1, pm2);
     }
@@ -69,7 +69,7 @@ namespace fq12_lib{
     func fq6_toom3_interp{range_check_ptr}(z0:FQ2, zinf:FQ2, z1:FQ2, zm1:FQ2, zm2:FQ2)->(r1:FQ2, r2:FQ2, r3:FQ2){
         let (twoinv:Uint384) = get_2_inverse();
         let (threeinv:Uint384) = get_3_inverse();
-        let (two_r_inf:FQ2) = fq2_lib.scalar_mul(Uint384(2,0,0), zinf);
+        let (two_r_inf:FQ2) = fq2_lib.add(zinf, zinf);
         let (sub1:FQ2) = fq2_lib.sub(zm2, z1);
         let (r3_temp:FQ2) = fq2_lib.mul_kar(threeinv, sub1);
         let (sub2:FQ2) = fq2_lib.sub(z1, zm1);
