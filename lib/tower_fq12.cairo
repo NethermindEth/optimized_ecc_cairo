@@ -1,7 +1,7 @@
 from lib.uint384 import Uint384, Uint384_expand, uint384_lib
 from lib.uint384_extension import Uint768, uint384_extension_lib
 from lib.field_arithmetic_new import field_arithmetic
-from lib.curve_new import get_modulus, get_modulus_expand, get_r_squared, get_p_minus_one, get_p_minus_one_div_2, get_twice_p
+from lib.curve_new import get_modulus, get_modulus_expand, get_2_inverse, get_3_inverse
 from lib.fq_new import fq_lib
 from lib.fq2_new import FQ2, fq2_lib
 from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
