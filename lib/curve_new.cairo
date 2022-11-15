@@ -37,6 +37,11 @@ const twoinv4=49917846650902749776825839158743435615;
 const twoinv5=17282741772707453034394598013407712875;
 const twoinv6=936899308823769933;
 
+//inverse of 3 modulo p, as a Uint384
+const threeinvd0=0x1472aaa9cb8d555526a9ffffffffc71d;
+const threeinvd1=0x984f87adf7ae0c7f9a208c6b4f20a418;
+const threeinvd2=0x11560bf17baa99bc32126fced787c88f;
+
 
 // (p-1)/2
 const p_minus_one_div_2 = 2001204777610833696708894912867952078278441409969503942666029068062015825245418932221343814564507832018947136279893;
@@ -67,6 +72,10 @@ func get_2_inverse() -> (twoinv:Uint384) {
 
 func get_2_inverse_exp() -> (twoinvexp:Uint384_expand) {
     return (twoinvexp=Uint384_expand(twoinv0, twoinv1, twoinv2, twoinv3, twoinv4, twoinv5, twoinv6));
+}
+
+func get_3_inverse() -> (threeinv:Uint384) {
+    return (threeinv=Uint384(threeinvd0, threeinvd1, threeinvd2));
 }
 
 func get_p_minus_one_div_2() -> (res: Uint384) {

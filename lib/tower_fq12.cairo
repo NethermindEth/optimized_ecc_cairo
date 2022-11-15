@@ -122,7 +122,8 @@ namespace fq12_lib{
 
 
     //Implement multiplication as a form of applying Karatsuba by using TC3 over FQ6, and using 
-    //the particularity of multiplication by v in FQ6, and by (u+1) in FQ2. 
+    //the particularity of multiplication by v in FQ6, and by (u+1) in FQ2.
+    //steps=180416, memory_holes=10201, range_check_builtin=19665
     func mul_fq12{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ12, y:FQ12)->(prod:FQ12){
         alloc_locals;
         let (mul_g0 : FQ6) = mul_fq6(x.g0, y.g0);
