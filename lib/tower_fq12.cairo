@@ -61,7 +61,7 @@ namespace fq12_lib{
         let (pm1:FQ2) = fq2_lib.sub(p0, m1);
         let (int:FQ2) = fq2_lib.add(pm1, m2);
         let (twint:FQ2) = fq2_lib.add(int, int);
-        let (pm2:FQ2) = fq2_lib.sub(twint, m1);
+        let (pm2:FQ2) = fq2_lib.sub(twint, m0);
         return(p1, pm1, pm2);
     }
 
