@@ -4,7 +4,6 @@ from lib.field_arithmetic_new import field_arithmetic
 from lib.curve_new import get_modulus, get_modulus_expand, get_2_inverse, get_3_inverse
 from lib.fq_new import fq_lib
 from lib.fq2_new import FQ2, fq2_lib
-from starkware.cairo.common.cairo_builtins import BitwiseBuiltin
 from starkware.cairo.common.uint256 import Uint256
 from starkware.cairo.common.math_cmp import is_not_zero, is_nn, is_le
 
@@ -41,7 +40,7 @@ namespace fq12_lib{
     }
 
     //will write it in a way that we don't expand the modulus many times at some later point.
-    func sub_fq6{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ6, y:FQ6)->(sub:FQ6){
+    func sub_fq6{range_check_ptr}(x:FQ6, y:FQ6)->(sub:FQ6){
         alloc_locals;
         let (f0: FQ2) =  fq2_lib.sub(x.f0, y.f0);
         let (f1: FQ2) =  fq2_lib.sub(x.f1, y.f1);
@@ -50,14 +49,14 @@ namespace fq12_lib{
     }
     
     //Computes x-y-z
-    func sub_three_terms_fq6{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ6, y:FQ6, z:FQ6)->(sub:FQ6){
+    func sub_three_terms_fq6{range_check_ptr}(x:FQ6, y:FQ6, z:FQ6)->(sub:FQ6){
         let (addzy: FQ6) = add_fq6(y, z);
         let (sub3 : FQ6) = sub_fq6(x, addzy);
         return (sub = sub3,);
     }
 
     //Returns the non-immediate evaluations of a polynomial of degree 3, i.e. those at 1, -1  & -2
-    func fq6_toom3_eval{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(m0:FQ2, m1:FQ2, m2:FQ2)->(p1:FQ2, pm1:FQ2, pm2:FQ2){
+    func fq6_toom3_eval{range_check_ptr}(m0:FQ2, m1:FQ2, m2:FQ2)->(p1:FQ2, pm1:FQ2, pm2:FQ2){
         alloc_locals;
         let (p0:FQ2) = fq2_lib.add(m0,m2);
         let (p1:FQ2) = fq2_lib.add(p0, m1);
@@ -69,7 +68,7 @@ namespace fq12_lib{
     }
 
     //finds the non-obvious coefficients of a degree 4 polynomial from 5 evaluations at distinct points.
-    func fq6_toom3_interp{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(z0:FQ2, zinf:FQ2, z1:FQ2, zm1:FQ2, zm2:FQ2)->(r1:FQ2, r2:FQ2, r3:FQ2){
+    func fq6_toom3_interp{range_check_ptr}(z0:FQ2, zinf:FQ2, z1:FQ2, zm1:FQ2, zm2:FQ2)->(r1:FQ2, r2:FQ2, r3:FQ2){
         alloc_locals;
         let (twoinv:Uint384) = get_2_inverse();
         let (threeinv:Uint384) = get_3_inverse();
@@ -92,7 +91,7 @@ namespace fq12_lib{
     //Elements of FQ6 are already polynomials of the form a+bv+cv^2
     //We use Toom-Cook3 to obtain the coefficient of the multiplication of two FQ6 elements. 
     //Then we need to reduce the v^3 and v^4 coefficients using the particularity if multiplication by (u+1)in FQ2.
-    func mul_fq6{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ6, y:FQ6)->(prod:FQ6){
+    func mul_fq6{range_check_ptr}(x:FQ6, y:FQ6)->(prod:FQ6){
         alloc_locals;
         let (x1:FQ2, xm1:FQ2, xm2:FQ2) = fq6_toom3_eval(x.f0, x.f1, x.f2);
         let (y1:FQ2, ym1:FQ2, ym2:FQ2) = fq6_toom3_eval(y.f0, y.f1, y.f2);
@@ -124,7 +123,7 @@ namespace fq12_lib{
     //Implement multiplication as a form of applying Karatsuba by using TC3 over FQ6, and using 
     //the particularity of multiplication by v in FQ6, and by (u+1) in FQ2.
     //steps=180416, memory_holes=10201, range_check_builtin=19665
-    func mul_fq12{range_check_ptr, bitwise_ptr:BitwiseBuiltin*}(x:FQ12, y:FQ12)->(prod:FQ12){
+    func mul_fq12{range_check_ptr}(x:FQ12, y:FQ12)->(prod:FQ12){
         alloc_locals;
         let (mul_g0 : FQ6) = mul_fq6(x.g0, y.g0);
         let (mul_g1 : FQ6) = mul_fq6(x.g1, y.g1);
