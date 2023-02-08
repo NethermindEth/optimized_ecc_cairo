@@ -1,5 +1,9 @@
 # optimized_ecc_cairo
 
+Development on this repo is currently inactive. BLS12-381 pairing will not complete due to memory requirements. The following repo, built on top of ours, is actively working on BLS12-381 cryptography: https://github.com/keep-starknet-strange/garaga/tree/main/src
+
+-----
+
 WARNING: The latest version of asyncio (>=0.19.0) is not supported. To downgrade do `pip install pytest-asyncio==0.18.3`
 
 
