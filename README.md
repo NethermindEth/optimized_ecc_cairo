@@ -1,6 +1,6 @@
 # optimized_ecc_cairo
 
-Development on this repo is currently inactive. BLS12-381 pairing will not complete due to memory requirements. The following repo, built on top of ours, is actively working on BLS12-381 cryptography: https://github.com/keep-starknet-strange/garaga/tree/main/src
+Development on this repo is currently inactive. BLS12-381 pairing will not complete on most computers due to high memory consumption. The following repo, built on top of ours, is actively working on BLS12-381 cryptography: https://github.com/keep-starknet-strange/garaga/tree/main/src
 
 -----
 
